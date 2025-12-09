@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Phishing Check</title>
+    <style>
+        body { width: 320px; font-family: sans-serif; padding: 10px; }
+        .result-box { 
+            margin-top: 15px; padding: 10px; border-radius: 5px; 
+            text-align: center; display: none; 
+        }
+        .safe { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .phishing { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .loading { color: #666; font-style: italic; }
+        #url-display { font-size: 10px; color: #888; word-break: break-all; margin-bottom: 10px;}
+        button { width: 100%; padding: 8px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px;}
+        button:disabled { background: #ccc; }
+    </style>
+</head>
+<body>
+    <h3> URL Scanner</h3>
+    <div id="url-display">Loading URL...</div>
+    
+    <button id="btn-scan">Scan Current Tab</button>
+    
+    <div id="status" class="loading" style="margin-top:10px;"></div>
+    
+    <div id="result" class="result-box">
+        <h2 id="verdict" style="margin:0;">SAFE</h2>
+        <div id="confidence">Confidence: 0%</div>
+    </div>
+
+    <script src="libs/ort.min.js"></script>
+    <script src="popup.js"></script>
+</body>
+</html>

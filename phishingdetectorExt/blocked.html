@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚠️ Phishing Detected!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 100%;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header .icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .warning-box h3 {
+            color: #856404;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .url-display {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 25px;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 14px;
+            color: #e74c3c;
+        }
+        
+        .confidence {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .confidence-bar {
+            height: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #f39c12, #e74c3c);
+            border-radius: 5px;
+            transition: width 0.5s ease;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            flex: 1;
+            min-width: 150px;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            text-align: center;
+        }
+        
+        .btn-safe {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .btn-safe:hover {
+            background: #219a52;
+            transform: translateY(-2px);
+        }
+        
+        .btn-danger {
+            background: transparent;
+            color: #e74c3c;
+            border: 2px solid #e74c3c;
+        }
+        
+        .btn-danger:hover {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .info-list {
+            list-style: none;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        
+        .info-list li {
+            padding: 8px 0;
+            color: #666;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .info-list li::before {
+            content: "⚠️";
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="icon">🛡️</div>
+            <h1>Phishing Website Detected!</h1>
+            <p>This website has been flagged as potentially dangerous</p>
+        </div>
+        
+        <div class="content">
+            <div class="warning-box">
+                <h3>⚠️ Warning</h3>
+                <p>Our AI model has detected that this URL may be a phishing attempt designed to steal your personal information.</p>
+            </div>
+            
+            <label style="font-weight: 600; color: #333; display: block; margin-bottom: 8px;">
+                Blocked URL:
+            </label>
+            <div class="url-display" id="blocked-url">
+                Loading...
+            </div>
+            
+            <div class="confidence">
+                <span style="font-weight: 600;">Detection Confidence: </span>
+                <span id="confidence-value" style="color: #e74c3c; font-weight: bold;">0%</span>
+                <div class="confidence-bar">
+                    <div class="confidence-fill" id="confidence-bar" style="width: 0%"></div>
+                </div>
+            </div>
+            
+            <div class="buttons">
+                <button class="btn btn-safe" onclick="goBack()">
+                    ← Go Back to Safety
+                </button>
+                <button class="btn btn-danger" onclick="continueAnyway()">
+                    Continue Anyway (Risky)
+                </button>
+            </div>
+            
+            <ul class="info-list">
+                <li>Phishing sites mimic legitimate websites to steal credentials</li>
+                <li>Never enter passwords on suspicious websites</li>
+                <li>Check the URL carefully before proceeding</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        // Parse URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const blockedUrl = urlParams.get('url') || 'Unknown URL';
+        const confidence = parseFloat(urlParams.get('confidence')) || 0;
+        
+        // Display blocked URL
+        document.getElementById('blocked-url').textContent = blockedUrl;
+        
+        // Display confidence
+        document.getElementById('confidence-value').textContent = confidence.toFixed(1) + '%';
+        document.getElementById('confidence-bar').style.width = confidence + '%';
+        
+        // Go back to safety (new tab or close)
+        function goBack() {
+            // Try to go back, if can't then open new tab
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = 'https://www.google.com';
+            }
+        }
+        
+        // Continue to the blocked URL anyway
+        function continueAnyway() {
+            if (confirm('⚠️ Are you sure you want to continue?\n\nThis website has been detected as a potential phishing site. Proceeding may put your personal information at risk.')) {
+                // Store in session that user chose to continue
+                sessionStorage.setItem('bypass_' + blockedUrl, 'true');
+                window.location.href = blockedUrl;
+            }
+        }
+    </script>
+</body>
+</html>
