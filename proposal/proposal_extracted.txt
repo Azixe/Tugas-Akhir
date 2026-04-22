@@ -1,0 +1,501 @@
+
+Perancangan Ekstensi Browser Client-Side untuk Deteksi URL Phishing Real-Time Berbasis Algoritma Random Forest dan XGBoost
+
+Proposal
+diajukan untuk memenuhi salah satu syarat memperoleh gelar sarjana
+pada Program Studi Teknik Informatika
+Direktorat Kampus Purwokerto
+Universitas Telkom
+
+
+
+2211102226
+Maulana Ibrahim Tirtodinignrat
+
+
+
+
+Program Studi Sarjana Teknik Informatika
+Direktorat Kampus Purwokerto
+Universitas Telkom
+Purwokerto
+2025
+
+
+# LEMBAR PENGESAHAN
+
+Perancangan Ekstensi Browser Client-Side untuk Deteksi URL Phishing Real-Time Berbasis Algoritma Random Forest dan XGBoost
+Design of a Client-Side Browser Extension for Real-Time Phishing URL Detection Based on Random Forest and XGBoost Algorithms
+
+2211102226
+Maulana Ibrahim Tirtodiningrat
+
+Proposal ini telah diterima dan disahkan untuk memenuhi sebagai syarat memperoleh gelar pada Program Studi Sarjana Teknik Informatika
+Direktorat Kampus Purwokerto
+Universitas Telkom
+
+Purwokerto, 31/12/2025
+Menyetujui
+# LEMBAR ORISINALITAS
+
+Dengan ini saya, Maulana Ibraim Tirtodiningrat menyatakan sesungguhnya bahwa Tugas Akhir saya dengan judul “Perancangan Ekstensi Browser Client-Side untuk Deteksi URL Phishing Real-Time Berbasis Algoritma Random Forest dan XGBoost” beserta dengan seluruh isinya merupakan hasil karya saya sendiri, dengan tidak melakukan penjiplakan yang tidak sesuai dengan etika keilmuan yang berlaku dengan masyarakat keilmuan, serta produk dari tugas akhir ini bukan merupakan hasil dari Generative AI. Saya siap menanggung risiko/sanksi yang diberikan jika di kemudian hari ditemukan pelanggaran terhadap etika keilmuan dalam Laporan Tugas Akhir, atau jika ada klaim dari pihak lain terhadap keaslian karya.
+
+
+# ABSTRAK
+
+Meningkatnya volume serangan phishing modern yang dicirikan oleh siklus hidup yang singkat telah mengungkap kelemahan mendasar dalam mekanisme pertahanan berbasis daftar hitam konvensional karena latensi pembaruan yang melekat. Penundaan ini menciptakan celah kerentanan di mana pengguna tetap tidak terlindungi dari ancaman baru dan yang muncul. Studi ini mengusulkan sistem deteksi phishing proaktif yang diimplementasikan sebagai ekstensi browser Google Chrome mandiri yang beroperasi sepenuhnya di sisi klien. Sistem ini dirancang untuk berfungsi sebagai garis pertahanan pertama dengan menyediakan penilaian risiko waktu nyata tanpa bergantung pada server eksternal, sehingga menjaga privasi pengguna selama navigasi web. Metodologi penelitian melibatkan pelatihan model pembelajaran mesin menggunakan algoritma Random Forest dan XGBoost pada dataset URL 2024, dengan penekanan pada ekstraksi fitur leksikal untuk memastikan efisiensi komputasi. Model yang dilatih dikonversi ke format Open Neural Network Exchange (ONNX) untuk memungkinkan inferensi yang efisien di dalam browser. Kinerja sistem dievaluasi secara komparatif dalam hal akurasi, recall, latensi inferensi, dan konsumsi memori untuk mengidentifikasi algoritma yang paling sesuai untuk menyeimbangkan efektivitas deteksi dan kinerja operasional dalam lingkungan browser yang terbatas sumber daya.
+Kata Kunci: Phishing Detection, Machine Learning, Browser Extension, Client-Side, Random Forest, XGBoost, ONNX
+# ABSTRACT
+
+The increasing volume of modern phishing attacks characterized by short lifecycles has exposed fundamental weaknesses in conventional blacklist-based defense mechanisms due to their inherent update latency. This delay creates a vulnerability gap where users remain unprotected from new and emerging threats. This study proposes a proactive phishing detection system implemented as a standalone Google Chrome browser extension that operates entirely on the client side. The system is designed to serve as a first line of defense by providing real-time risk assessment without relying on external servers, thus preserving user privacy during web navigation. The research methodology involves training machine learning models using Random Forest and XGBoost algorithms on a 2024 URL dataset, with an emphasis on lexical feature extraction to ensure computational efficiency. The trained models are converted to the Open Neural Network Exchange (ONNX) format to enable efficient inference within the browser. System performance is comparatively evaluated in terms of accuracy, recall, inference latency, and memory consumption to identify the most suitable algorithm to balance detection effectiveness and operational performance in a resource-constrained browser environment.
+Keywords: Phishing Detection, Machine Learning, Browser Extension, Client-Side, Random Forest, XGBoost, ONNX.
+
+# KATA PENGANTAR
+
+Kata pengantar laporan tugas akhir ini berisi ucapan syukur, penjelasan singkat tentang tujuan dan latar belakang penulisan, serta ucapan terima kasih kepada pihak-pihak yang telah membantu proses penyusunan tugas akhir.
+Ucapan syukur kepada Tuhan Yang Maha Esa.
+Ucapan terimakasih kepada Pak Prof. Dr. Suyanto, S.T., M.Sc. sebagai Rektor Universitas Telkom..
+Ucapan terimakasih kepada Bu Dr. Tenia Wahyuningrum, S.Kom., M.T. sebagai Direktur Universitas Telkom Direktorat Kampus Purwokerto.
+Ucapan terimakasih kepada Pak Aditya Dwi Putro W., S.Kom., M.Kom. sebagai Ketua Program Studi.
+Ucapan terimakasih kepada sebagai Bu Trihastuti Yuniati, S.Kom., M.T penguji 1.
+Ucapan terimakasih kepada Pak M. Agung Nugroho, S.Kom., M.Kom sebagai Dosen Pembimbing 1.
+Ucapan terimakasih kepada Pak Rakhmad Maulidi, M.Kom sebagai Dosen Pembimbing 2.
+Ucapan terima kasih kepada individu maupun lembaga yang memberikan bantuan, bimbingan dan dukungan yang relevan.
+
+Purwokerto, 16 Desember 2025
+
+Maulana Ibrahim Tirtodiningrat
+
+# DAFTAR ISI
+
+# DAFTAR GAMBAR
+Gambar 2.1 Model Phishing Deteksi Umum	27
+Gambar 2.2 Confusion Matrix	34
+Gambar 3.1 Diagram Alir Penelitian	40
+Gambar 3.2 Arsitektur Chrome Extension Phishing Detector	45
+Gambar 3.3 Sequence Diagram Chrome Extension Phishing Detector	47
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# DAFTAR TABEL
+
+Tabel 1.1 Jadwal Pelaksanaan Tugas Akhir	18
+Tabel 2.1 Ringkasan Penelitian Terdahulu	21
+Tabel 3.1 Rencana Pengujian Kinerja (Performance Testing)	49
+Tabel 3.2 Rencana Pengujian Kinerja Model	49
+Tabel 3.3 Hasil Pengujian Performa dan Efisiensi Model	50
+
+
+# DAFTAR LAMPIRAN
+
+
+
+
+
+# BAB I 
+PENDAHULUAN
+
+## Latar Belakang
+Phishing adalah jenis kejahatan siber yang melibatkan penipuan terhadap korban [13]. Pelaku biasanya berpura-pura menjadi entitas resmi atau sah saat berkomunikasi secara digital. Mereka melakukannya melalui email yang menyerupai surat resmi, pesan teks, atau situs web palsu. Tujuannya adalah untuk membuat korban memberikan data pribadi, menipu mereka, atau mengekstrak informasi penting. Dalam beberapa tahun terakhir, kasus phishing semakin sering terjadi karena semakin banyak orang yang aktif online, sehingga meningkatkan risiko dan paparan. Oleh karena itu, phishing tetap menjadi masalah besar dan terus berkembang di internet. Pada kuartal pertama 2025, APWG mencatat total 1.003.924 serangan phishing, yang merupakan volume serangan terbesar sejak akhir 2023[1].
+Meskipun volume serangan terus meningkat, mekanisme pertahanan utama yang diterapkan oleh web browser konvensional saat ini masih sangat bergantung pada metode berbasis blacklist, seperti Google Safe Browsing [14]. Secara teknis, metode ini bekerja dengan mencocokkan URL yang dikunjungi pengguna terhadap basis data pusat berisi daftar situs berbahaya yang telah terkonfirmasi. Namun, terdapat kekurangan, yaitu adalah latensi pembaruan. Sebuah studi terbaru menganalisis siklus hidup situs phishing dan menemukan bahwa rata-rata situs phishing modern hanya aktif selama kurang dari 24 jam, dengan median waktu hidup hanya sekitar 5,46 jam [2]. Sebaliknya, mekanisme blacklist rata-rata membutuhkan waktu hingga 4,5 hari untuk mendeteksi dan memblokir situs tersebut [2]. Disparitas waktu ini menciptakan window of vulnerability di mana sebagian besar situs phishing (sekitar 83,9%) telah dinonaktifkan oleh penyerang sebelum sempat dideteksi oleh sistem keamanan [2], meninggalkan pengguna tanpa perlindungan pada fase paling kritis serangan.
+Keterlambatan ini juga terjadi pada solusi keamanan berbasis server lainnya, seperti antivirus pihak ketiga (seperti Bitdefender) yang memerlukan waktu untuk memperbarui basis data signature mereka di sisi server sebelum dapat didistribusikan ke klien. Dalam konteks ini, sistem deteksi yang ada saat ini sering kali terlambat merespons serangan zero-day yang menggunakan teknik manipulasi leksikal baru [18]. Oleh karena itu, diperlukan sebuah mekanisme pertahanan garis depan (first line of defense) yang bersifat pre-emptif. Solusi ini harus mampu beroperasi secara mandiri di sisi klien untuk memberikan penilaian risiko secara instan saat URL diakses, mengisi kekosongan perlindungan sebelum mekanisme keamanan konvensional (seperti blacklist atau antivirus) sempat bereaksi.
+Berbagai solusi alternatif telah ditawarkan, seperti analisis berbasis heuristik di sisi server (server-side analysis). Meskipun metode ini akurat, ia memiliki kelemahan berupa latensi jaringan yang mengganggu pengalaman pengguna dan isu privasi karena data penelusuran (URL) pengguna harus dikirim ke server pihak ketiga untuk dianalisis [5], [12]. Solusi lain berupa edukasi pengguna juga terbukti tidak konsisten karena faktor kelalaian manusia (human error), di mana studi menunjukkan bahwa pelatihan sering kali gagal bertahan lama dalam memori pengguna saat menghadapi skenario serangan nyata [21]. Oleh karena itu, diperlukan pergeseran paradigma menuju deteksi proaktif yang berjalan secara lokal (client-side) untuk meminimalkan latensi dan menjaga privasi. Keunggulan pertama, privasi pengguna lebih terjaga karena data URL diproses secara lokal dan tidak pernah meninggalkan perangkat pengguna, memitigasi risiko kebocoran data profil penelusuran [20]. Kedua, eliminasi perjalanan data ke server (round-trip time) memungkinkan deteksi dengan latensi mendekati nol (near-zero latency), yang krusial untuk mencegah pengguna mengakses situs berbahaya sebelum halaman dimuat sepenuhnya [8]. Ketiga, sistem berbasis klien tetap berfungsi optimal dalam kondisi offline atau jaringan tidak stabil, memastikan proteksi yang konsisten tanpa bergantung pada ketersediaan layanan awan eksternal seperti pada di [12].
+Selain itu juga, pengembangan sistem ini akan mengadopsi standar arsitektur terbaru Manifest V3 yang diwajibkan oleh Google, yang menawarkan peningkatan keamanan dengan membatasi eksekusi kode eksternal yang berpotensi berbahaya [20]. Berdasarkan permasalahan tersebut, penelitian ini mengusulkan pengembangan sistem deteksi phishing proaktif yang diimplementasikan sebagai ekstensi mandiri (standalone) pada browser Google Chrome. Pemilihan Google Chrome sebagai platform target didasarkan pada dominasi pasarnya. Menurut statistik global per November 2025, Google Chrome menguasai 71,17% pangsa pasar browser global [22]. Hal ini menunjukkan bahwa ekstensi pada platform ini akan memberikan dampak perlindungan keamanan yang paling luas dan signifikan bagi sebagian besar pengguna internet. Ekstensi ini tidak dimaksudkan untuk menggantikan mekanisme keamanan utama, melainkan diposisikan sebagai alat pelengkap (supplementary tool) untuk keamanan online yang berfungsi sebagai langkah mitigasi sementara (interim countermeasure) pada fase awal serangan. Solusi ini memanfaatkan algoritma Machine Learning untuk memprediksi status URL secara real-time berdasarkan ekstraksi fitur leksikal, tanpa ketergantungan pada blacklist eksternal. Penelitian ini secara spesifik menggunakan dataset terbaru tahun 2024 [6] untuk menjamin relevansi model terhadap pola serangan terkini, dengan fokus mencapai keseimbangan optimal antara akurasi deteksi dan efisiensi komputasi (waktu respon dan penggunaan memori) menggunakan algoritma berbasis tree (seperti Random Forest atau XGBoost).
+## Rumusan Masalah
+Berdasarkan identifikasi masalah mengenai kesenjangan waktu deteksi (detection time gap) dan kurang efektifnya metode statis terhadap serangan zero-day, maka rumusan masalah spesifik yang akan diselesaikan dalam penelitian ini adalah:
+Bagaimana merancang arsitektur sistem deteksi phishing mandiri (standalone) pada ekstensi Google Chrome yang mampu melakukan inferensi model secara client-side untuk mengatasi latensi jaringan dan menjaga privasi data pengguna?
+Kombinasi fitur leksikal URL apa saja yang memiliki bobot signifikansi tertinggi (feature importance) dalam mengidentifikasi pola serangan phishing modern, guna mereduksi dimensi data tanpa mengorbankan akurasi deteksi?
+Seberapa efektif kinerja sistem deteksi yang diusulkan dalam meminimalkan response time dan tingkat false positive rate untuk menjamin pengalaman pengguna yang lancar pada lingkungan deteksi real-time?
+## Tujuan Penelitian
+Berikut adalah poin poin tujuan dari penelitian ini:
+Arsitektur pada sistem deteksi phishing berbasis ekstensi browser standalone dirancang juga diimplementasikan, yang mana inferensi model Machine Learning dieksekusi pada sisi klien untuk mengeliminasi dependensi server eksternal serta menjaga privasi data navigasi pengguna.
+Fitur-fitur leksikal URL yang paling signifikan diseleksi guna mereduksi dimensi data input, sehingga model deteksi dihasilkan secara ringan juga efisien tanpa mengurangi tingkat akurasi klasifikasi terhadap pola serangan yang modern.
+Efektivitas sistem yang diusulkan diukur dan diverifikasi berdasarkan metrik kinerja operasional, terutama dalam meminimalkan false positive rate untuk memastikan keandalan real-time.
+## Manfaat Penelitian
+Hasil penelitian ini diharapkan dapat memberikan kontribusi bagi pihak-pihak berikut:
+Pengguna Akhir: Memberikan perlindungan proaktif dan real-time terhadap serangan phishing baru (zero-day) yang belum terdaftar dalam daftar hitam, sambil memastikan privasi pengguna karena data URL tidak dikirimkan ke pihak ketiga.
+Untuk Literatur Ilmiah: Menambah literatur tentang implementasi praktis Machine Learning dalam lingkungan dengan sumber daya terbatas seperti ekstensi browser, serta memberikan wawasan empiris tentang efektivitas fitur leksikal dalam mendeteksi pola phishing terbaru.
+Untuk Praktisi Keamanan Siber: Menyediakan referensi arsitektur alternatif untuk mengembangkan alat keamanan endpoint yang ringan, cepat, dan server-less.
+## Batasan Masalah
+Berikut adalah beberapa batasan masalah yang terdapat pada penelitian ini:
+Platform Implementasi: Prototipe sistem hanya dikembangkan dan diuji secara spesifik pada browser Google Chrome versi desktop. Pengujian pada browser lain seperti Firefox, Safari atau versi mobile (Android/iOS) berada di luar lingkup penelitian ini.
+Sumber Data: Penelitian ini menggunakan dataset sekunder (publik) yang telah dilabeli, yaitu dataset URL phishing tahun 2024 dari Mendeley Data. Penelitian ini tidak mencakup proses web crawling mandiri untuk mengumpulkan dataset URL baru dari internet.
+Metode Deteksi: Deteksi phishing dibatasi hanya pada analisis fitur leksikal URL, seperti panjang string, karakter spesial, struktur domain. Penelitian ini tidak melakukan analisis konten halaman web, seperti struktur HTML, kode JavaScript, logo visual, atau DOM tree, maupun analisis jaringan (traffic analysis), demi menjaga performa real-time di sisi klien.
+Lingkungan Eksekusi Model: Model Machine Learning yang digunakan dilatih menggunakan bahasa pemrograman Python dengan library Scikit-learn, namun proses inferensi (prediksi) dijalankan sepenuhnya di lingkungan JavaScript pada ekstensi browser. Model tidak diperbarui (retrained) secara otomatis di sisi klien (online learning); pembaruan model dilakukan secara manual.
+Fungsionalitas Sistem: Sistem yang dibangun berfokus pada fungsi deteksi dan peringatan (detection and alerting). Jika sebuah URL terdeteksi sebagai phishing, sistem akan memblokir akses dan menampilkan halaman peringatan. Fitur mitigasi lanjutan seperti pelaporan otomatis (reporting) atau pemulihan akun tidak tercakup dalam sistem ini.
+Definisi Deteksi Zero-Day: Kemampuan deteksi serangan zero-day dalam penelitian ini terbatas pada identifikasi URL baru yang memiliki kemiripan pola fitur struktural dengan data latih. Sistem tidak menjamin deteksi terhadap varian serangan baru yang memiliki karakteristik fitur leksikal yang sepenuhnya berbeda dari dataset pelatihan.
+Jenis Serangan: Fokus deteksi adalah pada serangan phishing berbasis URL (deceptive URL). Jenis serangan siber lain seperti Man-in-the-Middle (MitM), malware injection tanpa URL phishing, atau DNS poisoning tidak termasuk dalam cakupan deteksi sistem ini.
+Pembaruan Model: Model yang diimplementasikan bersifat statis (pre-trained). Pembaruan pengetahuan model terhadap tren serangan baru bergantung pada mekanisme pembaruan versi ekstensi (extension update), bukan melalui sinkronisasi real-time ke server pusat.
+## Hipotesis Penelitian
+Berdasarkan tinjauan literatur mengenai keterbatasan metode deteksi server-side dan potensi Machine Learning pada lingkungan terbatas, hipotesis penelitian ini dirumuskan sebagai berikut:
+Efektivitas Arsitektur: Implementasi arsitektur deteksi mandiri (standalone) pada ekstensi browser dengan inferensi client-side diproyeksikan mampu mereduksi latensi deteksi secara signifikan (hingga di bawah 100ms) dibandingkan metode berbasis blacklist atau server-side API, karena mengeliminasi waktu perjalanan data jaringan (round-trip time) sepenuhnya.
+Keunggulan Fitur Leksikal: Ekstraksi dan penggunaan kombinasi fitur leksikal URL, seperti panjang hostname, entropi karakter, dan keberadaan keyword sensitif, diduga memiliki korelasi yang cukup kuat untuk mendeteksi pola serangan phishing modern, sehingga model dapat mencapai akurasi deteksi yang tinggi tanpa perlu membebani memori browser dengan pemrosesan konten halaman web (HTML parsing) yang berat.
+Kinerja Model (Ensemble Learning): Penggunaan algoritma berbasis Ensemble, seperti Random Forest, diperkirakan akan menghasilkan generalisasi yang lebih baik dan tingkat False Positive Rate (FPR) yang lebih rendah dibandingkan algoritma Decision Tree tunggal. Hal ini dikarenakan mekanisme agregasi keputusan pada ensemble mampu menangani variance pola URL phishing baru (zero-day) secara lebih stabil dalam lingkungan deteksi real-time.
+## Jadwal Penelitian
+Tabel 1.1 Jadwal Pelaksanaan Tugas Akhir
+
+
+
+# LANDASAN TEORI
+
+## Tinjaun Pustaka
+Beberapa penelitian terdahulu telah mengeksplorasi penggunaan algoritma klasifikasi seperti Random Forest, Support Vector Machine, dan XGBoost untuk mendeteksi URL berbahaya. Mayoritas studi berfokus pada akurasi deteksi sebagai metrik utama, dengan memanfaatkan fitur leksikal URL, fitur berbasis konten (HTML tags), dan fitur berbasis jaringan (DNS records). Namun, penilitian ini akan menekankan pentingnya keringanan dan efisiensi, dengan memindahkan proses deteksi dari server-side ke client-side guna menjaga privasi pengguna dan mengurangi waktu respon.
+Penelitian yang disebutkan di atas akan menjadi dasar perbandingan untuk penelitian ini, baik dari segi kelebihan maupun kelemahan metodologis. Berikut adalah daftar studi yang terkait dengan topik-topik yang relevan dengan penelitian ini...................................................
+Tabel 2.1 Ringkasan Penelitian Terdahulu
+
+## Landasan Teori
+### Phishing & Deteksi Phishing
+Phishing didefinisikan sebagai ancaman keamanan siber yang mengeksploitasi teknik psikologis dan social engineering yang canggih untuk memanipulasi individu agar melakukan tindakan tertentu, seperti mengklik tautan berbahaya atau menyerahkan informasi sensitif yang bernilai tinggi [13]. Informasi yang menjadi target utama serangan ini umumnya mencakup kredensial akun, data pribadi, atau informasi korporat. Meskipun secara teknis serangan phishing tidak selalu kompleks, dampaknya bisa signifikan, mulai dari pencurian identitas dan kerugian finansial, hingga kerusakan reputasi dan kebocoran data bagi organisasi yang mereknya ditiru.
+Dalam operasinya, serangan phishing melibatkan pembuatan situs web palsu yang dirancang menyerupai situs web entitas tepercaya (impersonation). Anatomi serangan ini ada beberapa tahap: penyerang membuat situs tiruan, menyebarkan tautan melalui saluran komunikasi (email, media sosial), dan mengelabui korban untuk mengaksesnya. Untuk meningkatkan tingkat keberhasilan, penyerang sering menggunakan teknik manipulasi URL seperti typosquatting (misalnya menulis "paymet" alih-alih "payment") atau menyisipkan karakter khusus untuk mengaburkan identitas asli situs tersebut [13].
+Terkait mitigasi ancaman ini, mekanisme deteksi situs phishing diklasifikasin ke dalam tiga kategori pendekatan utama [13]:
+Pendekatan Berbasis Daftar (List-based Approaches): Metode ini mengandalkan penggunaan blacklist dan whitelist. Blacklist merupakan mekanisme pertahanan dasar yang banyak digunakan pada browser web modern. Namun, kelemahan metode ini, yaitu sifatnya yang reaktif [13]. Blacklist sering kali gagal mendeteksi serangan zero-hour (serangan yang baru saja diluncurkan) karena adanya jeda waktu antara peluncuran situs phishing dan pembaruan basis data daftar hitam.
+Pendekatan Berbasis Kesamaan (Similarity-based Approaches): Metode ini mendeteksi phishing dengan membandingkan konten situs yang dicurigai dengan situs aslinya. Analisis dilakukan pada dua aspek: konten tekstual (seperti kode sumber HTML, CSS, dan struktur DOM) dan konten visual (tampilan halaman atau logo). Jika tingkat kesamaan visual atau struktural sangat tinggi namun domainnya berbeda, maka situs tersebut diklasifikasikan sebagai phishing.
+Pendekatan Berbasis Pembelajaran Mesin (Machine Learning-based Approaches): Pendekatan ini dipandang sebagai solusi yang lebih proaktif dan efektif untuk menangani serangan zero-hour. Metode ini bekerja dengan mengekstraksi fitur karakteristik dari situs web, baik dari properti URL (leksikal, statistik) maupun properti kode sumber (HTML, JavaScript) dan melatih model klasifikasi untuk membedakan antara situs sah dan situs phishing berdasarkan pola fitur tersebut [13].
+Penelitian ini secara spesifik akan berfokus pada pengembangan dalam kategori ketiga, yaitu pendekatan berbasis Machine Learning.
+
+######## Gambar 2.1 Model Phishing Deteksi Umum
+### Machine Learning untuk Deteksi URL
+Pendekatan Machine Learning dalam deteksi phishing pada dasarnya merupakan masalah supervised binary classification, di mana tujuan utamanya adalah memprediksi apakah sebuah URL masuk dalam kelas 'aman' (benign) atau 'berbahaya' (phishing) [14]. Berbeda dengan metode signature-based yang statis, ML memiliki kemampuan untuk menggeneralisasi pola dari training data untuk memprediksi data baru yang belum pernah dilihat sebelumnya.
+Divakaran dan Oest (2022) [14] memodelkan pipeline sistem deteksi berbasis ML ke dalam dua fase utama:
+Fase Pelatihan: Algoritma ML mempelajari pola diskriminatif dari dataset berlabel yang berisi ribuan sampel URL phishing dan benign. Proses ini menghasilkan model yang telah terlatih.
+Fase Inferensi: Model yang telah dilatih digunakan pada lingkungan operasional (seperti ekstensi browser) untuk menghitung probabilitas bahwa URL yang dikunjungi pengguna adalah phishing. Jika probabilitas melebihi threshold tertentu, akses ke situs tersebut akan diblokir.
+Kunci keberhasilan model ML terletak pada Feature Extraction. Dalam konteks deteksi berbasis URL, fitur yang diekstraksi umumnya adalah Fitur Leksikal. Fitur leksikal adalah properti statistik yang diperoleh langsung dari string URL tanpa perlu mengunduh konten halaman web tersebut. Pendekatan ini memiliki keunggulan signifikan dalam hal kecepatan dan keamanan privasi[10].
+Fitur leksikal yang umum digunakan meliputi:
+Fitur Berbasis Panjang: Panjang total URL, panjang nama domain, panjang direktori.
+Fitur Berbasis Karakter: Jumlah titik, tanda hubung, garis miring, atau karakter spesial lain yang sering digunakan penyerang untuk mengaburkan nama domain asli.
+Fitur Berbasis Kata: Keberadaan kata kunci sensitif (seperti "login", "secure", "bank") atau pola typosquatting pada URL.
+Tree-based algorithms seperti Random Forest dan XGBoost sangat efektif untuk klasifikasi fitur leksikal ini karena kemampuannya menangani hubungan non-linear antar fitur dan ketahanannya terhadap overfitting dibandingkan model linear sederhana [11].
+### Algoritma Random Forest
+Random Forest merupakan metode pembelajaran ensemble yang dikembangkan untuk meningkatkan akurasi klasifikasi dan mengatasi masalah overfitting yang sering terjadi pada Decision Tree tunggal. Secara fundamental, Random Forest didefinisikan sebagai kumpulan pengklasifikasi pohon (tree classifiers)  di mana setiap pohon tumbuh berdasarkan nilai vektor acak  yang didistribusikan secara independen dan identik untuk semua pohon dalam hutan [15].
+Mekanisme kerja algoritma ini didasarkan pada prinsip "kebijaksanaan orang banyak" (wisdom of crowds), di mana keputusan akhir diambil berdasarkan suara terbanyak (majority voting) dari seluruh pohon yang terbentuk. Breiman (2001) menjelaskan dua komponen utama yang menjadi kunci kinerja Random Forest:
+Bagging (Bootstrap Aggregating): Untuk setiap pohon yang dibangun, algoritma mengambil sampel acak dari data latih dengan pengembalian (replacement). Artinya, setiap pohon dilatih menggunakan subset data yang berbeda, yang meningkatkan keragaman (diversity) model.
+Seleksi Fitur Acak (Random Feature Selection): Alih-alih menggunakan seluruh fitur untuk memecah node (seperti pada pohon keputusan standar), Random Forest memilih sebagian kecil fitur secara acak pada setiap pembelahan node. Hal ini bertujuan untuk menurunkan korelasi antar-pohon. Batas atas kesalahan generalisasi (generalization error) bergantung pada dua parameter: kekuatan (strength) dari masing-masing pohon dan korelasi (correlation) di antara mereka. Kinerja optimal dicapai dengan meminimalkan korelasi sambil mempertahankan kekuatan prediksi pohon [15].
+Keunggulan utama Random Forest adalah kemampuannya untuk menangani data dengan dimensi tinggi, ketahanannya terhadap noise dan outlier, serta kemampuannya memberikan estimasi internal mengenai kesalahan generalisasi (out-of-bag error) yang tidak bias, sehingga meniadakan kebutuhan akan set validasi terpisah (cross-validation) dalam estimasi awal [15].
+Dalam konteks deteksi phishing, algoritma ini sangat relevan karena mampu menangani variasi fitur leksikal URL yang beragam tanpa mengalami penurunan performa yang signifikan akibat overfitting.
+### Algoritma XGBoost
+eXtreme Gradient Boosting (XGBoost) adalah implementasi yang dioptimalkan dari algoritma gradient tree boosting, yang dirancang untuk menjadi sangat efisien, fleksibel, dan portabel. Dikembangkan oleh Chen dan Guestrin (2016), XGBoost telah menjadi standar de facto dalam kompetisi data science karena kemampuannya menangani data skala besar dengan sumber daya yang minimal. Secara matematis, XGBoost menggunakan fungsi tujuan yang diregulasi (regularized objective function) untuk mengontrol kompleksitas model dan mencegah overfitting:
+
+di mana  . Di sini,  adalah fungsi kerugian (loss function) yang dapat didiferensiasi, adalah jumlah daun dalam pohon, dan  adalah bobot pada daun. Penambahan suku regularisasi  ini membedakan XGBoost dari Gradient Boosting Machine (GBM) konvensional, karena mendorong model untuk memilih struktur pohon yang lebih sederhana namun prediktif [16].
+Fitur kunci lain dari XGBoost yang dijelaskan meliputi:
+Algoritma Sadar Sparsitas (Sparsity-aware Split Finding): XGBoost secara otomatis mempelajari arah default untuk menangani nilai yang hilang (missing values) atau data jarang (sparse data). Hal ini sangat relevan untuk dataset phishing yang sering kali memiliki fitur yang tidak lengkap atau jarang muncul [16].
+Perhitungan Paralel dan Terdistribusi: XGBoost menggunakan struktur blok kolom (column block structure) yang memungkinkan komputasi paralel selama proses pelatihan, mempercepat waktu inferensi dan pelatihan secara signifikan dibandingkan implementasi GBM lainnya [16].
+Weighted Quantile Sketch: Untuk menangani data berbobot (weighted data) secara efisien, XGBoost menggunakan algoritma sketsa kuantil yang memungkinkan penemuan titik pemisah (split points) yang optimal pada data berskala besar [16].
+Dalam penelitian ini, XGBoost dipilih sebagai pembanding utama Random Forest karena efisiensinya dalam menangani fitur leksikal dan kemampuannya untuk menghasilkan model yang sangat akurat dengan waktu pelatihan yang cepat.
+### Fitur Leksikal URL
+Fitur leksikal (lexical features) didefinisikan sebagai properti statistik dan struktural yang diekstraksi secara langsung dari string Uniform Resource Locator (URL) tanpa memerlukan akses ke konten halaman web atau koneksi ke pihak ketiga [13]. Pendekatan ini berfokus pada analisis teks URL yang meliputi nama host, jalur (path), dan query string. Keunggulan utama penggunaan fitur leksikal adalah efisiensi waktu komputasi yang rendah dan keamanan privasi, karena sistem tidak perlu mengunduh konten halaman yang berpotensi berbahaya (malicious payload) [8].
+Fitur leksikal yang umum digunakan dalam deteksi phishing dikategorikan menjadi empat kelompok utama [10], [11], [12]:
+Fitur Berbasis Panjang (Length-based Features): Situs phishing cenderung memiliki struktur URL yang lebih panjang untuk menyembunyikan domain asli atau menyisipkan kata kunci palsu.
+Panjang URL: Total karakter dalam URL. Sankaranarayanan et al. (2024) mencatat bahwa peretas sering menggunakan URL panjang untuk mengaburkan address bar pada perangkat mobile.
+Panjang Domain: Jumlah karakter pada nama domain utama.
+Panjang Direktori/Path: Kedalaman struktur folder dalam URL.
+Fitur Berbasis Karakter (Character-based Features): Analisis keberadaan karakter khusus yang jarang ditemukan pada situs benign namun sering dimanipulasi oleh penyerang.
+Jumlah Titik (.): Digunakan untuk membuat subdomain bertingkat (misal: paypal.com.secure-login.com). Gupta et al. (2021) menemukan korelasi tinggi antara jumlah titik yang banyak dengan situs phishing.
+Simbol At (@): Karakter ini menyebabkan browser mengabaikan teks sebelumnya dan mengarahkan ke alamat setelahnya [12].
+Tanda Hubung (-): Sering digunakan dalam teknik typosquatting untuk meniru nama domain asli (misal: face-book.com).
+Karakter Lain: Keberadaan garis miring ganda (//) di luar protokol, persen (%), dan garis bawah (_).
+Fitur Berbasis Anomali (Anomaly-based Features): Fitur ini mendeteksi pola yang tidak lazim dalam struktur URL standar.
+Alamat IP sebagai Domain: Penggunaan alamat IP (misal: http://192.168.1.1/login) alih-alih nama domain adalah indikator kuat phishing [12].
+Layanan Pemendek URL (Shortening Services): Penggunaan layanan seperti bit.ly atau tinyurl untuk menyembunyikan tujuan asli tautan [11].
+Ketiadaan HTTPS: Meskipun banyak situs phishing kini menggunakan HTTPS, ketiadaan protokol ini pada situs yang meminta data sensitif tetap menjadi indikator risiko [10].
+Fitur Berbasis Kata Kunci (Keyword-based Features): Keberadaan kata-kata sensitif yang sering digunakan untuk rekayasa sosial, seperti "login", "signin", "verify", "account", "update", atau "bank" dalam string URL [11].
+Penggunaan kombinasi fitur-fitur leksikal ini memungkinkan model Machine Learning untuk mengidentifikasi pola manipulasi URL dengan akurasi tinggi tanpa membebani sumber daya komputasi perangkat pengguna.
+### Evaluasi Kinerja Model Klasifikasi
+Evaluasi kinerja merupakan tahap krusial untuk mengukur kemampuan generalisasi model Machine Learning terhadap data yang belum pernah dilihat sebelumnya. Pemilihan metrik evaluasi harus disesuaikan dengan karakteristik dataset, terutama pada kasus ketidakseimbangan kelas (class imbalance) di mana metrik akurasi semata dapat memberikan interpretasi yang menyesatkan [17].
+Dalam penelitian ini, evaluasi didasarkan pada Confusion Matrix, sebuah tabel representasi yang membandingkan prediksi model dengan kebenaran dasar (ground truth). Komponen utama matriks ini meliputi:
+True Positive (TP): URL phishing yang diprediksi dengan benar sebagai phishing.
+True Negative (TN): URL aman yang diprediksi dengan benar sebagai aman.
+False Positive (FP): URL aman yang salah diprediksi sebagai phishing (Kesalahan Tipe I).
+False Negative (FN): URL phishing yang salah diprediksi sebagai aman (Kesalahan Tipe II).
+Berdasarkan komponen tersebut, kinerja model diukur menggunakan metrik berikut [17]:
+Akurasi (Accuracy): Rasio total prediksi benar terhadap keseluruhan data.
+
+Presisi (Precision): Proporsi prediksi positif yang benar-benar positif. Metrik ini penting untuk meminimalkan False Positive agar pengguna tidak terganggu oleh peringatan palsu.
+
+Recall (Sensitivitas): Kemampuan model untuk mendeteksi seluruh sampel positif. Dalam konteks keamanan siber, Recall yang tinggi sangat krusial untuk memastikan tidak ada serangan phishing yang lolos (False Negative).
+
+F1-Score: Rata-rata harmonik antara Precision dan Recall. Metrik ini memberikan gambaran yang lebih seimbang tentang kinerja model pada dataset yang tidak seimbang dibandingkan dengan akurasi.
+
+
+Matriks berikut memungkinkan perhitungan metrik model kunci seperti sensitivitas/recall, spesifisitas, presisi, dan akurasi.
+
+######## Gambar 2.2 Confusion Matrix
+### Open Neural Network Exchange (ONNX)
+Open Neural Network Exchange (ONNX) adalah sebuah format standar terbuka yang dirancang untuk menjembatani kesenjangan interoperabilitas antar berbagai kerangka kerja (framework) Machine Learning dan Deep Learning [19]. Inisiatif sumber terbuka ini memungkinkan model kecerdasan buatan yang dilatih pada satu ekosistem (misalnya PyTorch atau TensorFlow) untuk ditransfer dan dijalankan pada ekosistem lain tanpa perlu pelatihan ulang atau reimplementasi kode yang kompleks. Secara teknis, ONNX mendefinisikan model grafik komputasi yang dapat diperluas (extensible computation graph model), operator bawaan, dan tipe data standar, yang menjamin konsistensi representasi model lintas platform.
+Dalam konteks pengembangan aplikasi berbasis web dan mobile, ONNX memainkan peran krusial melalui ONNX Runtime, sebuah mesin inferensi berkinerja tinggi yang dikembangkan oleh Microsoft. ONNX Runtime memungkinkan model yang telah dilatih (misalnya dalam format .pkl atau .h5 dari Python) untuk dieksekusi secara efisien di berbagai lingkungan, termasuk browser  web dan perangkat edge dengan sumber daya terbatas [19].
+Keunggulan utama penggunaan ONNX dalam arsitektur sistem deteksi berbasis klien meliputi:
+Portabilitas Model: Memfasilitasi penerapan (deployment) model ML ke lingkungan JavaScript (seperti ekstensi browser) tanpa ketergantungan pada backend Python.
+Optimasi Kinerja: ONNX Runtime mendukung akselerasi perangkat keras tingkat lanjut dan teknik optimasi inferensi yang dapat meningkatkan throughput dan mengurangi latensi secara signifikan.
+Interoperabilitas: Memungkinkan fleksibilitas dalam pemilihan framework pelatihan (misalnya scikit-learn atau XGBoost) sambil tetap mempertahankan kompatibilitas eksekusi di sisi klien.
+Implementasi ONNX dalam penelitian ini bertujuan untuk mengonversi model klasifikasi Random Forest dan XGBoost yang dilatih di lingkungan Python menjadi format yang dapat dijalankan secara mandiri (standalone) oleh ekstensi Google Chrome, sehingga mendukung arsitektur deteksi real-time yang menjaga privasi pengguna.
+### Arsitektur Ekstensi Browser (Manifest V3)
+Ekstensi browser Google Chrome dibangun berdasarkan standar konfigurasi yang disebut Manifest. Saat ini, ekosistem ekstensi sedang dalam masa transisi wajib menuju jadi Manifest V3, arsitektur yang baru yang dirancang untuk meningkatkan privasi, keamanan, dan kinerja browser [20].
+Terdapat beberapa perubahan fundamental dalam Manifest V3 yang mempengaruhi cara kerja ekstensi deteksi keamanan [20]:
+Service Workers: Menggantikan background pages yang persisten. Service workers bersifat event-driven (berjalan hanya saat dibutuhkan) dan ephemeral (berhenti saat tidak aktif), yang mengurangi penggunaan memori pengguna secara signifikan namun memerlukan penanganan state yang berbeda dalam pemrograman [20].
+Larangan Kode Eksternal (Remotely Hosted Code): Manifest V3 melarang eksekusi kode JavaScript yang diunduh dari server eksternal (seperti CDN). Semua logika deteksi harus dibundel di dalam paket ekstensi [20]. Hal ini memaksa model Machine Learning untuk dijalankan secara lokal (client-side), yang selaras dengan arsitektur yang diusulkan dalam penelitian ini.
+Keamanan API: Beberapa API yang rentan disalahgunakan, seperti eval(), telah dihapus atau dibatasi penggunaannya untuk mencegah serangan injeksi kode [20].
+Implementasi ekstensi dalam penelitian ini akan mematuhi spesifikasi Manifest V3 dengan menjalankan inferensi model ML di lingkungan Service Worker atau Content Script yang aman.
+
+
+
+
+
+
+
+# METODE PENELITIAN
+
+Pada pembahasan metode penelitian akan dipaparkan secara berurutan mengenai Subjek dan Objek Penelitian.
+## Subjek dan Objek Penelitian
+Subjek Penelitian: Subjek utama dalam penelitian ini adalah data URL (Uniform Resource Locator) yang dikategorikan ke dalam kelas phishing dan legitimate. Data ini merupakan entitas yang akan diproses, dipelajari polanya, dan diklasifikasikan oleh sistem.
+Objek Penelitian: Tingkat akurasi dan efisiensi komputasi dari model Machine Learning (khususnya algoritma Random Forest dan XGBoost) yang diimplementasikan pada arsitektur ekstensi browser Google Chrome secara client-side. Aspek spesifik yang diamati meliputi:
+Akurasi Klasifikasi: Kemampuan model Machine Learning (Random Forest dan XGBoost) dalam mengidentifikasi pola URL berbahaya secara tepat.
+Kinerja model klasifikasi yang diukur berdasarkan metrik Accuracy, Precision, Recall, dan F1-Score.
+Kinerja Komputasi Client-Side: Efisiensi waktu inferensi (latency) dan penggunaan sumber daya saat model dijalankan pada lingkungan ekstensi browser.
+## Alat dan Bahan Penelitian
+### Alat Penelitian
+Alat penelitian yang digunakan untuk mendukung seluruh tahapan penelitian, mulai dari pra-pemrosesan data, pelatihan model, hingga pengembangan dan pengujian ekstensi browser adalah sebagai berikut:
+A. Perangkat Keras (Hardware):
+Prosesor : AMD Ryzen 5 2600
+Memori : 32 GB DDR4
+Penyimpanan: 4.5 TB (2.5 TB HDD, 2 TB SSD)
+GPU: RX 6600 8 GB
+B. Perangkat Lunak (Software) Perangkat lunak yang digunakan meliputi sistem operasi, bahasa pemrograman, dan library pendukung:
+Sistem Operasi: Windows 10
+Bahasa Pemrograman:
+Python (v3.9+)
+JavaScript (ES6+)
+HTML5 & CSS3
+IDE: Visual Studio Code
+Library & Framework:
+scikit-learn: Implementasi algoritma Random Forest dan metrik evaluasi.
+xgboost: Implementasi algoritma XGBoost.
+pandas & numpy: Manipulasi dan analisis data tabular.
+skl2onnx: Untuk mengonversi model Python menjadi format yang dapat dieksekusi oleh JavaScript di browser.
+Browser Web: Google Chrome
+
+### Bahan Penelitian
+Penelitian ini menggunakan data sekunder yang diperoleh dari repositori publik terpercaya.
+1. Data Sekunder: Dataset utama yang digunakan adalah "Phishing URL Dataset" yang dipublikasikan oleh Jishnu & Arthi pada tahun 2024 melalui repositori Mendeley Data. Dataset ini dipilih karena relevansinya terhadap pola serangan phishing terkini. Karakteristik dataset tersebut adalah:
+Volume Data: 450.176 baris data URL.
+Distribusi Kelas:
+URL Phishing: 104.438 sampel.
+URL Legitimate (Aman): 345.738 sampel.
+Atribut: Data mentah hanya terdiri dari string URL dan label kelas (binary class), yang kemudian akan diekstraksi menjadi fitur-fitur leksikal numerik selama tahap pra-pemrosesan.
+Data ini akan dibagi dengan rasio 80:20, di mana 80% data digunakan untuk pelatihan (training set) dan 20% data digunakan untuk pengujian (testing set) untuk mengukur kinerja model.
+
+## Diagram Alir Penelitian
+
+######## Gambar 3.1 Diagram Alir Penelitian
+### Identifikasi Masalah dan Studi Literatur
+Tahap awal penelitian akan dimulai dengan belajar keterbatasan metode berbasis blacklist dalam menangani serangan zero-day secara real-time. Studi literatur dilakukan untuk mempelajari penelitian terdahulu terkait algoritma Random Forest, XGBoost, fitur leksikal URL, serta arsitektur ekstensi browser Manifest V3.
+### Pengumpulan Dataset URL
+Tahap pengumpulan data merupakan langkah awal untuk mendapatkan bahan latih bagi model Machine Learning. Penelitian ini menggunakan dataset sekunder "Phishing URL Dataset"[6] yang diunduh dari repositori Mendeley Data. Dataset ini dipilih karena memuat URL terkini yang mencerminkan pola serangan modern. Total data berjumlah 450.176 baris yang terdiri dari dua kelas kategori:
+Legitimate (Aman): 345.738 sampel URL.
+Phishing (Berbahaya): 104.438 sampel URL.
+### Pra-pemrosesan Data (Data Preprocessing)
+Sebelum dilakukan ekstraksi fitur, data mentah dibersihkan dan disiapkan melalui tahapan berikut:
+Pembersihan Data (Data Cleaning): Memeriksa dan menghapus baris data yang memiliki nilai kosong (null) atau duplikasi entri untuk menjaga kualitas pelatihan.
+Label Encoding: Mengonversi label kelas kategori menjadi format numerik biner agar dapat diproses oleh algoritma, di mana kelas Legitimate diberi label 0 dan kelas Phishing diberi label 1.
+Penyeimbangan Data: Adanya ketidakseimbangan distribusi kelas antara Legitimate dan Phishing (rasio ~3.3:1), dilakukan teknik Undersampling pada kelas mayoritas (Legitimate). Sejumlah data acak dari kelas Legitimate akan diambil hingga jumlahnya setara dengan kelas Phishing (104.438 sampel). Metode ini dipilih karena jumlah sampel kelas minoritas sudah cukup representatif (data > 100.000) untuk pembelajaran model, sehingga penambahan data sintetis (SMOTE) tidak diperlukan dan undersampling akan meningkatkan efisiensi waktu pelatihan.
+### Ekstraksi Fitur Leksikal (Feature Engineering)
+Karena model Machine Learning tidak dapat memproses teks mentah (string URL) secara langsung, dilakukan proses ekstraksi fitur untuk mengubah URL menjadi representasi vektor numerik. Berdasarkan landasan teori, fitur yang diekstraksi difokuskan pada fitur leksikal/struktural yang ringan secara komputasi.
+Sebanyak 9 (sembilan) fitur utama diekstraksi dari setiap URL:
+URL Length: Panjang total karakter dalam URL.
+Dot Count: Jumlah karakter titik (.) dalam URL (indikasi subdomain bertingkat).
+Slash Count: Jumlah garis miring (/) untuk mengukur kedalaman direktori.
+Dash Count: Jumlah tanda hubung (-) yang sering digunakan pada teknik typosquatting.
+At Count: Keberadaan simbol @ yang digunakan untuk mengaburkan authority URL.
+Digit Ratio: Rasio jumlah angka terhadap total karakter dalam URL.
+Shannon Entropy: Mengukur tingkat keacakan karakter dalam URL (URL phishing yang dihasilkan secara otomatis cenderung memiliki entropi tinggi).
+Common TLD: Variabel biner yang menandakan apakah TLD termasuk umum (seperti .com, .org, .net) atau tidak.
+Subdomain Level: Tingkat kedalaman subdomain.
+Selain fitur struktural, teknik tokenisasi berbasis frekuensi (TF-IDF) juga dipertimbangkan sebagai fitur tambahan untuk menangkap pola kata kunci tertentu, dengan tetap memperhatikan batasan memori pada sisi klien.
+### Pembagian Data (Data Splitting)
+Untuk mengevaluasi kinerja model secara objektif, dataset yang telah melalui tahap ekstraksi fitur dibagi menjadi dua bagian menggunakan metode Hold-out. Teknik ini digunakan untuk memastikan proporsi kelas phishing dan legitimate pada data latih dan data uji tetap seimbang sesuai populasi aslinya.
+Data Latih (Training Set): 80% dari total data, digunakan untuk melatih model mengenali pola.
+Data Uji (Testing Set): 20% dari total data, digunakan untuk mengukur kinerja model terhadap data yang belum pernah dilihat sebelumnya (unseen data).
+### Pelatihan Model (Model Training)
+Tahap pelatihan dilakukan di lingkungan Python menggunakan pustaka scikit-learn. Dua algoritma klasifikasi dilatih dan dibandingkan kinerjanya:
+Random Forest Classifier: Dilatih dengan parameter n_estimators (jumlah pohon) yang disesuaikan untuk menyeimbangkan akurasi dan ukuran file model akhir. Algoritma ini dipilih karena ketahanannya terhadap overfitting dan kemampuan menangani data non-linear.
+XGBoost Classifier: Dilatih sebagai model pembanding untuk melihat apakah teknik boosting dapat memberikan akurasi yang lebih tinggi atau ukuran model yang lebih efisien dibandingkan bagging (Random Forest).
+### Evaluasi Model
+Model yang telah dilatih dievaluasi menggunakan Data Uji berdasarkan Confusion Matrix. Metrik kinerja yang diukur meliputi:
+Akurasi (Accuracy): Tingkat kebenaran prediksi secara keseluruhan.
+Presisi (Precision): Tingkat ketepatan prediksi positif (meminimalkan False Positive).
+Recall (Sensitivitas): Kemampuan model mendeteksi seluruh serangan phishing (meminimalkan False Negative).
+F1-Score: Rata-rata harmonis presisi dan recall.
+Kriteria keberhasilan pelatihan ditetapkan apabila model mencapai F1-Score di atas 90%. Jika hasil di bawah target, dilakukan iterasi ulang pada tahap Hyperparameter Tuning atau rekayasa fitur.
+
+### Konversi Model ke Format Web
+Agar model dapat dijalankan di lingkungan peramban (browser) tanpa bergantung pada backend Python, model terbaik yang dihasilkan (format .pkl) dikonversi ke format ONNX (Open Neural Network Exchange) menggunakan pustaka skl2onnx. Proses ini menghasilkan dua luaran (output) utama:
+File model phishing model.onnx: Representasi biner dari model yang telah dilatih.
+File metadata (JSON): Menyimpan parameter pendukung seperti vocabulary TF-IDF atau nilai normalisasi yang diperlukan untuk pra-pemrosesan di sisi klien.
+### Pengembangan Ekstensi Browser
+Arsitektur sistem yang dibangun dirancang untuk beroperasi secara mandiri (standalone) tanpa memerlukan komunikasi dengan server backend eksternal untuk proses deteksi. Rancangan arsitektur sistem secara keseluruhan dapat dilihat pada berikut:
+
+
+######## Gambar 3.2 Arsitektur Chrome Extension Phishing Detector
+Komponen utama penyusun ekstensi terdiri dari:
+manifest.json: Berkas konfigurasi utama dalam format JSON yang mendefinisikan metadata ekstensi, izin akses (permissions) seperti activeTab dan storage, serta deklarasi aset yang digunakan.
+Background Service Worker (background.js): Komponen inti yang berjalan di latar belakang secara event-driven. Skrip ini bertugas memantau kejadian navigasi tab (browser navigation events), memuat runtime inferensi (ONNX), dan menjalankan logika deteksi utama saat pengguna membuka URL baru. Service Worker bersifat ephemeral (berhenti saat tidak aktif) untuk menghemat memori.
+Content Script (content.js): Skrip JavaScript yang disuntikkan langsung ke dalam halaman web yang sedang diakses pengguna. Komponen ini berfungsi sebagai jembatan komunikasi antara halaman web dengan ekstensi, serta bertugas memanipulasi DOM (Document Object Model) untuk menampilkan peringatan (warning banner) jika website suspicious atau melakukan pengalihan (redirect) jika URL terdeteksi phishing.
+Popup Interface (popup.html/js): Antarmuka pengguna berbasis HTML/CSS/JS yang muncul saat ikon ekstensi diklik. Melalui antarmuka ini, pengguna dapat melihat status keamanan situs saat ini, melakukan pemindaian manual, atau mengelola pengaturan whitelist.
+Model Resources: Direktori yang menyimpan berkas model phishing_model.onnx dan metadata pendukung lainnya yang dikemas di dalam paket ekstensi, memastikan ketersediaan model secara lokal.
+Diagram Sekuensial berikut memperjelas alur interaksi antar-komponen tersebut saat sistem melakukan deteksi URL secara real-time.
+
+######## Gambar 3.3 Sequence Diagram Chrome Extension Phishing Detector
+Alur proses deteksi berjalan sebagai berikut:
+Inisiasi: Saat pengguna mengunjungi sebuah URL, browser memicu event navigasi yang ditangkap oleh Service Worker.
+Pengecekan Whitelist: Sistem terlebih dahulu memeriksa apakah domain tersebut ada di dalam penyimpanan lokal (Local Storage) daftar aman (whitelist). Jika ada, proses dihentikan (bypass).
+Ekstraksi & Inferensi: Jika tidak ada di whitelist, Service Worker melakukan ekstraksi fitur leksikal dari string URL, kemudian mengirimkan vektor fitur tersebut ke ONNX Runtime untuk diprediksi.
+Aksi (Mitigasi): Berdasarkan skor probabilitas dari model:
+Jika skor > 80% (High Confidence), sistem memuat halaman blokir (blocked.html).
+Jika skor 60-80% (Suspicious), sistem menyuntikkan Content Script untuk menampilkan banner peringatan.
+Jika skor < 60% (Safe), sistem tidak melakukan intervensi.
+### Integrasi Model Client-Side
+Library ONNX Runtime Web (ort-wasm) diintegrasikan ke dalam ekstensi untuk memuat model onnx. Tantangan teknis utama pada tahap ini adalah melakukan replikasi logika ekstraksi fitur. Logika ekstraksi fitur yang sebelumnya ditulis dalam Python (pada tahap 3.3.4) ditulis ulang sepenuhnya ke dalam bahasa JavaScript agar ekstensi mampu mengubah URL yang sedang diakses pengguna menjadi vektor numerik yang siap diprediksi oleh model ONNX.
+### Pengujian Sistem
+Setelah integrasi selesai, dilakukan pengujian sistem secara menyeluruh:
+Pengujian Fungsional (Black-box Testing): Menguji fitur-fitur ekstensi seperti deteksi otomatis, fitur whitelist, dan tampilan halaman blokir (blocked page) menggunakan sampel URL phishing aktif dari PhishTank.
+Pengujian Kinerja Sistem: Pengujian ini untuk membuktikan klaim "ringan" dan "real-time" pada proposal. Pengujian dilakukan menggunakan Chrome DevTools Performance Profiler.
+Tabel 3.1 Rencana Pengujian Kinerja (Performance Testing)
+Pengujian Model Machine Learning
+
+Tabel 3.2 Rencana Pengujian Kinerja Model
+Model Benchmarking
+Pengujian kinerja dilakukan secara komparatif antara lingkungan pelatihan (Python) dan lingkungan penerapan (Web/ONNX).
+Tabel 3.3 Hasil Pengujian Performa dan Efisiensi Model
+### Analisis Hasil dan Pembahasan
+Pada tahap akhir, data dari hasil eksperimen pelatihan model dan pengujian sistem dikumpulkan. Analisis dilakukan secara komparatif untuk menjawab rumusan masalah:
+Membandingkan kinerja statistik (Akurasi, F1-Score) antara model Random Forest dan XGBoost.
+Menganalisis trade-off antara kompleksitas model dengan waktu inferensi di browser.
+Mengevaluasi keberhasilan arsitektur client-side dalam menjaga privasi dan kecepatan deteksi.
+
+...............................................................................
+# DAFTAR PUSTAKA
+
+[1] Anti-Phishing Working Group. 2025. "Recapping the APWG Phishing Activity Trends Report from Q1 2025". [Online]. Tersedia: https://www.fortra.com/blog/recapping-apwg-phishing-activity-trends-report-q1-2025. [Diakses: 25 November 2025].
+[2] Lim, J., et al. 2025. "7 Days Later: Analyzing Phishing-Site Lifespan After Detected". Proceedings of the ACM Web Conference 2025.
+[3] Fajar, A., Yazid, S., & Budi, I. 2024. "Enhancing Phishing Detection through Feature Importance Analysis and Explainable AI: A Comparative Study of CatBoost, XGBoost, and EBM Models". arXiv preprint arXiv:2411.06860.
+[4] Khalifar, S., et al. 2024. "Adapting to Cyber Threats: A Phishing Evolution Network (PEN) Framework for Phishing Generation and Analyzing Evolution Patterns using Large Language Models". arXiv preprint arXiv:2411.11389.
+[5] VenkataSaiMounika, P., et al. 2023. "Chrome Extension for Detecting Phishing Websites". International Journal of Research in Engineering and Science (IJRES).
+[6] Jishnu, K. S., & Arthi, B. 2024. "Phishing URL dataset". Mendeley Data, V1. doi: 10.17632/vfszbj9b36.1.
+[7] Ovi, M. S. I., Rahman, M. H., & Hossain, M. A. 2024. "PhishGuard: A Multi-Layered Ensemble Model for Optimal Phishing Website Detection". arXiv preprint arXiv:2409.19825.
+[8] Gupta, B. B., et al. 2021. "A novel approach for phishing URLs detection using lexical based machine learning in a real-time environment". Computer Communications, 175, 47-57.
+[9] Arun, A., & Abosata, N. 2024. "Next Generation of Phishing Attacks using AI powered Browsers". 2024 IEEE International Conference.
+[10] Raja, A. S., Vinodini, R., & Kavitha, A. 2021. "Lexical features based malicious URL detection using machine learning techniques". Materials Today: Proceedings.
+[11] Sankaranarayanan, S., et al. 2024. "An ensemble classification method based on machine learning models for malicious Uniform Resource Locators (URL)". PLOS ONE, 19(5), e0302196.
+[12] Thaçi, L., Halili, A., Vishi, K., & Rexha, B. 2024. "Efficient Chrome Extension for Phishing Detection Using Machine Learning Techniques". arXiv preprint arXiv:2409.10547.
+[13] Zieni, R., Massari, L., & Calzarossa, M. C. 2023. "Phishing or Not Phishing? A Survey on the Detection of Phishing Websites". IEEE Access, 11, 18499-18519. doi: 10.1109/ACCESS.2023.3247135.
+[14] Divakaran, D. M., & Oest, A. 2022. "Phishing Detection Leveraging Machine Learning and Deep Learning: A Review". IEEE Security & Privacy, 20(4).
+[15] Breiman, L. 2001. "Random Forests". Machine Learning, 45(1), 5-32.
+[16] Chen, T., & Guestrin, C. 2016. "XGBoost: A Scalable Tree Boosting System". Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining, 785-794.
+[17] Cabot, J. H., & Ross, E. G. 2023. "Evaluating Prediction Model Performance". Surgery, 174(3), 723-726.
+[18] Vijaykumar, et al. 2025. "Automated Phishing Detection Through URL Analysis and Machine Learning". Communications on Applied Nonlinear Analysis, 32(6s), 151-159.
+[19] Chia, A. 2024. "What is Open Neural Network Exchange (ONNX)?". Splunk Learn. [Online]. Tersedia: https://www.splunk.com/en_us/blog/learn/open-neural-network-exchange-onnx.html. [Diakses: 09 Desember 2025].
+[20] Pantelaios, N., & Kapravelos, A. 2024. "Work-in-Progress: Manifest V3 Unveiled: Navigating the New Era of Browser Extensions". Workshop on Measurements, Attacks, and Defenses for the Web (MADWeb) 2024.
+[21] Zhuo, S., Biddle, R., Koh, Y. S., Lottridge, D., & Russello, G. 2022. "SoK: Human-Centered Phishing Susceptibility". arXiv preprint arXiv:2202.07905.
+[22] StatCounter. 2025. "Browser Market Share Worldwide - Nov 2024 to Nov 2025". StatCounter Global Stats. [Online]. Tersedia: https://gs.statcounter.com/browser-market-share. [Diakses: 22 Desember 2025].
+
+
+
+
+
+
+
+
+
+
+
+
+--- TABLE 1 ---
+Pembimbing I,  |    |     |  | M. Agung Nugroho, S.Kom., M.Kom  | NIP: 25850001 |  |  | Pembimbing II,  |    |    |     | Rakhmad Maulidi, M.Kom.​ | NIP: 25820002
+Penguji I,  |    |    |  | Trihastuti Yuniati, S.Kom., M.T. | NIP: 22890004 |  |  | 
+ |  |  | 
+--- END TABLE ---
+
+
+--- TABLE 2 ---
+ |  | Purwokerto, 25/12/2025 | Yang menyatakan |  | Materai 10.000 |  | Maulana Ibrahim Tirtodiningrat | NIM: 2211102226
+--- END TABLE ---
+
+
+--- TABLE 3 ---
+
+--- END TABLE ---
+
+
+--- TABLE 4 ---
+No. | Deskripsi Tahapan | Bulan 1 | Bulan 2 | Bulan 3 | Bulan 4 | Bulan 5 | Bulan 6
+1 | Studi Literatur dan Investigasi Dataset |  |  |  |  |  | 
+2 | Pra-pemrosesan dan Rekayasa Fitur (Feature Engineering) |  |  |  |  |  | 
+3 | Pelatihan dan Evaluasi Model ML (Python Environment) |  |  |  |  |  | 
+4 | Pengembangan Ekstensi Browser dan Konversi Model |  |  |  |  |  | 
+5 | Pengujian Sistem, Analisis Latency dan Validasi Akhir |  |  |  |  |  | 
+6 | Penyusunan Laporan Akhir, Revisi, dan Publikasi |  |  |  |  |  | 
+--- END TABLE ---
+
+
+--- TABLE 5 ---
+No. | Judul dan Tahun | Pembahasan | Metode | Kelebihan dan Kekurangan | Perbedaan Penelitian
+1 | Efficient Chrome Extension for Phishing Detection Using Machine Learning Techniques (2024) [12] | Mengembangkan ekstensi Chrome "NoPhish" menggunakan algoritma Random Forest dengan 22 fitur leksikal. Menggunakan arsitektur Client-Server lokal. | Random Forest, Browser Extension | Kelebihan: Membuktikan Random Forest memiliki presisi terbaik dibanding SVM/kNN untuk ekstensi. |  |  |  |  |  | Kekurangan: Arsitektur bergantung pada web server lokal (Python) untuk inferensi, tidak murni standalone di browser. | Penelitian ini mengusulkan arsitektur sepenuhnya client-side (tanpa server backend lokal), di mana model ML dikonversi agar dapat berjalan langsung di lingkungan JavaScript browser.
+2 | 7 Days Later: Analyzing Phishing-Site Lifespan After Detected (2025) [2] | Menganalisis siklus hidup situs phishing dan efektivitas deteksi blacklist. Menemukan bahwa median waktu hidup situs phishing hanya 5,46 jam, jauh lebih cepat daripada waktu deteksi blacklist rata-rata. | Analisis Statistik, High-frequency Monitoring | Kelebihan: Memberikan bukti empiris kuat mengenai kegagalan metode blacklist terhadap serangan cepat. | Kekurangan: Fokus pada analisis fenomena, bukan pengembangan solusi deteksi real-time. | Penelitian ini tidak hanya menganalisis masalah latensi deteksi, tetapi mengusulkan solusi konkrit berupa ekstensi deteksi mandiri untuk menutup celah waktu tersebut.
+3 | An ensemble classification method based on machine learning models for malicious URL (2024) [11] | Mengembangkan model Stacking Ensemble yang menggabungkan 4 algoritma (RF, XGBoost, LightGBM, CatBoost) menggunakan fitur leksikal pada dataset besar (651k URL). | Stacking Ensemble, Fitur Leksikal | Kelebihan: Validasi kuat bahwa fitur leksikal efektif (akurasi 96.8%) pada dataset skala besar. |  |  |  |  |  | Kekurangan: Model Stacking 4 algoritma sangat berat secara komputasi (computationally expensive) untuk dijalankan di browser. | Penelitian ini menyederhanakan kompleksitas tersebut dengan mencari model tunggal/ringan yang tetap akurat namun jauh lebih efisien untuk arsitektur standalone.
+4 | Adapting to Cyber Threats: A Phishing Evolution Network (PEN) Framework(2024) [4] | Analisis pola evolusi serangan phishing menggunakan LLM untuk mengantisipasi varian serangan baru. | LLM, Evolution Network | Kelebihan: Pendekatan proaktif memprediksi evolusi serangan. |  |  |  |  |  | Kekurangan: Komputasi sangat berat, sulit dijalankan lokal di browser. | Penelitian ini mengadopsi pemahaman tentang pola evolusi serangan namun menerapkannya menggunakan fitur leksikal ringan agar dapat berjalan efisien di ekstensi browser tanpa membebani memori.
+5 | Chrome Extension for Detecting Phishing Websites (2023) [5] | Membahas pengembangan plugin deteksi dengan fokus pada integrasi sistem deteksi ke dalam alur kerja pengguna sehari-hari. | Machine Learning, Browser extnsion | Kelebihan: Menunjukkan arsitektur integrasi yang baik dengan browser. |  |  |  |  |  | Kekurangan: Masih bergantung pada validasi server eksternal untuk beberapa komponen, menimbulkan isu privasi. | Penelitian ini merancang arsitektur yang sepenuhnya standalone (mandiri), di mana proses inferensi terjadi 100% di sisi klien untuk menjamin privasi data pengguna.
+6 | Next Generation of Phishing Attacks using AI powered Browsers (2024) [9] | Mengembangkan ekstensi browser real-time untuk deteksi serangan zero-day. Studi ini membandingkan beberapa algoritma dan menemukan bahwa Random Forest paling efektif. | Random Forest, SVM, XGBoost, Browser Extension | Kelebihan: Deteksi zero-day akurat (99.11%) dan mengungguli Google Safe Browsing. |  |  |  |  |  | Kekurangan: Fokus pada akurasi, belum mendalami optimasi beban memori sisi klien. | Penelitian ini fokus pada optimasi waktu inferensi dan penggunaan memori di sisi klien dengan dataset terbaru 2024.
+7 | PhishGuard: A Multi-Layered Ensemble Model for Optimal Phishing Website Detection (2024) [7] | Mengusulkan model stacking ensemble (RF, GB, XGBoost) dengan seleksi fitur SelectKBest dan RFECV untuk meningkatkan akurasi. | Stacking Ensemble, Feature Selection | Kelebihan: Akurasi sangat tinggi (99.05%) pada dataset publik. |  |  |  |  |  | Kekurangan: Model stacking kompleks dan berat secara komputasi untuk browser environment. | Penelitian ini menghindari model stacking berat, memilih model tunggal/ensemble ringan untuk arsitektur standalone client-side.
+8 | A novel approach for phishing URLs detection using lexical based machine learning (2021) [8] | Mengusulkan pendekatan deteksi berbasis fitur leksikal ringan (9 fitur) untuk lingkungan real-time dengan response time rendah. | Random Forest, Fitur Leksikal | Kelebihan: Waktu respon sangat cepat (<25ms) dan FPR rendah. |  |  |  |  |  | Kekurangan: Dataset usang (2016), tidak relevan dengan pola modern pasca-2023. | Mengadopsi konsep fitur leksikal ringan namun diterapkan pada dataset terbaru (2024) [6] untuk relevansi deteksi.
+9 | Lexical features based malicious URL detection using machine learning techniques (2021) [10] | Menganalisis efektivitas fitur leksikal menggunakan berbagai klasifikasi. Menemukan bahwa Random Forest memberikan akurasi tertinggi dibanding SVM dan k-NN. | Random Forest, Fitur Leksikal (20 Fitur) | Kelebihan: Memvalidasi secara statistik bahwa Random Forest + Fitur Leksikal adalah kombinasi efisien. | Kekurangan: Masih menggunakan dataset lama (UNB 2016) dan tidak memiliki implementasi produk nyata. | Penelitian ini memperbarui basis data ke tahun 2024 dan mengimplementasikan temuan tersebut ke dalam bentuk ekstensi browser fungsional.
+10 | Enhancing Phishing Detection through Feature Importance Analysis and Explainable AI. (2024) [3] | Melakukan studi komparatif antara CatBoost, XGBoost, dan EBM dengan fokus pada seleksi fitur (RFE) dan interpretabilitas model (SHAP). Menemukan bahwa XGBoost sangat efisien dalam runtime. | XGBoost, CatBoost, Recursive Feature Elimination (RFE), XAI | Kelebihan: Membuktikan efisiensi waktu eksekusi (runtime) XGBoost dan pentingnya seleksi fitur untuk performa. |  | Kekurangan: Fokus penelitian terbatas pada analisis kinerja model secara offline dan aspek Explainable AI, tanpa implementasi sistem deteksi real-time pada sisi pengguna. | Penelitian ini mengambil temuan efisiensi XGBoost tersebut dan mengimplementasikannya secara langsung ke dalam ekstensi peramban (client-side) untuk deteksi real-time, bukan sekadar analisis model teoretis.
+11 | Automated Phishing Detection Through URL Analysis and Machine Learning (2025) [18] | Membangun sistem deteksi berbasis Random Forest dengan fitur URL (panjang, karakter spesial, HTTPS). Implementasi berupa Web Application (Flask+React). | Random Forest, Web Application | Kelebihan: Akurasi tinggi (95.2%) dengan fitur URL sederhana. |  |  |  |  |  | Kekurangan: Implementasi berbasis Web App mengharuskan pengguna melakukan pengecekan manual (copy-paste URL), tidak real-time. | Penelitian ini mengintegrasikan deteksi langsung ke dalam Ekstensi browser sehingga deteksi berjalan otomatis saat pengguna buka link baru.
+--- END TABLE ---
+
+
+--- TABLE 6 ---
+No | Metrik | Deskripsi | Kriteria Pencapaian
+P-01 | Inference Latency | Waktu yang dibutuhkan dari input URL hingga keluar hasil prediksi. | Rata-rata < 100 ms (agar tidak terasa lag oleh pengguna).
+P-02 | Memory Footprint | Penggunaan RAM oleh Service Worker saat idle dan saat scanning. | < 50 MB saat idle, < 150 MB saat peak scanning.
+P-03 | CPU Usage | Persentase penggunaan CPU saat proses ekstraksi fitur dan inferensi. | Tidak menyebabkan freezing pada browser (CPU spike < 30% pada prosesor standar).
+P-04 | Ukuran Ekstensi | Total ukuran fail ekstensi (.crx) termasuk model ONNX. | < 30 MB (untuk kemudahan distribusi).
+--- END TABLE ---
+
+
+--- TABLE 7 ---
+No | Metrik | Deskripsi | Target Capaian
+M-01 | Accuracy | Persentase prediksi benar dari total data uji. | > 95% pada Test Set.
+M-02 | Recall (Sensitivitas) | Kemampuan mendeteksi phishing yang sebenarnya (mencegah False Negative). | > 90% (Prioritas Utama: Jangan sampai phishing lolos).
+M-03 | False Positive Rate (FPR) | Persentase situs aman yang salah dideteksi sebagai phishing. | < 2% (Agar tidak mengganggu kenyamanan pengguna).
+M-04 | Model Size | Ukuran file model setelah disimpan (.pkl vs .onnx). | < 2 MB agar ringan dimuat di browser.
+--- END TABLE ---
+
+
+--- TABLE 8 ---
+Model | Akurasi/Presisi/Recall/F1 | Memory Usage | Memory Usage | Memory Usage | Waktu Inferensi | Waktu Inferensi | Waktu Inferensi | File Size
+Model | Akurasi/Presisi/Recall/F1 | Min | Max | Avg | Min | Max | Avg | File Size
+Random Forest (.pkl) |  |  |  |  |  |  |  | 
+Random Forest (.onnx) |  |  |  |  |  |  |  | 
+XGBoost (.pkl) |  |  |  |  |  |  |  | 
+XGBoost (.onnx) |  |  |  |  |  |  |  | 
+--- END TABLE ---

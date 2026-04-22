@@ -1,34 +1,70 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Phishing Check</title>
+    <title>Phishing Detector</title>
     <style>
-        body { width: 320px; font-family: sans-serif; padding: 10px; }
-        .result-box { 
-            margin-top: 15px; padding: 10px; border-radius: 5px; 
-            text-align: center; display: none; 
-        }
-        .safe { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .phishing { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .loading { color: #666; font-style: italic; }
-        #url-display { font-size: 10px; color: #888; word-break: break-all; margin-bottom: 10px;}
-        button { width: 100%; padding: 8px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px;}
-        button:disabled { background: #ccc; }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{width:320px;font-family:system-ui,sans-serif;padding:12px;background:#f8f9fa}
+        h3{font-size:14px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+        .tabs{display:flex;gap:4px;margin-bottom:10px}
+        .tab{flex:1;padding:8px;border:none;background:#e9ecef;border-radius:6px 6px 0 0;cursor:pointer;font-size:11px;font-weight:600;color:#666}
+        .tab.active{background:#667eea;color:#fff}
+        .panel{display:none}
+        .panel.active{display:block}
+        #url-display{font-size:10px;color:#666;word-break:break-all;margin-bottom:10px;padding:6px;background:#fff;border-radius:4px;border:1px solid #e9ecef}
+        button{width:100%;padding:10px;cursor:pointer;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:6px;font-weight:600;transition:.2s;font-size:12px}
+        button:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(102,126,234,.4)}
+        button:disabled{background:#ccc;transform:none;box-shadow:none}
+        #status{margin-top:8px;font-size:11px;color:#666;text-align:center}
+        .result-box{margin-top:12px;padding:12px;border-radius:8px;text-align:center;display:none}
+        .result-box h2{font-size:16px;margin-bottom:4px}
+        .result-box div{font-size:11px}
+        .safe{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
+        .warning{background:#fff3cd;color:#856404;border:1px solid #ffeeba}
+        .danger{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb}
+        .whitelist-container{background:#fff;border:1px solid #e9ecef;border-radius:6px;max-height:200px;overflow-y:auto}
+        .wl-item{display:flex;align-items:center;padding:8px 10px;border-bottom:1px solid #f0f0f0;font-size:11px}
+        .wl-item:last-child{border:none}
+        .wl-item span{flex:1;word-break:break-all}
+        .wl-item .del{background:#e74c3c;color:#fff;border:none;width:24px;height:24px;border-radius:4px;cursor:pointer;font-size:14px}
+        .wl-item .del:hover{background:#c0392b}
+        .add-form{display:flex;gap:6px;margin-top:10px}
+        .add-form input{flex:1;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:11px}
+        .add-form button{width:auto;padding:8px 16px}
+        .empty{text-align:center;padding:20px;color:#999;font-size:11px}
     </style>
 </head>
 <body>
-    <h3> URL Scanner</h3>
-    <div id="url-display">Loading URL...</div>
+    <h3> Phishing Detector</h3>
     
-    <button id="btn-scan">Scan Current Tab</button>
-    
-    <div id="status" class="loading" style="margin-top:10px;"></div>
-    
-    <div id="result" class="result-box">
-        <h2 id="verdict" style="margin:0;">SAFE</h2>
-        <div id="confidence">Confidence: 0%</div>
+    <div class="tabs">
+        <button class="tab active" data-tab="scan">Scan</button>
+        <button class="tab" data-tab="whitelist">Whitelist</button>
     </div>
-
+    
+    <!-- Scan Panel -->
+    <div id="panel-scan" class="panel active">
+        <div id="url-display">Waiting...</div>
+        <button id="btn-scan" disabled>Scan Current Tab</button>
+        <div id="status"></div>
+        <div id="result" class="result-box">
+            <h2 id="verdict"></h2>
+            <div id="confidence"></div>
+        </div>
+    </div>
+    
+    <!-- Whitelist Panel -->
+    <div id="panel-whitelist" class="panel">
+        <div class="whitelist-container" id="wl-list">
+            <div class="empty">Loading...</div>
+        </div>
+        <div class="add-form">
+            <input type="text" id="wl-input" placeholder="Add domain (e.g. example.com)">
+            <button id="btn-add">Add</button>
+        </div>
+        <button id="btn-add-current" style="margin-top:8px;background:#27ae60">+ Add Current Site</button>
+    </div>
+    
     <script src="libs/ort.min.js"></script>
     <script src="popup.js"></script>
 </body>

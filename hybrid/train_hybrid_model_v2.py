@@ -97,9 +97,47 @@ if __name__ == "__main__":
         print("Dataset not found")
         exit()
 
+    # --- Pra-pemrosesan Data (Sesuai Proposal Bab 3.3.3) ---
+    
+    # 1. Pembersihan Data (Data Cleaning)
+    print(f"Dataset awal: {len(df)} baris")
+    df = df.dropna(subset=['url', 'type'])           # Hapus baris dengan nilai kosong
+    df = df.drop_duplicates(subset=['url'])           # Hapus URL duplikat
+    print(f"Setelah cleaning: {len(df)} baris")
+    
+    # 2. Label Encoding (Legitimate = 0, Phishing = 1)
     df['label_binary'] = df['type'].map({'phishing': 1, 'legitimate': 0})
-    X_train, X_test, y_train, y_test = train_test_split(df['url'], df['label_binary'], test_size=0.2, random_state=42)
+    
+    # 3. Penyeimbangan Data (Undersampling)
+    # Kelas mayoritas (Legitimate) di-downsample hingga setara dengan kelas minoritas (Phishing)
+    df_phishing = df[df['label_binary'] == 1]
+    df_legitimate = df[df['label_binary'] == 0]
+    
+    n_minority = len(df_phishing)
+    print(f"\nDistribusi sebelum undersampling:")
+    print(f"  Legitimate: {len(df_legitimate)}")
+    print(f"  Phishing:   {len(df_phishing)}")
+    
+    # Random undersampling kelas mayoritas
+    df_legitimate_undersampled = df_legitimate.sample(n=n_minority, random_state=42)
+    
+    # Gabungkan kembali
+    df_balanced = pd.concat([df_legitimate_undersampled, df_phishing])
+    df_balanced = df_balanced.sample(frac=1, random_state=42).reset_index(drop=True)  # Shuffle
+    
+    print(f"\nDistribusi setelah undersampling:")
+    print(f"  Legitimate: {len(df_balanced[df_balanced['label_binary'] == 0])}")
+    print(f"  Phishing:   {len(df_balanced[df_balanced['label_binary'] == 1])}")
+    print(f"  Total:      {len(df_balanced)}")
+    
+    # 4. Pembagian Data (80% Train, 20% Test)
+    X_train, X_test, y_train, y_test = train_test_split(
+        df_balanced['url'], df_balanced['label_binary'], 
+        test_size=0.2, random_state=42
+    )
+    print(f"\nTrain: {len(X_train)}, Test: {len(X_test)}")
 
+    # --- Definisi Pipeline ---
     combined_features = FeatureUnion([
         # OPTIMASI SIZE 1: Kurangi max_features drastis (5000 -> 1500)
         # Kita mengandalkan fitur struktur, jadi tidak butuh terlalu banyak kata.
@@ -116,11 +154,11 @@ if __name__ == "__main__":
             max_depth=15,          # Batasi kedalaman pohon (mencegah file bengkak)
             min_samples_split=10,  # Jangan split jika sampel < 10 (mencegah overfitting detail remeh)
             min_samples_leaf=4,    # Daun minimal 4 sampel
-            class_weight='balanced'
+            # class_weight='balanced' dihapus karena data sudah di-undersample (seimbang)
         ))
     ])
 
-    print("Training Optimized Hybrid Model...")
+    print("\nTraining Optimized Hybrid Model (Undersampled)...")
     start = time.time()
     pipeline.fit(X_train, y_train)
     print(f"Selesai: {(time.time()-start)/60:.2f} menit")
