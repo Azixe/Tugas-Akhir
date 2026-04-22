@@ -1,7 +1,7 @@
 // === SHARED UTILITIES ===
 // Common functions used by both background.js and popup.js
 
-const WHITELIST = ['google.com','youtube.com','facebook.com','twitter.com','github.com','stackoverflow.com','microsoft.com','apple.com','amazon.com','wikipedia.org','linkedin.com','reddit.com','instagram.com'];
+const WHITELIST = ['google.com','youtube.com','facebook.com','twitter.com','github.com','stackoverflow.com','microsoft.com','apple.com','amazon.com','wikipedia.org','linkedin.com','instagram.com'];
 const COMMON_TLDS = ['.com','.org','.net','.edu','.gov','.id','.co.id'];
 
 // Shannon Entropy
@@ -59,7 +59,6 @@ function structural(url) {
     const ats = (s.match(/@/g)||[]).length;
     const digits = (s.match(/\d/g)||[]).length;
     const domain = s.replace(/^https?:\/\//,'').split('/')[0];
-    //const subLevel = Math.max(0, (domain.match(/\./g)||[]).length - 1);
     const subLevel = (domain.match(/\./g)||[]).length;
     const isTld = COMMON_TLDS.some(t => s.endsWith(t)) ? 1 : 0;
     return [len, dots, slashes, dashes, ats, len > 0 ? digits/len : 0, entropy(s), isTld, subLevel];
@@ -73,4 +72,47 @@ function shouldScan(url) {
         const host = new URL(url).hostname.toLowerCase();
         return !WHITELIST.some(d => host.includes(d));
     } catch { return false; }
+}
+
+// === XGBoost Preprocessing Functions ===
+
+// StandardScaler: (x - mean) / scale
+function scaleFeatures(features, mean, scale) {
+    const result = new Array(features.length);
+    for (let i = 0; i < features.length; i++) {
+        result[i] = (features[i] - mean[i]) / scale[i];
+    }
+    return result;
+}
+
+// Select specific feature indices from a vector
+function selectFeatures(features, indices) {
+    const result = new Array(indices.length);
+    for (let i = 0; i < indices.length; i++) {
+        result[i] = features[indices[i]];
+    }
+    return result;
+}
+
+// PCA transform: (X - mean) @ components.T
+function pcaTransform(features, pcaMean, pcaComponents) {
+    // pcaComponents shape: [n_components, n_features]
+    const nComponents = pcaComponents.length;
+    const result = new Array(nComponents);
+    for (let i = 0; i < nComponents; i++) {
+        let sum = 0;
+        for (let j = 0; j < features.length; j++) {
+            sum += (features[j] - pcaMean[j]) * pcaComponents[i][j];
+        }
+        result[i] = sum;
+    }
+    return result;
+}
+
+// Full XGBoost preprocessing pipeline: scale → select → PCA
+function preprocessXgb(rawFeatures, prepData) {
+    const scaled = scaleFeatures(rawFeatures, prepData.scaler_mean, prepData.scaler_scale);
+    const selected = selectFeatures(scaled, prepData.selected_feature_indices);
+    const pcaResult = pcaTransform(selected, prepData.pca_mean, prepData.pca_components);
+    return pcaResult;
 }

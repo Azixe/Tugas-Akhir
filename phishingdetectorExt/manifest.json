@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Phishing Detector (Hybrid Model)",
-  "version": "2.0",
-  "description": "Deteksi URL phishing menggunakan Random Forest & Lexical Features secara lokal.",
+  "name": "Phishing Detector (RF + XGBoost)",
+  "version": "3.0",
+  "description": "Deteksi URL phishing menggunakan Random Forest & XGBoost secara lokal via ONNX Runtime.",
   "permissions": [
     "activeTab",
     "tabs",
@@ -38,6 +38,9 @@
         "libs/ort.min.js",
         "tfidf_data.json",
         "phishing_rf.onnx",
+        "tfidf_data_xgb.json",
+        "phishing_xgb.onnx",
+        "xgb_preprocessing.json",
         "blocked.html"
       ],
       "matches": ["<all_urls>"]

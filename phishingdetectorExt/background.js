@@ -1,46 +1,85 @@
 // === BACKGROUND SERVICE WORKER ===
 importScripts('utils.js', 'libs/ort.min.js');
 
-let session = null, tfidfData = null, ready = false;
+// Model state
+let currentModel = 'rf';  // 'rf' or 'xgb'
+let models = {
+    rf:  { session: null, tfidfData: null, ready: false },
+    xgb: { session: null, tfidfData: null, prepData: null, ready: false }
+};
 
-async function init() {
-    if (ready) return true;
+// Load saved model preference
+chrome.storage.local.get('selectedModel', ({ selectedModel }) => {
+    if (selectedModel) currentModel = selectedModel;
+    console.log('[BG] Selected model:', currentModel);
+});
+
+async function initModel(modelType) {
+    const m = models[modelType];
+    if (m.ready) return true;
+
     try {
         ort.env.wasm.wasmPaths = chrome.runtime.getURL('libs/');
         ort.env.wasm.numThreads = 1;
-        
-        const [tRes, mRes] = await Promise.all([
-            fetch(chrome.runtime.getURL('tfidf_data.json')),
-            fetch(chrome.runtime.getURL('phishing_rf.onnx'))
-        ]);
-        tfidfData = await tRes.json();
-        session = await ort.InferenceSession.create(await mRes.arrayBuffer(), {
-            executionProviders: ['wasm']
-        });
-        ready = true;
-        console.log('[BG] Ready');
+
+        if (modelType === 'rf') {
+            const [tRes, mRes] = await Promise.all([
+                fetch(chrome.runtime.getURL('tfidf_data.json')),
+                fetch(chrome.runtime.getURL('phishing_rf.onnx'))
+            ]);
+            m.tfidfData = await tRes.json();
+            m.session = await ort.InferenceSession.create(await mRes.arrayBuffer(), {
+                executionProviders: ['wasm']
+            });
+        } else if (modelType === 'xgb') {
+            const [tRes, mRes, pRes] = await Promise.all([
+                fetch(chrome.runtime.getURL('tfidf_data_xgb.json')),
+                fetch(chrome.runtime.getURL('phishing_xgb.onnx')),
+                fetch(chrome.runtime.getURL('xgb_preprocessing.json'))
+            ]);
+            m.tfidfData = await tRes.json();
+            m.session = await ort.InferenceSession.create(await mRes.arrayBuffer(), {
+                executionProviders: ['wasm']
+            });
+            m.prepData = await pRes.json();
+        }
+
+        m.ready = true;
+        console.log(`[BG] ${modelType.toUpperCase()} model ready`);
         return true;
     } catch (e) {
-        console.error('[BG] Init error:', e);
+        console.error(`[BG] ${modelType.toUpperCase()} init error:`, e);
         return false;
     }
 }
 
 async function predict(url) {
     const startTime = performance.now();
-    
-    const features = [...tfidf(url.toLowerCase(), tfidfData), ...structural(url)];
-    const input = new ort.Tensor('float32', Float32Array.from(features), [1, features.length]);
-    const results = await session.run({ [session.inputNames[0]]: input });
-    
-    const label = Number(results[session.outputNames[0]].data[0]);
-    const probs = results[session.outputNames[1]].data;
+    const m = models[currentModel];
+
+    // Extract raw features (TF-IDF + structural = 1509)
+    const rawFeatures = [...tfidf(url.toLowerCase(), m.tfidfData), ...structural(url)];
+
+    let inputFeatures;
+    if (currentModel === 'xgb') {
+        // XGBoost: scale → select → PCA → 160 features
+        inputFeatures = preprocessXgb(rawFeatures, m.prepData);
+    } else {
+        // RF: use raw 1509 features directly
+        inputFeatures = rawFeatures;
+    }
+
+    const input = new ort.Tensor('float32', Float32Array.from(inputFeatures), [1, inputFeatures.length]);
+    const results = await m.session.run({ [m.session.inputNames[0]]: input });
+
+    const label = Number(results[m.session.outputNames[0]].data[0]);
+    const probs = results[m.session.outputNames[1]].data;
     const conf = (label === 1 ? probs[1] : probs[0]) * 100;
-    
+
     const inferenceTime = performance.now() - startTime;
-    console.log(`[BG] ⏱️ Inference: ${inferenceTime.toFixed(2)}ms`);
-    
-    return { isPhishing: label === 1, confidence: conf, url, inferenceTime };
+    console.log(`[BG] [${currentModel.toUpperCase()}] ${label === 1 ? 'PHISHING' : 'SAFE'} ${url} ${conf.toFixed(1)}% (${inferenceTime.toFixed(2)}ms)`);
+
+    return { isPhishing: label === 1, confidence: conf, url, inferenceTime, model: currentModel };
 }
 
 // Check if URL is in user whitelist
@@ -66,22 +105,21 @@ async function addToWhitelist(domain) {
 // Navigation listener
 chrome.webNavigation.onCompleted.addListener(async ({ frameId, tabId, url }) => {
     if (frameId !== 0 || !shouldScan(url)) return;
-    
+
     // Check user whitelist
     if (await isUserWhitelisted(url)) {
         console.log('[BG] User whitelisted:', url);
         return;
     }
-    
-    if (!await init()) return;
-    
+
+    if (!await initModel(currentModel)) return;
+
     try {
         const r = await predict(url);
-        console.log('[BG]', r.isPhishing ? '⚠️' : '✅', url, r.confidence.toFixed(1) + '%');
-        
+
         if (r.isPhishing && r.confidence > 80) {
             chrome.tabs.update(tabId, {
-                url: chrome.runtime.getURL('blocked.html') + 
+                url: chrome.runtime.getURL('blocked.html') +
                     `?url=${encodeURIComponent(url)}&conf=${r.confidence.toFixed(1)}`
             });
         } else if (r.isPhishing && r.confidence > 60) {
@@ -95,7 +133,23 @@ chrome.webNavigation.onCompleted.addListener(async ({ frameId, tabId, url }) => 
 // Message handler for popup and content script
 chrome.runtime.onMessage.addListener((req, _, res) => {
     if (req.action === 'scan') {
-        init().then(ok => ok ? predict(req.url).then(res).catch(e => res({ error: e.message })) : res({ error: 'Not ready' }));
+        initModel(currentModel).then(ok =>
+            ok ? predict(req.url).then(res).catch(e => res({ error: e.message }))
+               : res({ error: 'Model not ready' })
+        );
+        return true;
+    }
+    if (req.action === 'switchModel') {
+        currentModel = req.model;
+        chrome.storage.local.set({ selectedModel: currentModel });
+        // Pre-load the newly selected model
+        initModel(currentModel).then(ok => {
+            res({ success: ok, model: currentModel });
+        });
+        return true;
+    }
+    if (req.action === 'getModel') {
+        res({ model: currentModel });
         return true;
     }
     if (req.action === 'addWhitelist') {
@@ -104,4 +158,4 @@ chrome.runtime.onMessage.addListener((req, _, res) => {
     }
 });
 
-console.log('[BG] Service worker loaded');
+console.log('[BG] Service worker loaded (RF + XGBoost)');

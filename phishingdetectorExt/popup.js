@@ -1,6 +1,5 @@
 // === POPUP SCRIPT ===
-ort.env.wasm.wasmPaths = chrome.runtime.getURL('libs/');
-ort.env.wasm.numThreads = 1;
+// Delegates all inference to background.js via message passing
 
 const $ = id => document.getElementById(id);
 
@@ -51,10 +50,38 @@ function renderWhitelist(list) {
 document.addEventListener('DOMContentLoaded', async () => {
     const status = $('status'), result = $('result'), verdict = $('verdict');
     const conf = $('confidence'), btn = $('btn-scan'), urlDiv = $('url-display');
+    const modelSelect = $('model-select');
+    const modelTag = $('model-tag');
     
-    let session, data, currentUrl = '';
+    let currentUrl = '';
     
-    // Tab switching
+    // --- Model Selector ---
+    // Get current model from background
+    chrome.runtime.sendMessage({ action: 'getModel' }, (response) => {
+        if (response && response.model) {
+            modelSelect.value = response.model;
+        }
+    });
+    
+    // Handle model switch
+    modelSelect.onchange = () => {
+        const newModel = modelSelect.value;
+        status.textContent = `Switching to ${newModel === 'rf' ? 'Random Forest' : 'XGBoost'}...`;
+        btn.disabled = true;
+        result.style.display = 'none';
+        
+        chrome.runtime.sendMessage({ action: 'switchModel', model: newModel }, (response) => {
+            if (response && response.success) {
+                status.textContent = `${newModel === 'rf' ? 'Random Forest' : 'XGBoost'} ready`;
+                btn.disabled = false;
+                setTimeout(() => { if (status.textContent.includes('ready')) status.textContent = ''; }, 2000);
+            } else {
+                status.textContent = 'Error switching model';
+            }
+        });
+    };
+    
+    // --- Tab Switching ---
     document.querySelectorAll('.tab').forEach(tab => {
         tab.onclick = () => {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -65,13 +92,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
     });
     
-    // Load whitelist
+    // --- Whitelist ---
     async function loadWhitelist() {
         const list = await getWhitelist();
         renderWhitelist(list);
     }
     
-    // Add domain button
     $('btn-add').onclick = async () => {
         const input = $('wl-input');
         if (input.value.trim()) {
@@ -81,7 +107,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
     
-    // Add current site button
     $('btn-add-current').onclick = async () => {
         if (currentUrl) {
             const list = await addToWhitelist(currentUrl);
@@ -91,28 +116,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
     
-    // Get current tab URL
+    // --- Get Current Tab URL ---
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     currentUrl = tab?.url || '';
     urlDiv.textContent = currentUrl || 'No URL';
     
-    // Load model
-    try {
-        status.textContent = 'Loading...';
-        const [tRes, mRes] = await Promise.all([
-            fetch(chrome.runtime.getURL('tfidf_data.json')),
-            fetch(chrome.runtime.getURL('phishing_rf.onnx'))
-        ]);
-        data = await tRes.json();
-        session = await ort.InferenceSession.create(await mRes.arrayBuffer(), { executionProviders: ['wasm'] });
-        status.textContent = 'Ready';
+    // Enable scan button (background handles model loading)
+    if (currentUrl && currentUrl.startsWith('http')) {
         btn.disabled = false;
-    } catch (e) {
-        status.textContent = 'Error: ' + e.message;
-        return;
+        status.textContent = '';
+    } else {
+        status.textContent = 'No scannable URL';
     }
     
-    // Scan button
+    // --- Scan Button ---
     btn.onclick = async () => {
         const url = currentUrl;
         
@@ -125,71 +142,41 @@ document.addEventListener('DOMContentLoaded', async () => {
         status.textContent = 'Scanning...';
         result.style.display = 'none';
         
-        try {
-            // Extract features using inline functions (same as utils.js)
-            const s = url.toLowerCase();
+        // Send scan request to background.js (which handles ONNX inference)
+        chrome.runtime.sendMessage({ action: 'scan', url }, (r) => {
+            btn.disabled = false;
+            status.textContent = '';
             
-            // Tokenize
-            let tokens = [];
-            s.split('/').forEach(p => {
-                const byDash = p.split('-');
-                let byDot = [];
-                byDash.forEach(t => byDot = byDot.concat(t.split('.')));
-                tokens = tokens.concat(byDash, byDot);
-            });
-            tokens = [...new Set(tokens)].filter(t => t && t !== 'com' && t !== 'www');
-            
-            // TF-IDF
-            const vec = new Array(Object.keys(data.vocabulary).length).fill(0);
-            tokens.forEach(t => { if (data.vocabulary[t] !== undefined) vec[data.vocabulary[t]]++; });
-            let sumSq = 0;
-            for (let i = 0; i < vec.length; i++) {
-                if (vec[i] > 0 && data.sublinear_tf) vec[i] = 1 + Math.log(vec[i]);
-                vec[i] *= data.idf[i];
-                sumSq += vec[i] * vec[i];
+            if (!r || r.error) {
+                status.textContent = 'Error: ' + (r?.error || 'No response');
+                return;
             }
-            if (sumSq > 0) { const n = Math.sqrt(sumSq); for (let i = 0; i < vec.length; i++) vec[i] /= n; }
             
-            // Structural
-            const len = s.length;
-            const cnt = p => (s.match(p) || []).length;
-            const domain = s.replace(/^https?:\/\//, '').split('/')[0];
-            const freq = {};
-            for (const c of s) freq[c] = (freq[c]||0) + 1;
-            let ent = 0;
-            for (const v of Object.values(freq)) { const p = v/len; ent -= p * Math.log2(p); }
-            const tlds = ['.com','.org','.net','.edu','.gov','.id','.co.id'];
-            //const struct = [len, cnt(/\./g), cnt(/\//g), cnt(/-/g), cnt(/@/g), cnt(/\d/g)/len, ent, tlds.some(t=>s.endsWith(t))?1:0, Math.max(0,(domain.match(/\./g)||[]).length-1)];
-            const struct = [len, cnt(/\./g), cnt(/\//g), cnt(/-/g), cnt(/@/g), cnt(/\d/g)/len, ent, tlds.some(t=>s.endsWith(t))?1:0, (domain.match(/\./g)||[]).length];
+            // Display result
+            const label = r.isPhishing;
+            const prob = r.confidence;
+            const modelName = r.model === 'xgb' ? 'XGBoost' : 'Random Forest';
+            const verdictIcon = $('verdict-icon');
             
-            // Predict
-            const features = [...vec, ...struct];
-            const input = new ort.Tensor('float32', Float32Array.from(features), [1, features.length]);
-            const results = await session.run({ [session.inputNames[0]]: input });
-            const label = Number(results[session.outputNames[0]].data[0]);
-            const probs = results[session.outputNames[1]].data;
-            const prob = (label === 1 ? probs[1] : probs[0]) * 100;
-            
-            // Display
             result.style.display = 'block';
-            if (label === 1 && prob > 80) {
-                verdict.textContent = ' PHISHING';
+            if (label && prob > 80) {
+                verdictIcon.textContent = '🚨';
+                verdict.textContent = 'PHISHING';
                 result.className = 'result-box danger';
                 conf.textContent = `High Risk (${prob.toFixed(1)}%)`;
-            } else if (label === 1 && prob > 60) {
-                verdict.textContent = ' SUSPICIOUS';
+            } else if (label && prob > 60) {
+                verdictIcon.textContent = '⚠️';
+                verdict.textContent = 'SUSPICIOUS';
                 result.className = 'result-box warning';
                 conf.textContent = `Medium Risk (${prob.toFixed(1)}%)`;
             } else {
-                verdict.textContent = ' SAFE';
+                verdictIcon.textContent = '✅';
+                verdict.textContent = 'SAFE';
                 result.className = 'result-box safe';
                 conf.textContent = `Confidence: ${(100-prob).toFixed(1)}%`;
             }
-        } catch (e) {
-            status.textContent = 'Error: ' + e.message;
-        }
-        
-        btn.disabled = false;
-        status.textContent = '';
+            
+            modelTag.textContent = `${modelName} · ${r.inferenceTime.toFixed(1)}ms`;
+        });
     };
 });
