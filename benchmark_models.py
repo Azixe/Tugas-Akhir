@@ -19,7 +19,6 @@ from sklearn.metrics import (
     classification_report, accuracy_score, confusion_matrix,
     precision_score, recall_score, f1_score
 )
-from sklearn.model_selection import train_test_split
 
 # ============================================================
 # FEATURE EXTRACTION (matches JS extension exactly)
@@ -149,24 +148,18 @@ if __name__ == "__main__":
             print(f"ERROR: {f} not found!")
             exit()
 
-    # --- Load Dataset ---
-    print("\n[1] Loading dataset...")
+    # --- Load FULL Dataset ---
+    print("\n[1] Loading FULL dataset (all rows, imbalanced)...")
     df = pd.read_csv(DATASET)
     df = df.dropna(subset=['url', 'type'])
     df = df.drop_duplicates(subset=['url'])
     df['label'] = df['type'].map({'phishing': 1, 'legitimate': 0})
 
-    # Undersample (same as training)
-    df_phish = df[df['label'] == 1]
-    df_legit = df[df['label'] == 0].sample(n=len(df_phish), random_state=42)
-    df_balanced = pd.concat([df_legit, df_phish]).sample(frac=1, random_state=42).reset_index(drop=True)
-    print(f"    Balanced: {len(df_balanced)} URLs")
-
-    # Same test split as training
-    _, test_df = train_test_split(df_balanced, test_size=0.2, random_state=42, stratify=df_balanced['label'])
-    test_urls = test_df['url'].values
-    y_true = test_df['label'].values
-    print(f"    Test set: {len(test_urls)} URLs ({sum(y_true==0)} legit, {sum(y_true==1)} phishing)")
+    test_urls = df['url'].values
+    y_true = df['label'].values
+    n_legit = sum(y_true == 0)
+    n_phish = sum(y_true == 1)
+    print(f"    Total: {len(test_urls)} URLs ({n_legit} legit, {n_phish} phishing, ratio {n_legit/n_phish:.1f}:1)")
 
     # --- Load TF-IDF Data ---
     print("\n[2] Loading exported TF-IDF vocabularies...")
@@ -179,17 +172,27 @@ if __name__ == "__main__":
     print(f"    RF vocab: {len(rf_tfidf_data['vocabulary'])} terms")
     print(f"    XGB vocab: {len(xgb_tfidf_data['vocabulary'])} terms")
 
-    # --- Feature Extraction ---
+    # --- Feature Extraction (in chunks to manage memory) ---
     print("\n[3] Extracting features (using exported vocabularies)...")
+    print("    This may take several minutes for 450K URLs...")
     t0 = time.time()
+    CHUNK = 10000
 
-    X_test_rf = extract_features(test_urls, rf_tfidf_data)
-    print(f"    RF features: {X_test_rf.shape}")
+    rf_chunks = []
+    xgb_chunks = []
+    for i in range(0, len(test_urls), CHUNK):
+        chunk_urls = test_urls[i:i+CHUNK]
+        rf_chunks.append(extract_features(chunk_urls, rf_tfidf_data))
+        xgb_raw = extract_features(chunk_urls, xgb_tfidf_data)
+        xgb_chunks.append(preprocess_xgb(xgb_raw, xgb_prep).astype(np.float32))
+        print(f"      {min(i+CHUNK, len(test_urls))}/{len(test_urls)} done...")
 
-    X_test_xgb_raw = extract_features(test_urls, xgb_tfidf_data)
-    X_test_xgb = preprocess_xgb(X_test_xgb_raw, xgb_prep)
-    print(f"    XGB features: {X_test_xgb.shape}")
-    print(f"    Feature extraction: {time.time()-t0:.1f}s")
+    X_test_rf = np.vstack(rf_chunks).astype(np.float32)
+    X_test_xgb = np.vstack(xgb_chunks).astype(np.float32)
+    del rf_chunks, xgb_chunks
+
+    print(f"    RF features: {X_test_rf.shape}, XGB features: {X_test_xgb.shape}")
+    print(f"    Feature extraction: {(time.time()-t0)/60:.1f} min")
 
     # --- Load ONNX Models ---
     print("\n[4] Loading ONNX models...")
@@ -200,32 +203,44 @@ if __name__ == "__main__":
     xgb_onnx_size = os.path.getsize(XGB_ONNX) / 1024
     xgb_prep_size = os.path.getsize(XGB_PREP) / 1024
 
-    # --- Predictions ---
-    print("\n[5] Running predictions (per-sample latency)...")
+    # --- Predictions (batch + latency sample) ---
+    print("\n[5] Running predictions...")
 
-    def predict_all(session, X):
-        """Predict all samples, measure per-sample latency."""
+    def predict_batch(session, X, batch_size=1000):
+        """Predict in batches for speed."""
         input_name = session.get_inputs()[0].name
-        labels = []
-        probs = []
+        all_labels = []
+        all_probs = []
+        for i in range(0, len(X), batch_size):
+            batch = X[i:i+batch_size]
+            results = session.run(None, {input_name: batch})
+            all_labels.extend(results[0].flatten().tolist())
+            all_probs.extend(results[1].tolist())
+            if (i + batch_size) % 50000 < batch_size:
+                print(f"      {min(i+batch_size, len(X))}/{len(X)} done...")
+        return np.array(all_labels, dtype=int), np.array(all_probs)
+
+    def measure_latency(session, X, n_samples=1000):
+        """Measure per-sample latency on a random sample."""
+        input_name = session.get_inputs()[0].name
+        indices = np.random.choice(len(X), min(n_samples, len(X)), replace=False)
         latencies = []
-        for i in range(len(X)):
-            sample = X[i:i+1]
+        for idx in indices:
+            sample = X[idx:idx+1]
             t0 = time.perf_counter()
-            results = session.run(None, {input_name: sample})
-            latency_ms = (time.perf_counter() - t0) * 1000
-            latencies.append(latency_ms)
-            labels.append(int(results[0][0]))
-            probs.append(results[1][0])
-            if (i + 1) % 10000 == 0:
-                print(f"      {i+1}/{len(X)} done...")
-        return np.array(labels), np.array(probs), np.array(latencies)
+            session.run(None, {input_name: sample})
+            latencies.append((time.perf_counter() - t0) * 1000)
+        return np.array(latencies)
 
-    print("    RF predictions...")
-    rf_labels, rf_probs, rf_latencies = predict_all(rf_session, X_test_rf)
+    print("    RF predictions (batch)...")
+    rf_labels, rf_probs = predict_batch(rf_session, X_test_rf)
+    print("    RF latency sample (1000 URLs)...")
+    rf_latencies = measure_latency(rf_session, X_test_rf)
 
-    print("    XGBoost predictions...")
-    xgb_labels, xgb_probs, xgb_latencies = predict_all(xgb_session, X_test_xgb)
+    print("    XGBoost predictions (batch)...")
+    xgb_labels, xgb_probs = predict_batch(xgb_session, X_test_xgb)
+    print("    XGBoost latency sample (1000 URLs)...")
+    xgb_latencies = measure_latency(xgb_session, X_test_xgb)
 
     mem_mb = psutil.Process().memory_info().rss / 1024 / 1024
 
