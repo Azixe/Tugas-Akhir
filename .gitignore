@@ -3,3 +3,4 @@ phishing_hybrid_model.pkl
 phishing_optimized.pkl
 phishing_rf*.onnx
 URL dataset.csv
+chat_history.md.vscode/
