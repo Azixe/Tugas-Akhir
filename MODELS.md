@@ -5,10 +5,14 @@
 
 ## Deployed in the extension
 
+Both models refreshed 2026-09-20 from the locally trained sampling-study artifacts (same configurations as before: RF = full dataset, XGB = undersampled).
+
 | Artifact | Variant | Features | Origin | Size | SHA-256 | Paired files |
 |---|---|---|---|---|---|---|
-| `phishingdetectorExt/phishing_rf.onnx` | RF — **no undersampling** | 1509 (1500 TF-IDF + 9 struct) | Gen 3, Dec 2025. Original `.pkl` was overwritten and lost | 901 KB | `0a8f995b4869749c13dcd561970c2857ff6c21b7bdc2a08ed741652f06a47f5a` | `phishingdetectorExt/tfidf_data.json` (`3933ff90a34285cf40f88644ab06d9face451f44ed4870e96219d39c96b3748c`) |
-| `phishingdetectorExt/phishing_xgb.onnx` | XGB — undersampled | 160 (PCA of 189) | Colab, Apr 2026 | 1,277 KB | `1c1965eb9da03ee459d3657b9a349764a7dcda1ac8658d88d9e31d7f8dc863d7` | `tfidf_data_xgb.json` (`3720ae3c6770b1eb4518d81ff255d24368f7c8f27507998bc185c44479f419d9`), `xgb_preprocessing.json` (`ac8848a21b02dfa23d085cf46daf92788a25272077267de33f56014084cf7d79`) |
+| `phishingdetectorExt/phishing_rf.onnx` | RF — **no undersampling** | 1509 (1500 TF-IDF + 9 struct) | Local retrain, 2026-09-20 (`sampling_results/rf_full.pkl`) | 730 KB | `625c9333151667c478a59dccf66095e69338996033627d85bb493b596ac95135` | `phishingdetectorExt/tfidf_data.json` (`594309360bc559b63d7ec78585f4ac111898be9f991f2bf334a200b630a32c7d`) |
+| `phishingdetectorExt/phishing_xgb.onnx` | XGB — undersampled | 151 (PCA of 179) | Local retrain, 2026-09-20 (`sampling_results/xgb_under.pkl`) | 1,253 KB | `daa8c8d49a200ac3061720f052cc82788b753b3b4fd07f20e8f6e605f105f21f` | `tfidf_data_xgb.json` (`57f715b79a084bd37588ea11e0e05d11c73b8efb4d65dd714f21a519ce878faf`), `xgb_preprocessing.json` (`9a87f5a92e9d31fd8b3b1271f9706ed459327394de3866eb83329a9391e9eeba`) |
+
+Extension version bumped to 3.1 in `manifest.json`. Previous deployed files (for reference): RF `0a8f995b…` (901 KB, Gen-3 non-undersampled, pkl lost) and XGB `1c1965eb…` (1,277 KB, Colab-tuned undersampled).
 
 ## RF variants & history (`rf_models/`)
 

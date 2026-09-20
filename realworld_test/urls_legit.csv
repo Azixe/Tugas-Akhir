@@ -1,0 +1,21 @@
+url,note
+https://steamcommunity.com/,FP-prone landing page (observed in the wild)
+https://steamcommunity.com/id/WhyIzMyLifeLikeDiz/,user profile with random-looking path (observed at 65-95%)
+https://steamcommunity.com/market/listings/730/AK-47%20%7C%20Redline%20%28Field-Tested%29,long URL-encoded market path
+https://www.reddit.com/r/programming/,forum
+https://www.reddit.com/r/ProgrammerHumor/comments/1f8k2zp/some_very_long_post_title_with_many_words_and/,long post path
+https://discord.com/,chat app
+https://www.kaskus.co.id/,Indonesian forum
+https://www.tokopedia.com/,e-commerce
+https://www.detik.com/,news
+https://www.kompas.com/,news
+https://open.spotify.com/,streaming
+https://www.figma.com/,design tool
+https://gitlab.com/explore,dev platform
+https://www.npmjs.com/package/react,package registry
+https://docs.python.org/3/library/csv.html,documentation
+https://arxiv.org/abs/2409.19825,preprint
+https://www.bbc.com/news,news
+https://www.cloudflare.com/,infrastructure
+https://web.whatsapp.com/,chat app
+https://www.tiktok.com/,social media
