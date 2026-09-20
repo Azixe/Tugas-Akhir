@@ -31,6 +31,19 @@ Root `tfidf_data.json` (`4f9cf4bd4c48e0d013171bc9959ad46cd3cf7afb8f09c6505138f61
 | `phishing_xgb_model.pkl` | XGB — undersampled | Classifier only | 577 KB | `120ee8bfb06080b5d8a8c59017ba1349c7779c4932c13e063c0b1ce8d4bb5523` |
 | `phishing_xgb.onnx` | ONNX of the above | Byte-identical to `phishingdetectorExt/phishing_xgb.onnx` | 1,277 KB | `1c1965eb9da03ee459d3657b9a349764a7dcda1ac8658d88d9e31d7f8dc863d7` |
 
+## Sampling study (`sampling_results/`)
+
+Trained by `benchmark_sampling.py` (2026-09-20) with the shared protocol in `sampling.py` (stratified 80/20, seed 42; all models evaluated on the same 90,036-URL test set). Local Anaconda environment (numpy 1.23.5 / sklearn 1.2.1 / xgboost 3.0.2) — every pkl loads locally. The `.pkl` files are gitignored; regenerate with `python benchmark_sampling.py --force-retrain` (~8 min).
+
+| Artifact | Variant | Train size | Size | SHA-256 |
+|---|---|---:|---:|---|
+| `rf_under.pkl` | RF undersampled | 167,100 | 4,320 KB | `a02778667932b90abfa74c23b01c798714d3d0255bc88e46eead3d8ad882d507` |
+| `rf_full.pkl` | RF full dataset | 360,140 | 7,529 KB | `d328efeba8d91e595fbfa53bbad167bc6047685dcd0a3cbec86526e816a120ad` |
+| `xgb_under.pkl` | XGB undersampled (fixed tuned params) | 167,100 | 4,672 KB | `9884a1a7c9ff04375e74b5030ed5fea3ce0a3b2ebf136d809a647257e63ff232` |
+| `xgb_full.pkl` | XGB full dataset (fixed tuned params) | 360,140 | 7,830 KB | `5963d843d16beaa69b11c700ce19f87160a4089a073465d223b35776603fb911` |
+
+Results: `sampling_results/sampling_report.md` (metrics JSON + CSV alongside).
+
 ## Regenerating
 
 ```bash
