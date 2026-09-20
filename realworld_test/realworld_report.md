@@ -3,56 +3,77 @@
 - Phishing source: PhishTank `online-valid` (76,683 URLs with unique domains), sampled 25 across unique domains, seed 42, collected 2026-09-20
 - Legitimate: 20 manual URLs (FP-prone sites: Steam, Reddit, Discord, ...)
 - Extension model version: v3.1  |  RF sha256 `625c9333151667c4…`  |  XGB sha256 `daa8c8d49a200ac3…`
+- Two variants scored per URL: **as-listed** (raw feed string) and **browser** (http→https upgrade + curl-resolved redirects; 5 URLs differ). The browser variant is primary.
 - URL-only analysis (same input the extension sees); liveness does not affect scoring
-- Training set (Mendeley 2024): 2.6% of phishing URLs are on free-hosting platforms vs 16/25 (64%) in this live sample.
+- Training set (Mendeley 2024): phishing 93.8% http / 6.2% https, legitimate 0.0% http / 100.0% https — the scheme alone separates ~94% of the data
+- RF's top-2 features by importance: `https:` (23.4%) and `http:` (20.4%) — a dataset shortcut now obsolete (modern phishing is https)
 
-## Summary
+## Summary — browser-observed (primary)
+
+| Metric | Random Forest | XGBoost |
+|---|---:|---:|
+| Accuracy | 44.44% | 55.56% |
+| Precision (phishing) | 0.00% | 77.78% |
+| Recall (phishing) | 0.00% | 28.00% |
+| F1 (phishing) | 0.00% | 41.18% |
+| False Positive Rate | 0.00% | 10.00% |
+| TP / FP / TN / FN | 0 / 0 / 20 / 25 | 7 / 2 / 18 / 18 |
+
+RF and XGBoost agree on 80.0% of URLs.
+
+## Summary — as-listed (reference)
 
 | Metric | Random Forest | XGBoost |
 |---|---:|---:|
 | Accuracy | 51.11% | 64.44% |
-| Precision (phishing) | 100.00% | 84.62% |
 | Recall (phishing) | 12.00% | 44.00% |
-| F1 (phishing) | 21.43% | 57.89% |
 | False Positive Rate | 0.00% | 10.00% |
 | TP / FP / TN / FN | 3 / 0 / 20 / 22 | 11 / 2 / 18 / 14 |
 
-RF and XGBoost agree on 77.8% of URLs.
+## Scheme sensitivity (why one letter flips the model)
 
-## Phishing sample by domain type
+| URL (as-listed) | RF as-listed | RF browser | XGB as-listed | XGB browser |
+|---|---:|---:|---:|---:|
+| http://bntp3725nhw-yfhcnfyn-7d5e0f-xk266a.pages.dev/ | 1 / 56.0% | 0 / 6.5% | 1 / 100.0% | 0 / 0.0% |
+| http://crypto-ah4.netlify.app/ | 1 / 61.9% | 0 / 12.4% | 1 / 100.0% | 0 / 34.0% |
+| http://norzeta-gld-fentela-r5t2hp76.pages.dev/ | 1 / 56.0% | 0 / 6.5% | 1 / 100.0% | 0 / 0.0% |
+| https://web.tegtdi.top | 0 / 12.3% | 0 / 11.5% | 0 / 39.8% | 0 / 22.6% |
+| https://www.auberge-lorraine-levaltin.fr/webspace/portal/clients/login.php?verification#_login&amp;appIdKey=91bfa3054d6407b&amp;country=RO | 0 / 42.8% | 0 / 8.0% | 1 / 99.3% | 0 / 5.7% |
+
+## Phishing sample by domain type (browser variant)
 
 | Domain type | n | RF caught | XGBoost caught |
 |---|---:|---:|---:|
-| free-hosting | 16 | 3/16 | 8/16 |
-| owned-domain | 9 | 0/9 | 3/9 |
+| free-hosting | 16 | 0/16 | 5/16 |
+| owned-domain | 9 | 0/9 | 2/9 |
 
-## Extension behavior (decision thresholds)
+## Extension behavior (decision thresholds, browser variant)
 
 | Model | Blocked (>80%) | Warned (60-80%) | SAFE (<60%) |
 |---|---|---|---|
-| Random Forest | 0 (0 TP / 0 FP) | 1 | 44 |
-| XGBoost | 11 (9 TP / 2 FP) | 1 | 33 |
+| Random Forest | 0 (0 TP / 0 FP) | 0 | 45 |
+| XGBoost | 7 (5 TP / 2 FP) | 1 | 37 |
 
-## Per-URL results
+## Per-URL results (browser variant)
 
-Format: ✓/✗ = raw model label vs expected; the word shown is the extension verdict at its thresholds (>80% PHISHING, 60–80% SUSPICIOUS, <60% SAFE).
+Format: ✓/✗ = raw model label vs expected; the word is the extension verdict at its thresholds (>80% PHISHING, 60–80% SUSPICIOUS, <60% SAFE).
 
-| # | Expected | URL | RF | XGB |
+| # | Expected | URL (browser) | RF | XGB |
 |---:|---|---|---|---|
 | 1 | phish | https://allegrolokalnie.oferta839174.click/milwaukee-m18-fuel-szlifierka-/14759 | ✗ SAFE (7.2%) | ✗ SAFE (0.0%) |
 | 2 | phish | https://bafkreicsgdat4hmyhxfwmqjpak66skttjj4o2d2bennbpjwfmfi4ukl5fa.ipfs.dweb.link/ | ✗ SAFE (9.1%) | ✓ SAFE (51.0%) |
-| 3 | phish | http://bntp3725nhw-yfhcnfyn-7d5e0f-xk266a.pages.dev/ | ✓ SAFE (56.0%) | ✓ PHISHING (100.0%) |
+| 3 | phish | https://bntp3725nhw-yfhcnfyn-7d5e0f-xk266a.pages.dev/ | ✗ SAFE (6.5%) | ✗ SAFE (0.0%) |
 | 4 | phish | https://cdcinforma001020.web.app/ | ✗ SAFE (12.4%) | ✓ PHISHING (97.3%) |
 | 5 | phish | https://choisir-horaire.com/ | ✗ SAFE (44.3%) | ✗ SAFE (4.2%) |
 | 6 | phish | https://comcast-xfiintybkjhm.weeblysite.com/ | ✗ SAFE (8.1%) | ✗ SAFE (0.0%) |
-| 7 | phish | http://crypto-ah4.netlify.app/ | ✓ SUSPICIOUS (61.9%) | ✓ PHISHING (100.0%) |
+| 7 | phish | https://crypto-ah4.netlify.app/ | ✗ SAFE (12.4%) | ✗ SAFE (34.0%) |
 | 8 | phish | https://discreet-mountain-005558.framer.app/ | ✗ SAFE (9.6%) | ✗ SAFE (34.7%) |
 | 9 | phish | https://germanshepherddatabase.org/pp_pedigree.php?id=%22%2F%3E%3Cimg%20src%3D%22https%3A%2F%2Fgoogle.com%2FMGSwmyb3v2ATI.jpg%22%20onerror%3D%22window.location%3DdecodeURIComponent%28atob%28%27Njg3NDc0NzA3MzNhMmYyZjY2NjI3YTY2NmY2ZDJlNjM2MTM2NjEzODYyMzczNDJkMzMzMjYxNjMyZDM0MzU2NTYxMmQzODM0NjYzMDJkNjY2MjM2MzAzNzYyMzgzNzM4Mzk2MTYyMmU2MzZjNjk2MzZiMmYzNjM0NjM2NDY1MzAzNDMwMmQzMjMyMzMzNTJkMzQzNTYyNjUyZDYxMzM2NjM2MmQzNDY0NjM2NDM2NjMzODM4MzY2NDYyNjUyZTcwNjg3MA%3D%3D%27%29.replace%28%2F%28..%29%2Fg%2C%20%27%25%241%27%29%29%3B%22%3E | ✗ SAFE (39.5%) | ✓ PHISHING (95.6%) |
 | 10 | phish | https://itdkbgit8.web.app/ | ✗ SAFE (12.5%) | ✓ PHISHING (98.8%) |
 | 11 | phish | https://lecaikejiao.com/uid_4673027932?ticket=ofuT1ALEqM | ✗ SAFE (46.9%) | ✗ SAFE (2.6%) |
 | 12 | phish | https://live-desktophelp.wixstudio.com/en-us | ✗ SAFE (7.1%) | ✗ SAFE (3.2%) |
 | 13 | phish | https://lolafry11.wixsite.com/my-site | ✗ SAFE (20.3%) | ✗ SAFE (42.0%) |
-| 14 | phish | http://norzeta-gld-fentela-r5t2hp76.pages.dev/ | ✓ SAFE (56.0%) | ✓ PHISHING (100.0%) |
+| 14 | phish | https://norzeta-gld-fentela-r5t2hp76.pages.dev/ | ✗ SAFE (6.5%) | ✗ SAFE (0.0%) |
 | 15 | phish | https://official-rabbycdn.wixstudio.com/us-en | ✗ SAFE (7.1%) | ✗ SAFE (5.2%) |
 | 16 | phish | https://pay-interbank.webcindario.com/ | ✗ SAFE (8.1%) | ✗ SAFE (0.0%) |
 | 17 | phish | https://pub-fbcc9cd30d2f4f4793500c39a15307b1.r2.dev/link.html | ✗ SAFE (20.1%) | ✓ SUSPICIOUS (67.3%) |
@@ -60,9 +81,9 @@ Format: ✓/✗ = raw model label vs expected; the word shown is the extension v
 | 19 | phish | https://shodbj.com/view/radfTprBTd | ✗ SAFE (48.0%) | ✗ SAFE (32.8%) |
 | 20 | phish | https://siggnonnatto-mygovv.web.app/ | ✗ SAFE (9.8%) | ✓ PHISHING (97.5%) |
 | 21 | phish | https://viaverde-seguranca.com/steps/billing.php | ✗ SAFE (38.5%) | ✓ PHISHING (99.2%) |
-| 22 | phish | https://web.tegtdi.top | ✗ SAFE (12.3%) | ✗ SAFE (39.8%) |
+| 22 | phish | https://web.tegtdi.top/ | ✗ SAFE (11.5%) | ✗ SAFE (22.6%) |
 | 23 | phish | https://webservice000auth-xfinity.weebly.com/ | ✗ SAFE (8.7%) | ✗ SAFE (0.0%) |
-| 24 | phish | https://www.auberge-lorraine-levaltin.fr/webspace/portal/clients/login.php?verification#_login&amp;appIdKey=91bfa3054d6407b&amp;country=RO | ✗ SAFE (42.8%) | ✓ PHISHING (99.3%) |
+| 24 | phish | https://www.auberge-lorraine-levaltin.fr/ | ✗ SAFE (8.0%) | ✗ SAFE (5.7%) |
 | 25 | phish | https://xfinitymail2026.weebly.com/ | ✗ SAFE (9.0%) | ✗ SAFE (0.0%) |
 | 26 | legit | https://steamcommunity.com/ | ✓ SAFE (44.3%) | ✓ SAFE (5.0%) |
 | 27 | legit | https://steamcommunity.com/id/WhyIzMyLifeLikeDiz/ | ✓ SAFE (47.6%) | ✗ PHISHING (89.9%) |
@@ -85,20 +106,23 @@ Format: ✓/✗ = raw model label vs expected; the word shown is the extension v
 | 44 | legit | https://web.whatsapp.com/ | ✓ SAFE (9.9%) | ✓ SAFE (2.2%) |
 | 45 | legit | https://www.tiktok.com/ | ✓ SAFE (9.0%) | ✓ SAFE (0.0%) |
 
-## Errors
+## Errors (browser variant)
 
-**Random Forest** — false positives: 0, false negatives: 22
+**Random Forest** — false positives: 0, false negatives: 25
 - FN: https://allegrolokalnie.oferta839174.click/milwaukee-m18-fuel-szlifierka-/14759
 - FN: https://bafkreicsgdat4hmyhxfwmqjpak66skttjj4o2d2bennbpjwfmfi4ukl5fa.ipfs.dweb.link/
+- FN: https://bntp3725nhw-yfhcnfyn-7d5e0f-xk266a.pages.dev/
 - FN: https://cdcinforma001020.web.app/
 - FN: https://choisir-horaire.com/
 - FN: https://comcast-xfiintybkjhm.weeblysite.com/
+- FN: https://crypto-ah4.netlify.app/
 - FN: https://discreet-mountain-005558.framer.app/
 - FN: https://germanshepherddatabase.org/pp_pedigree.php?id=%22%2F%3E%3Cimg%20src%3D%22https%3A%2F%2Fgoogle.com%2FMGSwmyb3v2ATI.jpg%22%20onerror%3D%22window.location%3DdecodeURIComponent%28atob%28%27Njg3NDc0NzA3MzNhMmYyZjY2NjI3YTY2NmY2ZDJlNjM2MTM2NjEzODYyMzczNDJkMzMzMjYxNjMyZDM0MzU2NTYxMmQzODM0NjYzMDJkNjY2MjM2MzAzNzYyMzgzNzM4Mzk2MTYyMmU2MzZjNjk2MzZiMmYzNjM0NjM2NDY1MzAzNDMwMmQzMjMyMzMzNTJkMzQzNTYyNjUyZDYxMzM2NjM2MmQzNDY0NjM2NDM2NjMzODM4MzY2NDYyNjUyZTcwNjg3MA%3D%3D%27%29.replace%28%2F%28..%29%2Fg%2C%20%27%25%241%27%29%29%3B%22%3E
 - FN: https://itdkbgit8.web.app/
 - FN: https://lecaikejiao.com/uid_4673027932?ticket=ofuT1ALEqM
 - FN: https://live-desktophelp.wixstudio.com/en-us
 - FN: https://lolafry11.wixsite.com/my-site
+- FN: https://norzeta-gld-fentela-r5t2hp76.pages.dev/
 - FN: https://official-rabbycdn.wixstudio.com/us-en
 - FN: https://pay-interbank.webcindario.com/
 - FN: https://pub-fbcc9cd30d2f4f4793500c39a15307b1.r2.dev/link.html
@@ -106,27 +130,31 @@ Format: ✓/✗ = raw model label vs expected; the word shown is the extension v
 - FN: https://shodbj.com/view/radfTprBTd
 - FN: https://siggnonnatto-mygovv.web.app/
 - FN: https://viaverde-seguranca.com/steps/billing.php
-- FN: https://web.tegtdi.top
+- FN: https://web.tegtdi.top/
 - FN: https://webservice000auth-xfinity.weebly.com/
-- FN: https://www.auberge-lorraine-levaltin.fr/webspace/portal/clients/login.php?verification#_login&amp;appIdKey=91bfa3054d6407b&amp;country=RO
+- FN: https://www.auberge-lorraine-levaltin.fr/
 - FN: https://xfinitymail2026.weebly.com/
 
-**XGBoost** — false positives: 2, false negatives: 14
+**XGBoost** — false positives: 2, false negatives: 18
 - FP: https://steamcommunity.com/id/WhyIzMyLifeLikeDiz/
 - FP: https://steamcommunity.com/market/listings/730/AK-47%20%7C%20Redline%20%28Field-Tested%29
 - FN: https://allegrolokalnie.oferta839174.click/milwaukee-m18-fuel-szlifierka-/14759
+- FN: https://bntp3725nhw-yfhcnfyn-7d5e0f-xk266a.pages.dev/
 - FN: https://choisir-horaire.com/
 - FN: https://comcast-xfiintybkjhm.weeblysite.com/
+- FN: https://crypto-ah4.netlify.app/
 - FN: https://discreet-mountain-005558.framer.app/
 - FN: https://lecaikejiao.com/uid_4673027932?ticket=ofuT1ALEqM
 - FN: https://live-desktophelp.wixstudio.com/en-us
 - FN: https://lolafry11.wixsite.com/my-site
+- FN: https://norzeta-gld-fentela-r5t2hp76.pages.dev/
 - FN: https://official-rabbycdn.wixstudio.com/us-en
 - FN: https://pay-interbank.webcindario.com/
 - FN: https://settallupservices.com/
 - FN: https://shodbj.com/view/radfTprBTd
-- FN: https://web.tegtdi.top
+- FN: https://web.tegtdi.top/
 - FN: https://webservice000auth-xfinity.weebly.com/
+- FN: https://www.auberge-lorraine-levaltin.fr/
 - FN: https://xfinitymail2026.weebly.com/
 
-> Thresholds mirror the extension: >80% PHISHING, 60–80% SUSPICIOUS, <60% SAFE.
+> Thresholds mirror the extension: >80% PHISHING, 60–80% SUSPICIOUS, <60% SAFE. Network reachability of the sample is logged in `urls_phishing_resolved.csv` and does not affect scoring.
