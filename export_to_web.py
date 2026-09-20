@@ -1,150 +1,121 @@
-import joblib
+"""Export a trained RF pipeline to ONNX + TF-IDF JSON for the extension.
+
+Usage (run from the repo root):
+
+    # Undersampled variant -> rf_models/phishing_rf3.onnx + rf_models/tfidf_data.json
+    python export_to_web.py --model rf_models/phishing_optimized.pkl --outdir rf_models \
+        --onnx-name phishing_rf3.onnx
+
+    # Non-undersampled variant (the one deployed in the extension)
+    python export_to_web.py --model rf_models/rf_full.pkl --outdir rf_models \
+        --onnx-name rf_full.onnx --tfidf-name rf_full_tfidf_data.json
+
+The extension expects `phishing_rf.onnx` + `tfidf_data.json` inside
+`phishingdetectorExt/` — copy them there after exporting.
+"""
+
+import argparse
+import hashlib
 import json
-import numpy as np
+import os
 import sys
-import math
-from collections import Counter
-from skl2onnx import convert_sklearn, to_onnx
+
+import joblib
+from skl2onnx import convert_sklearn
 from skl2onnx.common.data_types import FloatTensorType
-from sklearn.base import BaseEstimator, TransformerMixin
 
-# --- 1. DEFINISI HELPER (COPY-PASTE DARI TRAINING, JANGAN IMPORT) ---
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from features import alias_legacy_main  # noqa: E402
 
-# Fungsi entropy harus ada di sini karena dipanggil StructuralFeatureExtractor
-def shannon_entropy(data):
-    if not data:
-        return 0
-    entropy = 0
-    for x in Counter(data).values():
-        p_x = x / len(data)
-        entropy -= p_x * math.log(p_x, 2)
-    return entropy
 
-def user_is_ip(url):
+def sha256(path):
+    h = hashlib.sha256()
+    with open(path, 'rb') as f:
+        for chunk in iter(lambda: f.read(1 << 20), b''):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Export the RF pipeline to ONNX + JSON.")
+    parser.add_argument('--model', default=os.path.join('rf_models', 'phishing_optimized.pkl'),
+                        help="Input .pkl pipeline (default: %(default)s)")
+    parser.add_argument('--outdir', default='.',
+                        help="Output directory (default: %(default)s)")
+    parser.add_argument('--onnx-name', default='phishing_rf.onnx',
+                        help="ONNX filename (default: %(default)s)")
+    parser.add_argument('--tfidf-name', default='tfidf_data.json',
+                        help="TF-IDF JSON filename (default: %(default)s)")
+    return parser.parse_args()
+
+
+def main():
+    args = parse_args()
+    os.makedirs(args.outdir, exist_ok=True)
+
+    # Legacy pickles reference __main__.make_tokens etc.; new ones reference features.*
+    alias_legacy_main()
+
     try:
-        domain = url.split('/')[0] 
-        parts = domain.split('.')
-        if len(parts) == 4 and all(part.isdigit() for part in parts):
-            return True
-        return False
-    except:
-        return False
+        print(f"Memuat model pipeline: {args.model}")
+        pipeline = joblib.load(args.model)
+        print("Model berhasil dimuat.")
+    except AttributeError as e:
+        print(f"CRITICAL ERROR: {e}")
+        print("Pastikan nama fungsi SAMA PERSIS dengan file training.")
+        sys.exit(1)
+    except FileNotFoundError:
+        print(f"Error: file .pkl tidak ditemukan: {args.model}")
+        sys.exit(1)
 
-# Class Struktural
-class StructuralFeatureExtractor(BaseEstimator, TransformerMixin):
-    def fit(self, X, y=None):
-        return self
-        
-    def transform(self, X):
-        features = []
-        common_tlds = ['.com', '.org', '.net', '.edu', '.gov', '.id', '.co.id']
-        
-        for url in X:
-            s_url = str(url).lower()
-            
-            length = len(s_url)
-            dot_count = s_url.count('.')
-            slash_count = s_url.count('/')
-            dash_count = s_url.count('-')
-            at_count = s_url.count('@')
-            
-            digit_count = sum(c.isdigit() for c in s_url)
-            digit_ratio = digit_count / length if length > 0 else 0
-            
-            entropy = shannon_entropy(s_url)
-            
-            is_common_tld = 0
-            for tld in common_tlds:
-                if s_url.endswith(tld) or s_url.endswith(tld + '/'):
-                    is_common_tld = 1
-                    break
-            
-            try:
-                clean = s_url.replace("https://", "").replace("http://", "").split('/')[0]
-                subdomain_level = clean.count('.')
-            except:
-                subdomain_level = 0
-            
-            features.append([length, dot_count, slash_count, dash_count, at_count, 
-                             digit_ratio, entropy, is_common_tld, subdomain_level])
-            
-        return np.array(features)
+    # Ambil komponen
+    feature_union = pipeline.named_steps['features']
+    tfidf_model = feature_union.transformer_list[0][1]
+    rf_model = pipeline.named_steps['clf']
 
-# Fungsi Tokenizer
-def make_tokens(f):
-    tokens_by_slash = str(f).encode('utf-8').decode('utf-8').split('/')
-    total_tokens = []
-    for i in tokens_by_slash:
-        tokens = str(i).split('-')
-        tokens_dot = []
-        for j in range(0, len(tokens)):
-            temp_tokens = str(tokens[j]).split('.')
-            tokens_dot = tokens_dot + temp_tokens
-        total_tokens = total_tokens + tokens + tokens_dot
-    total_tokens = list(set(total_tokens))
-    if 'com' in total_tokens: total_tokens.remove('com')
-    if 'www' in total_tokens: total_tokens.remove('www') 
-    return total_tokens
+    # --- Ekspor JSON (TF-IDF) ---
+    print("Mengekspor TF-IDF vocabulary...")
+    vocab_raw = tfidf_model.vocabulary_
+    vocab_clean = {k: int(v) for k, v in vocab_raw.items()}
+    idf_clean = tfidf_model.idf_.tolist()
 
-# --- 2. LOAD & EXPORT LOGIC ---
+    tfidf_data = {
+        "vocabulary": vocab_clean,
+        "idf": idf_clean,
+        "norm": tfidf_model.norm,
+        "use_idf": tfidf_model.use_idf,
+        "smooth_idf": tfidf_model.smooth_idf,
+        "sublinear_tf": tfidf_model.sublinear_tf
+    }
 
-try:
-    print("Memuat model pipeline...")
-    # Karena semua fungsi di atas sudah didefinisikan, joblib akan mengenalnya
-    pipeline = joblib.load('phishing_optimized.pkl')
-    print("Model berhasil dimuat.")
-except AttributeError as e:
-    print(f"CRITICAL ERROR: {e}")
-    print("Pastikan nama fungsi SAMA PERSIS dengan file training.")
-    sys.exit()
-except FileNotFoundError:
-    print("Error: File .pkl tidak ditemukan.")
-    sys.exit()
+    tfidf_path = os.path.join(args.outdir, args.tfidf_name)
+    with open(tfidf_path, "w") as f:
+        json.dump(tfidf_data, f)
+    print(f"-> {tfidf_path} OK ({len(vocab_clean)} terms)")
 
-# Ambil komponen
-feature_union = pipeline.named_steps['features']
-tfidf_model = feature_union.transformer_list[0][1] 
-rf_model = pipeline.named_steps['clf']             
+    # --- Ekspor ONNX (Random Forest) ---
+    n_features = len(vocab_clean) + 9  # vocab + 9 structural features
+    print(f"Jumlah fitur ONNX: {n_features}")
 
-# --- Ekspor JSON (TF-IDF) ---
-print("Mengekspor TF-IDF Vocabulary...")
-vocab_raw = tfidf_model.vocabulary_
-# Pakai int() untuk konversi numpy.int32 ke python int biasa
-vocab_clean = {k: int(v) for k, v in vocab_raw.items()} 
-idf_clean = tfidf_model.idf_.tolist()
+    initial_type = [('float_input', FloatTensorType([None, n_features]))]
+    print("Mengonversi ke ONNX...")
 
-tfidf_data = {
-    "vocabulary": vocab_clean,
-    "idf": idf_clean,
-    "norm": tfidf_model.norm, 
-    "use_idf": tfidf_model.use_idf,
-    "smooth_idf": tfidf_model.smooth_idf,
-    "sublinear_tf": tfidf_model.sublinear_tf
-}
+    onnx_model = convert_sklearn(
+        rf_model,
+        initial_types=initial_type,
+        target_opset=12,
+        options={id(rf_model): {'zipmap': False}}  # ZipMap tidak didukung browser
+    )
 
-with open("tfidf_data.json", "w") as f:
-    json.dump(tfidf_data, f)
-print("-> tfidf_data.json OK.")
+    onnx_path = os.path.join(args.outdir, args.onnx_name)
+    with open(onnx_path, "wb") as f:
+        f.write(onnx_model.SerializeToString())
 
-# --- Ekspor ONNX (Random Forest) ---
-# Jumlah fitur = Vocab Size + 9 Fitur Manual
-n_features = len(vocab_clean) + 9 
-print(f"Jumlah fitur ONNX: {n_features}")
+    print(f"-> {onnx_path} OK ({os.path.getsize(onnx_path)/1024:.0f} KB)")
+    print(f"   sha256 {sha256(onnx_path)}")
+    print(f"   sha256 {sha256(tfidf_path)}  ({args.tfidf_name})")
+    print("\nSUKSES! File siap untuk Web Extension.")
 
-initial_type = [('float_input', FloatTensorType([None, n_features]))]
 
-print("Mengonversi ke ONNX...")
-
-# FIXED: Disable ZipMap output (tidak di-support browser)
-onnx_model = convert_sklearn(
-    rf_model, 
-    initial_types=initial_type,
-    target_opset=12,
-    options={id(rf_model): {'zipmap': False}}  
-)
-
-with open("phishing_rf.onnx", "wb") as f:
-    f.write(onnx_model.SerializeToString())
-print("-> phishing_rf.onnx OK.")
-
-print("\nSUKSES! File siap untuk Web Extension.")
+if __name__ == "__main__":
+    main()

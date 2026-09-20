@@ -5,31 +5,41 @@ Run on Google Colab with GPU runtime.
 
 Setup:
 1. Colab: Runtime -> Change runtime type -> GPU (T4)
-2. Upload 'URL dataset.csv' to /content/
-3. Upload this file and run: !python train_xgb_colab.py
+2. Upload to /content/: 'URL dataset.csv', this file, and 'features.py'
+   (shared feature module — required, same file as in the repo root)
+3. Run: !python train_xgb_colab.py
+
+Options:
+  --data PATH        dataset CSV (default: auto-detect in /content)
+  --outdir DIR       where to save the .pkl artifacts (default: .)
+  --no-undersample   train on the full imbalanced dataset (default: undersampled)
 """
 
-import pandas as pd
-import numpy as np
-import math
+import argparse
+import gc
+import os
+import sys
 import time
 import warnings
-import os
-import gc
-from collections import Counter
+
+import numpy as np
+import pandas as pd
 
 from sklearn.model_selection import (
     train_test_split, RandomizedSearchCV, StratifiedKFold
 )
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.pipeline import FeatureUnion
-from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.preprocessing import StandardScaler
 from sklearn.feature_selection import SelectKBest, f_classif
 from sklearn.decomposition import PCA
 from sklearn.metrics import classification_report, accuracy_score
 from xgboost import XGBClassifier
 import joblib
+
+# Shared feature definitions (upload features.py next to this script on Colab)
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from features import StructuralFeatureExtractor, make_tokens  # noqa: E402
 
 warnings.filterwarnings('ignore')
 
@@ -52,77 +62,38 @@ XGB_DEVICE = 'cuda' if USE_GPU else 'cpu'
 print(f"XGBoost device: {XGB_DEVICE}\n")
 
 # ============================================================
-# HELPER FUNCTIONS & CLASSES (identical to RF training)
+# FEATURE HELPERS
 # ============================================================
-
-def shannon_entropy(data):
-    if not data:
-        return 0
-    entropy = 0
-    for x in Counter(data).values():
-        p_x = x / len(data)
-        entropy -= p_x * math.log(p_x, 2)
-    return entropy
-
-class StructuralFeatureExtractor(BaseEstimator, TransformerMixin):
-    def fit(self, X, y=None):
-        return self
-        
-    def transform(self, X):
-        features = []
-        common_tlds = ['.com', '.org', '.net', '.edu', '.gov', '.id', '.co.id']
-        for url in X:
-            s_url = str(url).lower()
-            length = len(s_url)
-            dot_count = s_url.count('.')
-            slash_count = s_url.count('/')
-            dash_count = s_url.count('-')
-            at_count = s_url.count('@')
-            digit_count = sum(c.isdigit() for c in s_url)
-            digit_ratio = digit_count / length if length > 0 else 0
-            entropy = shannon_entropy(s_url)
-            is_common_tld = 0
-            for tld in common_tlds:
-                if s_url.endswith(tld) or s_url.endswith(tld + '/'):
-                    is_common_tld = 1
-                    break
-            try:
-                clean = s_url.replace("https://", "").replace("http://", "").split('/')[0]
-                subdomain_level = clean.count('.')
-            except:
-                subdomain_level = 0
-            features.append([length, dot_count, slash_count, dash_count, at_count, 
-                             digit_ratio, entropy, is_common_tld, subdomain_level])
-        return np.array(features)
-
-def make_tokens(f):
-    tokens_by_slash = str(f).encode('utf-8').decode('utf-8').split('/')
-    total_tokens = []
-    for i in tokens_by_slash:
-        tokens = str(i).split('-')
-        tokens_dot = []
-        for j in range(0, len(tokens)):
-            temp_tokens = str(tokens[j]).split('.')
-            tokens_dot = tokens_dot + temp_tokens
-        total_tokens = total_tokens + tokens + tokens_dot
-    total_tokens = list(set(total_tokens))
-    if 'com' in total_tokens: total_tokens.remove('com')
-    if 'www' in total_tokens: total_tokens.remove('www')
-    return total_tokens
+# make_tokens / StructuralFeatureExtractor are imported from features.py
+# (single source of truth shared with the RF pipeline and the benchmarks).
 
 # ============================================================
 # MAIN EXECUTION
 # ============================================================
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="Train the XGBoost phishing-URL pipeline.")
+    parser.add_argument('--data', default=None,
+                        help="Path to the CSV dataset (default: auto-detect)")
+    parser.add_argument('--outdir', default='.',
+                        help="Directory for the saved .pkl artifacts (default: %(default)s)")
+    parser.add_argument('--no-undersample', dest='undersample', action='store_false',
+                        help="Train on the full imbalanced dataset instead of undersampling")
+    parser.set_defaults(undersample=True)
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
+    args = parse_args()
     total_start = time.time()
-    
+
     # --- Find dataset ---
-    dataset_paths = [
+    dataset_paths = [p for p in [
+        args.data,
         'URL dataset.csv',
         '/content/URL dataset.csv',
         '/content/drive/MyDrive/URL dataset.csv',
-    ]
+    ] if p]
     df = None
     for path in dataset_paths:
         if os.path.exists(path):
@@ -130,14 +101,14 @@ if __name__ == "__main__":
             df = pd.read_csv(path)
             break
     if df is None:
-        print("Dataset not found! Upload 'URL dataset.csv' to Colab.")
+        print("Dataset not found! Upload 'URL dataset.csv' to Colab or pass --data.")
         exit()
 
     # ============================================================
-    # STAGE 1: Preprocessing & Undersampling
+    # STAGE 1: Preprocessing & (optional) Undersampling
     # ============================================================
     print("=" * 60)
-    print("STAGE 1: Data Preprocessing & Undersampling")
+    print(f"STAGE 1: Data Preprocessing ({'Undersampling' if args.undersample else 'No undersampling'})")
     print("=" * 60)
     
     print(f"Dataset awal: {len(df)} baris")
@@ -148,17 +119,21 @@ if __name__ == "__main__":
     df['label_binary'] = df['type'].map({'phishing': 1, 'legitimate': 0})
     df_phishing = df[df['label_binary'] == 1]
     df_legitimate = df[df['label_binary'] == 0]
-    n_minority = len(df_phishing)
     
     print(f"Sebelum: Legit={len(df_legitimate)}, Phishing={len(df_phishing)}")
     
-    df_legitimate_under = df_legitimate.sample(n=n_minority, random_state=42)
-    df_balanced = pd.concat([df_legitimate_under, df_phishing])
-    df_balanced = df_balanced.sample(frac=1, random_state=42).reset_index(drop=True)
+    if args.undersample:
+        n_minority = len(df_phishing)
+        df_legitimate_under = df_legitimate.sample(n=n_minority, random_state=42)
+        df_balanced = pd.concat([df_legitimate_under, df_phishing])
+        df_balanced = df_balanced.sample(frac=1, random_state=42).reset_index(drop=True)
+        print(f"Setelah undersampling: {len(df_balanced)} total (1:1 ratio)")
+        del df, df_phishing, df_legitimate, df_legitimate_under
+    else:
+        df_balanced = df.sample(frac=1, random_state=42).reset_index(drop=True)
+        print(f"Tanpa undersampling: {len(df_balanced)} total (imbalanced)")
+        del df
     
-    print(f"Setelah undersampling: {len(df_balanced)} total (1:1 ratio)")
-    
-    del df, df_phishing, df_legitimate, df_legitimate_under
     gc.collect()
 
     # ============================================================
@@ -417,11 +392,15 @@ if __name__ == "__main__":
         }
     }
     
-    joblib.dump(artifacts, 'phishing_xgb_pipeline.pkl', compress=3)
-    print(">> Saved: phishing_xgb_pipeline.pkl")
+    os.makedirs(args.outdir, exist_ok=True)
+    pipeline_path = os.path.join(args.outdir, 'phishing_xgb_pipeline.pkl')
+    model_path = os.path.join(args.outdir, 'phishing_xgb_model.pkl')
+
+    joblib.dump(artifacts, pipeline_path, compress=3)
+    print(f">> Saved: {pipeline_path}")
     
-    joblib.dump(best_model, 'phishing_xgb_model.pkl', compress=3)
-    print(">> Saved: phishing_xgb_model.pkl")
+    joblib.dump(best_model, model_path, compress=3)
+    print(f">> Saved: {model_path}")
     
     total_time = (time.time() - total_start) / 60
     print(f"\n{'=' * 60}")
@@ -432,7 +411,7 @@ if __name__ == "__main__":
     try:
         from google.colab import files
         print("\nDownloading files...")
-        files.download('phishing_xgb_pipeline.pkl')
-        files.download('phishing_xgb_model.pkl')
+        files.download(pipeline_path)
+        files.download(model_path)
     except ImportError:
-        print("\nFiles saved to current directory.")
+        print(f"\nFiles saved to: {args.outdir}")

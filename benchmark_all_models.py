@@ -1,10 +1,10 @@
 """
 Automated Performance Benchmark — PKL vs ONNX × RF vs XGBoost
 ==============================================================
-Tests all 4 model variants on the full dataset:
-  1. RF (pickle / scikit-learn)
-  2. RF (ONNX)
-  3. XGBoost (pickle / native)
+Tests all 4 model variants on the held-out test split (41K URLs):
+  1. RF (pickle / scikit-learn)   <- UNDERSAMPLED variant (rf_models/phishing_optimized.pkl)
+  2. RF (ONNX)                    <- NON-undersampled variant deployed in the extension
+  3. XGBoost (pickle / native)    <- UNDERSAMPLED variant
   4. XGBoost (ONNX)
 
 Uses exported TF-IDF vocabularies for ONNX models, and the
@@ -13,13 +13,11 @@ original pipeline objects for PKL models.
 
 import pandas as pd
 import numpy as np
-import math
 import time
 import json
 import os
 import sys
 import psutil
-from collections import Counter
 
 import onnxruntime as ort
 from sklearn.metrics import (
@@ -27,117 +25,19 @@ from sklearn.metrics import (
     precision_score, recall_score, f1_score
 )
 from sklearn.model_selection import train_test_split
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.pipeline import FeatureUnion
-from sklearn.base import BaseEstimator, TransformerMixin
 
 # ============================================================
-# SHARED HELPERS (must be defined before loading pkl)
+# SHARED HELPERS (single source of truth: features.py)
 # ============================================================
 
-def shannon_entropy(data):
-    if not data:
-        return 0
-    entropy = 0
-    for x in Counter(data).values():
-        p_x = x / len(data)
-        entropy -= p_x * math.log(p_x, 2)
-    return entropy
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from features import (  # noqa: E402
+    alias_legacy_main, build_tfidf_vector, extract_features_onnx,
+    preprocess_xgb, structural_features,
+)
 
-class StructuralFeatureExtractor(BaseEstimator, TransformerMixin):
-    def fit(self, X, y=None):
-        return self
-    def transform(self, X):
-        features = []
-        common_tlds = ['.com', '.org', '.net', '.edu', '.gov', '.id', '.co.id']
-        for url in X:
-            s_url = str(url).lower()
-            length = len(s_url)
-            dot_count = s_url.count('.')
-            slash_count = s_url.count('/')
-            dash_count = s_url.count('-')
-            at_count = s_url.count('@')
-            digit_count = sum(c.isdigit() for c in s_url)
-            digit_ratio = digit_count / length if length > 0 else 0
-            entropy = shannon_entropy(s_url)
-            is_common_tld = 0
-            for tld in common_tlds:
-                if s_url.endswith(tld) or s_url.endswith(tld + '/'):
-                    is_common_tld = 1
-                    break
-            try:
-                clean = s_url.replace("https://", "").replace("http://", "").split('/')[0]
-                subdomain_level = clean.count('.')
-            except:
-                subdomain_level = 0
-            features.append([length, dot_count, slash_count, dash_count, at_count,
-                             digit_ratio, entropy, is_common_tld, subdomain_level])
-        return np.array(features)
-
-def make_tokens(f):
-    tokens_by_slash = str(f).encode('utf-8').decode('utf-8').split('/')
-    total_tokens = []
-    for i in tokens_by_slash:
-        tokens = str(i).split('-')
-        tokens_dot = []
-        for j in range(0, len(tokens)):
-            temp_tokens = str(tokens[j]).split('.')
-            tokens_dot = tokens_dot + temp_tokens
-        total_tokens = total_tokens + tokens + tokens_dot
-    total_tokens = list(set(total_tokens))
-    if 'com' in total_tokens: total_tokens.remove('com')
-    if 'www' in total_tokens: total_tokens.remove('www')
-    return total_tokens
-
-# ============================================================
-# ONNX FEATURE EXTRACTION (from exported JSON vocabularies)
-# ============================================================
-
-def build_tfidf_vector(url, tfidf_data):
-    tokens = make_tokens(url.lower())
-    vocab = tfidf_data['vocabulary']
-    idf = tfidf_data['idf']
-    n_features = len(vocab)
-    vec = np.zeros(n_features, dtype=np.float32)
-    for t in tokens:
-        if t in vocab:
-            vec[vocab[t]] += 1
-    for i in range(n_features):
-        vec[i] *= idf[i]
-    norm = np.sqrt(np.sum(vec * vec))
-    if norm > 0:
-        vec /= norm
-    return vec
-
-def structural_features(url):
-    s = url.lower()
-    length = len(s)
-    common_tlds = ['.com', '.org', '.net', '.edu', '.gov', '.id', '.co.id']
-    is_common_tld = 0
-    for tld in common_tlds:
-        if s.endswith(tld) or s.endswith(tld + '/'):
-            is_common_tld = 1; break
-    clean = s.replace("https://", "").replace("http://", "").split('/')[0]
-    return np.array([length, s.count('.'), s.count('/'), s.count('-'), s.count('@'),
-                     sum(c.isdigit() for c in s) / length if length > 0 else 0,
-                     shannon_entropy(s), is_common_tld, clean.count('.')], dtype=np.float32)
-
-def extract_features_onnx(urls, tfidf_data):
-    features = []
-    for url in urls:
-        tfidf_vec = build_tfidf_vector(url, tfidf_data)
-        struct = structural_features(url)
-        features.append(np.concatenate([tfidf_vec, struct]))
-    return np.array(features, dtype=np.float32)
-
-def preprocess_xgb(features, prep_data):
-    mean = np.array(prep_data['scaler_mean'], dtype=np.float32)
-    scale = np.array(prep_data['scaler_scale'], dtype=np.float32)
-    scaled = (features - mean) / scale
-    selected = scaled[:, prep_data['selected_feature_indices']]
-    pca_mean = np.array(prep_data['pca_mean'], dtype=np.float32)
-    pca_components = np.array(prep_data['pca_components'], dtype=np.float32)
-    return ((selected - pca_mean) @ pca_components.T).astype(np.float32)
+# Legacy pkls reference __main__.make_tokens / StructuralFeatureExtractor
+alias_legacy_main()
 
 # ============================================================
 # MAIN
@@ -499,23 +399,26 @@ if __name__ == "__main__":
     print(f"{'Test Samples':<25} {len(y_true):>12}")
 
     # ============================================================
-    # PKL vs ONNX PARITY CHECK
+    # CROSS-VARIANT CHECK (not a parity check!)
     # ============================================================
+    # RF (PKL) is the *undersampled* variant; RF (ONNX) is the *non-undersampled*
+    # variant deployed in the extension (see MODELS.md). Disagreements are
+    # expected and are exactly what the undersampling comparison studies.
     print(f"\n{'=' * 80}")
-    print("PKL vs ONNX PARITY CHECK")
+    print("CROSS-VARIANT CHECK (RF PKL = undersampled vs RF ONNX = non-undersampled)")
     print(f"{'=' * 80}")
 
     if 'RF (PKL)' in results and 'RF (ONNX)' in results:
         rf_match = np.sum(results['RF (PKL)']['labels'] == results['RF (ONNX)']['labels'])
-        print(f"  RF:  PKL vs ONNX agree on {rf_match}/{len(y_true)} predictions ({rf_match/len(y_true)*100:.2f}%)")
+        print(f"  RF variants agree on {rf_match}/{len(y_true)} predictions ({rf_match/len(y_true)*100:.2f}%)")
         if rf_match == len(y_true):
-            print("  ✓ RF models are perfectly equivalent")
+            print("  (identical predictions)")
         else:
-            print(f"  ⚠ RF models differ on {len(y_true) - rf_match} predictions")
+            print(f"  (differ on {len(y_true) - rf_match} predictions — expected, different training data)")
 
     if 'XGB (PKL)' in results and 'XGB (ONNX)' in results:
         xgb_match = np.sum(results['XGB (PKL)']['labels'] == results['XGB (ONNX)']['labels'])
-        print(f"  XGB: PKL vs ONNX agree on {xgb_match}/{len(y_true)} predictions ({xgb_match/len(y_true)*100:.2f}%)")
+        print(f"  XGB parity (same undersampled model, PKL vs ONNX): {xgb_match}/{len(y_true)} agree ({xgb_match/len(y_true)*100:.2f}%)")
         if xgb_match == len(y_true):
             print("  ✓ XGB models are perfectly equivalent")
         else:

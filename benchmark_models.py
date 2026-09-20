@@ -7,12 +7,11 @@ to build feature vectors, ensuring exact alignment with models.
 
 import pandas as pd
 import numpy as np
-import math
 import time
 import json
 import os
+import sys
 import psutil
-from collections import Counter
 
 import onnxruntime as ort
 from sklearn.metrics import (
@@ -21,110 +20,14 @@ from sklearn.metrics import (
 )
 
 # ============================================================
-# FEATURE EXTRACTION (matches JS extension exactly)
+# FEATURE EXTRACTION (single source of truth: features.py)
 # ============================================================
 
-def shannon_entropy(data):
-    if not data:
-        return 0
-    entropy = 0
-    for x in Counter(data).values():
-        p_x = x / len(data)
-        entropy -= p_x * math.log(p_x, 2)
-    return entropy
-
-def make_tokens(url):
-    """Tokenizer matching JS and Python training code."""
-    tokens_by_slash = str(url).split('/')
-    total_tokens = []
-    for part in tokens_by_slash:
-        by_dash = part.split('-')
-        by_dot = []
-        for t in by_dash:
-            by_dot.extend(t.split('.'))
-        total_tokens.extend(by_dash)
-        total_tokens.extend(by_dot)
-    total_tokens = list(set(total_tokens))
-    if 'com' in total_tokens: total_tokens.remove('com')
-    if 'www' in total_tokens: total_tokens.remove('www')
-    return [t for t in total_tokens if t]
-
-def build_tfidf_vector(url, tfidf_data):
-    """Build TF-IDF vector using exported vocabulary (matches JS)."""
-    tokens = make_tokens(url.lower())
-    vocab = tfidf_data['vocabulary']
-    idf = tfidf_data['idf']
-    n_features = len(vocab)
-
-    vec = np.zeros(n_features, dtype=np.float32)
-
-    # Term frequency
-    for t in tokens:
-        if t in vocab:
-            vec[vocab[t]] += 1
-
-    # Apply IDF and L2 normalize
-    for i in range(n_features):
-        vec[i] *= idf[i]
-
-    norm = np.sqrt(np.sum(vec * vec))
-    if norm > 0:
-        vec /= norm
-
-    return vec
-
-def structural_features(url):
-    """9 structural features matching JS and Python training code."""
-    s = url.lower()
-    length = len(s)
-    dot_count = s.count('.')
-    slash_count = s.count('/')
-    dash_count = s.count('-')
-    at_count = s.count('@')
-    digit_count = sum(c.isdigit() for c in s)
-    digit_ratio = digit_count / length if length > 0 else 0
-    entropy = shannon_entropy(s)
-
-    common_tlds = ['.com', '.org', '.net', '.edu', '.gov', '.id', '.co.id']
-    is_common_tld = 0
-    for tld in common_tlds:
-        if s.endswith(tld) or s.endswith(tld + '/'):
-            is_common_tld = 1
-            break
-
-    clean = s.replace("https://", "").replace("http://", "").split('/')[0]
-    subdomain_level = clean.count('.')
-
-    return np.array([length, dot_count, slash_count, dash_count, at_count,
-                     digit_ratio, entropy, is_common_tld, subdomain_level], dtype=np.float32)
-
-def extract_features(urls, tfidf_data):
-    """Extract full feature vector for a batch of URLs."""
-    features = []
-    for url in urls:
-        tfidf_vec = build_tfidf_vector(url, tfidf_data)
-        struct = structural_features(url)
-        features.append(np.concatenate([tfidf_vec, struct]))
-    return np.array(features, dtype=np.float32)
-
-# ============================================================
-# XGBoost PREPROCESSING
-# ============================================================
-
-def preprocess_xgb(features, prep_data):
-    """Apply StandardScaler -> feature selection -> PCA (matches JS)."""
-    mean = np.array(prep_data['scaler_mean'], dtype=np.float32)
-    scale = np.array(prep_data['scaler_scale'], dtype=np.float32)
-    scaled = (features - mean) / scale
-
-    indices = prep_data['selected_feature_indices']
-    selected = scaled[:, indices]
-
-    pca_mean = np.array(prep_data['pca_mean'], dtype=np.float32)
-    pca_components = np.array(prep_data['pca_components'], dtype=np.float32)
-    pca_result = (selected - pca_mean) @ pca_components.T
-
-    return pca_result.astype(np.float32)
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from features import (  # noqa: E402
+    extract_features_onnx as extract_features,
+    preprocess_xgb,
+)
 
 # ============================================================
 # MAIN
