@@ -1,0 +1,5 @@
+model,train_size,accuracy,precision_phishing,recall_phishing,f1_phishing,fpr,fp,fn,latency_avg_ms,latency_p95_ms
+RF (undersampled),167100,0.9924,0.997,0.9702,0.9834,0.00088,61,623,26.4855,28.16
+RF (full dataset),360140,0.9904,1.0,0.9587,0.9789,1e-05,1,863,23.9623,26.0653
+XGBoost (undersampled),167100,0.9946,0.9883,0.9887,0.9885,0.00354,245,237,3.8863,4.8551
+XGBoost (full dataset),360140,0.9955,0.9957,0.9848,0.9903,0.00127,88,317,3.3934,3.8443

@@ -6,3 +6,4 @@ URL dataset.csv
 chat_history.md.vscode/
 __pycache__/
 *.pyc
+sampling_results/*.pkl
