@@ -7,3 +7,6 @@ chat_history.md.vscode/
 __pycache__/
 *.pyc
 sampling_results/*.pkl
+sampling_results/*.onnx
+sampling_results/*_preprocessing.json
+sampling_results/*_tfidf.json

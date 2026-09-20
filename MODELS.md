@@ -44,6 +44,17 @@ Trained by `benchmark_sampling.py` (2026-09-20) with the shared protocol in `sam
 
 Results: `sampling_results/sampling_report.md` (metrics JSON + CSV alongside).
 
+ONNX exports (local, `export_to_web.py` / `export_xgb_onnx.py`; gitignored, regenerable):
+
+| Export | Files | SHA-256 |
+|---|---|---|
+| RF undersampled | `rf_under.onnx` (638 KB) + `rf_under_tfidf.json` | `a74ece21937d1ee81021e749911beb904874a9491242acb8da8b6c1e96151e06`, `cf5bdc5303de09c8412a3a23530b172a34cfe08bbb39715e8760eefaa055e7da` |
+| RF full | `rf_full.onnx` (730 KB) + `rf_full_tfidf.json` | `625c9333151667c478a59dccf66095e69338996033627d85bb493b596ac95135`, `594309360bc559b63d7ec78585f4ac111898be9f991f2bf334a200b630a32c7d` |
+| XGB undersampled | `xgb_under.onnx` (1,253 KB) + `xgb_under_preprocessing.json` (654 KB) + `xgb_under_tfidf.json` | `daa8c8d49a200ac3061720f052cc82788b753b3b4fd07f20e8f6e605f105f21f`, `9a87f5a92e9d31fd8b3b1271f9706ed459327394de3866eb83329a9391e9eeba`, `57f715b79a084bd37588ea11e0e05d11c73b8efb4d65dd714f21a519ce878faf` |
+| XGB full | `xgb_full.onnx` (1,291 KB) + `xgb_full_preprocessing.json` (655 KB) + `xgb_full_tfidf.json` | `4efd7ead699770a04423bd436464b070365980b83f2a36a9608dd7c781b2c702`, `54e37c7fdac56ed7cf462c2b2363c2e9b4820992dbf67b4e919eba85db95c289`, `7885a6b1c2bc516b2f77c29a12054da13d5daceb92efb87bce75d13d61949094` |
+
+Benchmark outputs: `benchmark_pkl_vs_onnx_under.md` (PKL vs ONNX on the undersampled pair, common 90,036-URL test set).
+
 ## Regenerating
 
 ```bash

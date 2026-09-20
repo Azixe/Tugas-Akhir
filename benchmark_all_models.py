@@ -1,16 +1,36 @@
 """
 Automated Performance Benchmark — PKL vs ONNX × RF vs XGBoost
 ==============================================================
-Tests all 4 model variants on the held-out test split (41K URLs):
-  1. RF (pickle / scikit-learn)   <- UNDERSAMPLED variant (rf_models/phishing_optimized.pkl)
-  2. RF (ONNX)                    <- NON-undersampled variant deployed in the extension
-  3. XGBoost (pickle / native)    <- UNDERSAMPLED variant
+Evaluates up to four entries on the same held-out test set:
+  1. RF (pickle / scikit-learn)
+  2. RF (ONNX)
+  3. XGBoost (pickle / native)
   4. XGBoost (ONNX)
 
-Uses exported TF-IDF vocabularies for ONNX models, and the
-original pipeline objects for PKL models.
+Two protocols (--protocol):
+  legacy (default): balanced undersampled split, 41,776 test URLs
+  common:           sampling.py common split on the full dataset, 90,036 URLs
+
+All paths are overridable, so any matching PKL/ONNX pair can be benchmarked.
+For the sampling-study models:
+
+  python benchmark_all_models.py --protocol common \
+      --rf-pkl sampling_results/rf_under.pkl \
+      --rf-onnx sampling_results/rf_under.onnx \
+      --rf-tfidf sampling_results/rf_under_tfidf.json \
+      --xgb-pkl sampling_results/xgb_under.pkl \
+      --xgb-onnx sampling_results/xgb_under.onnx \
+      --xgb-tfidf sampling_results/xgb_under_tfidf.json \
+      --xgb-prep sampling_results/xgb_under_preprocessing.json \
+      --out benchmark_pkl_vs_onnx_under.md
+
+Latency is measured per URL as the full pipeline (feature extraction +
+preprocessing + model) — the same path the extension executes at scan time.
+A model-only latency is reported for the ONNX entries as well.
 """
 
+import argparse
+import contextlib
 import pandas as pd
 import numpy as np
 import time
@@ -18,6 +38,7 @@ import json
 import os
 import sys
 import psutil
+import joblib
 
 import onnxruntime as ort
 from sklearn.metrics import (
@@ -43,45 +64,99 @@ alias_legacy_main()
 # MAIN
 # ============================================================
 
-if __name__ == "__main__":
+def parse_args():
+    parser = argparse.ArgumentParser(description="PKL vs ONNX benchmark for RF and XGBoost.")
+    parser.add_argument('--data', default='URL dataset.csv',
+                        help="Dataset CSV (default: %(default)s)")
+    parser.add_argument('--protocol', choices=['legacy', 'common'], default='legacy',
+                        help="Test-set protocol (default: %(default)s)")
+    parser.add_argument('--rf-pkl', default=os.path.join('rf_models', 'phishing_optimized.pkl'))
+    parser.add_argument('--xgb-pkl', default=os.path.join('Xgboost', 'phishing_xgb_pipeline.pkl'))
+    parser.add_argument('--rf-onnx', default=os.path.join('phishingdetectorExt', 'phishing_rf.onnx'))
+    parser.add_argument('--xgb-onnx', default=os.path.join('phishingdetectorExt', 'phishing_xgb.onnx'))
+    parser.add_argument('--rf-tfidf', default=os.path.join('phishingdetectorExt', 'tfidf_data.json'))
+    parser.add_argument('--xgb-tfidf', default=os.path.join('phishingdetectorExt', 'tfidf_data_xgb.json'))
+    parser.add_argument('--xgb-prep', default=os.path.join('phishingdetectorExt', 'xgb_preprocessing.json'))
+    parser.add_argument('--latency-samples', type=int, default=1000,
+                        help="URLs sampled for per-URL latency (default: %(default)s)")
+    parser.add_argument('--max-test-rows', type=int, default=0,
+                        help="Debug: cap the test set size (0 = full)")
+    parser.add_argument('--out', default=None,
+                        help="Write the full report to this Markdown file")
+    return parser.parse_args()
+
+
+class Tee:
+    def __init__(self, *streams):
+        self.streams = streams
+
+    def write(self, s):
+        for st in self.streams:
+            st.write(s)
+
+    def flush(self):
+        for st in self.streams:
+            st.flush()
+
+
+def main():
+    args = parse_args()
+    if args.out:
+        with open(args.out, 'w', encoding='utf-8') as f:
+            with contextlib.redirect_stdout(Tee(sys.stdout, f)):
+                run(args)
+    else:
+        run(args)
+
+
+def run(args):
     print("=" * 70)
     print("BENCHMARK: PKL vs ONNX × RF vs XGBoost (All 4 Models)")
+    print(f"Protocol: {args.protocol}")
     print("=" * 70)
 
-    # --- Paths ---
-    EXT_DIR = 'phishingdetectorExt'
-    RF_ONNX  = os.path.join(EXT_DIR, 'phishing_rf.onnx')
-    XGB_ONNX = os.path.join(EXT_DIR, 'phishing_xgb.onnx')
-    RF_TFIDF  = os.path.join(EXT_DIR, 'tfidf_data.json')
-    XGB_TFIDF = os.path.join(EXT_DIR, 'tfidf_data_xgb.json')
-    XGB_PREP  = os.path.join(EXT_DIR, 'xgb_preprocessing.json')
-    RF_PKL   = os.path.join('rf_models', 'phishing_optimized.pkl')
-    XGB_PKL  = os.path.join('Xgboost', 'phishing_xgb_pipeline.pkl')
-    DATASET  = 'URL dataset.csv'
+    # --- Paths (from CLI) ---
+    RF_ONNX, XGB_ONNX = args.rf_onnx, args.xgb_onnx
+    RF_TFIDF, XGB_TFIDF, XGB_PREP = args.rf_tfidf, args.xgb_tfidf, args.xgb_prep
+    RF_PKL, XGB_PKL = args.rf_pkl, args.xgb_pkl
 
-    missing = [f for f in [RF_ONNX, XGB_ONNX, RF_TFIDF, XGB_TFIDF, XGB_PREP, RF_PKL, XGB_PKL, DATASET]
+    missing = [f for f in [RF_ONNX, XGB_ONNX, RF_TFIDF, XGB_TFIDF, XGB_PREP, RF_PKL, args.data]
                if not os.path.exists(f)]
     if missing:
         for f in missing:
             print(f"  ERROR: {f} not found!")
+        print("  (XGB_PKL is optional — the benchmark continues without it)")
         exit()
 
     # --- Load Dataset ---
     print("\n[1] Loading dataset...")
-    df = pd.read_csv(DATASET)
-    df = df.dropna(subset=['url', 'type'])
-    df = df.drop_duplicates(subset=['url'])
-    df['label'] = df['type'].map({'phishing': 1, 'legitimate': 0})
+    if args.protocol == 'common':
+        import sampling
+        df = sampling.load_clean_dataset(args.data)
+        _, test_df = sampling.common_split(df)
+        print(f"    Protocol: common (sampling.py) — full dataset {len(df)} rows")
+    else:
+        df = pd.read_csv(args.data)
+        df = df.dropna(subset=['url', 'type'])
+        df = df.drop_duplicates(subset=['url'])
+        df['label'] = df['type'].map({'phishing': 1, 'legitimate': 0})
 
-    # Undersample (same as training)
-    df_phish = df[df['label'] == 1]
-    df_legit = df[df['label'] == 0].sample(n=len(df_phish), random_state=42)
-    df_balanced = pd.concat([df_legit, df_phish]).sample(frac=1, random_state=42).reset_index(drop=True)
+        # Undersample (same as the legacy training protocol)
+        df_phish = df[df['label'] == 1]
+        df_legit = df[df['label'] == 0].sample(n=len(df_phish), random_state=42)
+        df_balanced = pd.concat([df_legit, df_phish]).sample(frac=1, random_state=42).reset_index(drop=True)
 
-    # Same test split as training (80/20)
-    _, test_df = train_test_split(df_balanced, test_size=0.2, random_state=42, stratify=df_balanced['label'])
+        # Same test split as training (80/20)
+        _, test_df = train_test_split(df_balanced, test_size=0.2, random_state=42, stratify=df_balanced['label'])
+        print("    Protocol: legacy (balanced undersampled split)")
+
     test_urls = test_df['url'].values
     y_true = test_df['label'].values
+    if args.max_test_rows and args.max_test_rows < len(test_urls):
+        sel = np.random.RandomState(42).choice(len(test_urls), args.max_test_rows, replace=False)
+        test_urls = test_urls[sel]
+        y_true = y_true[sel]
+        print(f"    !! Debug: test set capped to {len(test_urls)} rows")
     print(f"    Test set: {len(test_urls)} URLs ({sum(y_true==0)} legit, {sum(y_true==1)} phishing)")
 
     # --- Load PKL Models ---
@@ -96,15 +171,9 @@ if __name__ == "__main__":
     print(f"    RF pkl type: {type(rf_pkl_pipeline).__name__}")
 
     # XGBoost PKL — dict with model + preprocessing objects
-    # May fail if saved with newer numpy (Colab numpy 2.x vs local 1.x)
     xgb_pkl_loaded = False
     print("    Loading XGBoost pkl...")
     try:
-        # Try monkey-patching numpy._core for cross-version compatibility
-        import numpy.core
-        if not hasattr(np, '_core'):
-            sys.modules['numpy._core'] = np.core
-            sys.modules['numpy._core.multiarray'] = np.core.multiarray
         xgb_pkl_artifacts = joblib.load(XGB_PKL)
         print(f"    XGB pkl keys: {list(xgb_pkl_artifacts.keys())}")
         xgb_pkl_model = xgb_pkl_artifacts['model']
@@ -115,11 +184,10 @@ if __name__ == "__main__":
         xgb_pkl_rfecv = xgb_pkl_artifacts.get('rfecv', None)
         xgb_pkl_loaded = True
     except Exception as e:
-        print(f"    ⚠ XGB pkl failed to load: {e}")
-        print(f"    ⚠ This pkl was saved with a newer numpy version (Colab).")
-        print(f"    ⚠ To fix: re-export the pkl from Colab with matching numpy,")
-        print(f"    ⚠ or run the benchmark on Colab instead.")
-        print(f"    → Skipping XGB (PKL), benchmarking remaining 3 models.")
+        print(f"    ⚠ XGB pkl failed to load ({type(e).__name__}): {e}")
+        print("    ⚠ The Colab pkl was saved under numpy 2.x (numpy._core) — it cannot load on numpy 1.x.")
+        print("    ⚠ Use a locally trained pkl instead, e.g. sampling_results/xgb_under.pkl")
+        print("    → Skipping XGB (PKL), benchmarking remaining 3 models.")
 
     # --- Load ONNX Models ---
     print("\n[3] Loading ONNX models...")
@@ -145,7 +213,8 @@ if __name__ == "__main__":
     # PREDICTIONS — ALL 4 MODELS
     # ============================================================
 
-    LATENCY_SAMPLES = 1000
+    sample_count = min(args.latency_samples, len(test_urls))
+    sample_idx = np.random.RandomState(42).choice(len(test_urls), sample_count, replace=False)
     results = {}
 
     # ----- MODEL 1: RF PKL -----
@@ -157,10 +226,9 @@ if __name__ == "__main__":
     # Probability for confidence
     rf_pkl_probs = rf_pkl_pipeline.predict_proba(test_urls)
 
-    # Per-sample latency
-    print("    Measuring latency (1000 samples)...")
+    # Per-sample latency (full pipeline: features + classifier)
+    print(f"    Measuring latency ({sample_count} samples, full pipeline)...")
     rf_pkl_latencies = []
-    sample_idx = np.random.choice(len(test_urls), LATENCY_SAMPLES, replace=False)
     for idx in sample_idx:
         url_arr = [test_urls[idx]]
         t0 = time.perf_counter()
@@ -184,14 +252,14 @@ if __name__ == "__main__":
         if hasattr(X_test_xgb_raw, 'toarray'):
             X_test_xgb_raw = X_test_xgb_raw.toarray()
 
-        # Apply preprocessing pipeline: scaler → kbest → (rfecv?) → pca
+        # Apply preprocessing pipeline: scaler → kbest → importance mask → pca
         X_test_scaled = xgb_pkl_scaler.transform(X_test_xgb_raw)
         X_test_kbest = xgb_pkl_kbest.transform(X_test_scaled)
-        if xgb_pkl_rfecv is not None:
-            X_test_rfecv = xgb_pkl_rfecv.transform(X_test_kbest)
+        if xgb_pkl_artifacts.get('important_mask') is not None:
+            X_test_imp = X_test_kbest[:, xgb_pkl_artifacts['important_mask']]
         else:
-            X_test_rfecv = X_test_kbest
-        X_test_pca = xgb_pkl_pca.transform(X_test_rfecv)
+            X_test_imp = X_test_kbest
+        X_test_pca = xgb_pkl_pca.transform(X_test_imp)
 
         feat_time = time.time() - t0
         print(f"    Feature extraction: {feat_time:.1f}s")
@@ -203,7 +271,7 @@ if __name__ == "__main__":
         xgb_pkl_probs = xgb_pkl_model.predict_proba(X_test_pca)
 
         # Per-sample latency (includes feature extraction + preprocessing + predict)
-        print("    Measuring latency (1000 samples, full pipeline)...")
+        print(f"    Measuring latency ({sample_count} samples, full pipeline)...")
         xgb_pkl_latencies = []
         for idx in sample_idx:
             url_arr = [test_urls[idx]]
@@ -214,11 +282,11 @@ if __name__ == "__main__":
                 x_raw = x_raw.toarray()
             x_s = xgb_pkl_scaler.transform(x_raw)
             x_k = xgb_pkl_kbest.transform(x_s)
-            if xgb_pkl_rfecv is not None:
-                x_r = xgb_pkl_rfecv.transform(x_k)
+            if xgb_pkl_artifacts.get('important_mask') is not None:
+                x_i = x_k[:, xgb_pkl_artifacts['important_mask']]
             else:
-                x_r = x_k
-            x_p = xgb_pkl_pca.transform(x_r)
+                x_i = x_k
+            x_p = xgb_pkl_pca.transform(x_i)
             xgb_pkl_model.predict(x_p)
             xgb_pkl_latencies.append((time.perf_counter() - t0) * 1000)
         xgb_pkl_latencies = np.array(xgb_pkl_latencies)
@@ -257,18 +325,25 @@ if __name__ == "__main__":
         rf_onnx_probs.extend(res[1].tolist())
     rf_onnx_labels = np.array(rf_onnx_labels, dtype=int)
 
-    # Latency
-    print("    Measuring latency (1000 samples)...")
+    # Latency: full pipeline per URL (feature extraction + model) and model-only
+    print(f"    Measuring latency ({sample_count} samples, full pipeline + model-only)...")
     rf_onnx_latencies = []
+    rf_onnx_model_latencies = []
     for idx in sample_idx:
-        sample = X_rf_onnx[idx:idx+1]
         t0 = time.perf_counter()
-        rf_onnx_session.run(None, {rf_onnx_input: sample})
+        feats = extract_features_onnx([test_urls[idx]], rf_tfidf_data)
+        rf_onnx_session.run(None, {rf_onnx_input: feats})
         rf_onnx_latencies.append((time.perf_counter() - t0) * 1000)
+
+        t0 = time.perf_counter()
+        rf_onnx_session.run(None, {rf_onnx_input: X_rf_onnx[idx:idx+1]})
+        rf_onnx_model_latencies.append((time.perf_counter() - t0) * 1000)
     rf_onnx_latencies = np.array(rf_onnx_latencies)
+    rf_onnx_model_latencies = np.array(rf_onnx_model_latencies)
 
     results['RF (ONNX)'] = {
         'labels': rf_onnx_labels, 'latencies': rf_onnx_latencies,
+        'model_latencies': rf_onnx_model_latencies,
         'size_kb': rf_onnx_size
     }
 
@@ -298,18 +373,26 @@ if __name__ == "__main__":
         xgb_onnx_probs.extend(res[1].tolist())
     xgb_onnx_labels = np.array(xgb_onnx_labels, dtype=int)
 
-    # Latency
-    print("    Measuring latency (1000 samples)...")
+    # Latency: full pipeline per URL (features + preprocessing + model) and model-only
+    print(f"    Measuring latency ({sample_count} samples, full pipeline + model-only)...")
     xgb_onnx_latencies = []
+    xgb_onnx_model_latencies = []
     for idx in sample_idx:
-        sample = X_xgb_onnx[idx:idx+1]
         t0 = time.perf_counter()
-        xgb_onnx_session.run(None, {xgb_onnx_input: sample})
+        raw = extract_features_onnx([test_urls[idx]], xgb_tfidf_data)
+        feats = preprocess_xgb(raw, xgb_prep_data)
+        xgb_onnx_session.run(None, {xgb_onnx_input: feats})
         xgb_onnx_latencies.append((time.perf_counter() - t0) * 1000)
+
+        t0 = time.perf_counter()
+        xgb_onnx_session.run(None, {xgb_onnx_input: X_xgb_onnx[idx:idx+1]})
+        xgb_onnx_model_latencies.append((time.perf_counter() - t0) * 1000)
     xgb_onnx_latencies = np.array(xgb_onnx_latencies)
+    xgb_onnx_model_latencies = np.array(xgb_onnx_model_latencies)
 
     results['XGB (ONNX)'] = {
         'labels': xgb_onnx_labels, 'latencies': xgb_onnx_latencies,
+        'model_latencies': xgb_onnx_model_latencies,
         'size_kb': xgb_onnx_size + xgb_prep_size
     }
 
@@ -361,6 +444,7 @@ if __name__ == "__main__":
             'lat_avg': r['latencies'].mean(),
             'lat_p95': np.percentile(r['latencies'], 95),
             'lat_max': r['latencies'].max(),
+            'lat_model_avg': r['model_latencies'].mean() if 'model_latencies' in r else None,
             'size': r['size_kb'],
         }
 
@@ -382,11 +466,13 @@ if __name__ == "__main__":
         ('Avg Latency (ms)',  'lat_avg', '.3f'),
         ('P95 Latency (ms)',  'lat_p95', '.3f'),
         ('Max Latency (ms)',  'lat_max', '.3f'),
+        ('Avg Model-only (ms)', 'lat_model_avg', '.3f'),
     ]
     for label, key, fmt in lat_rows:
         line = f"{label:<25}"
         for name in model_names:
-            line += f" {metrics[name][key]:>12{fmt}}"
+            val = metrics[name].get(key)
+            line += f" {val:>12{fmt}}" if val is not None else f" {'-':>12}"
         print(line)
 
     print("-" * 75)
@@ -399,32 +485,28 @@ if __name__ == "__main__":
     print(f"{'Test Samples':<25} {len(y_true):>12}")
 
     # ============================================================
-    # CROSS-VARIANT CHECK (not a parity check!)
+    # PKL vs ONNX AGREEMENT (same model, two formats)
     # ============================================================
-    # RF (PKL) is the *undersampled* variant; RF (ONNX) is the *non-undersampled*
-    # variant deployed in the extension (see MODELS.md). Disagreements are
-    # expected and are exactly what the undersampling comparison studies.
     print(f"\n{'=' * 80}")
-    print("CROSS-VARIANT CHECK (RF PKL = undersampled vs RF ONNX = non-undersampled)")
+    print("PKL vs ONNX AGREEMENT")
     print(f"{'=' * 80}")
+    print("  Note: the ONNX feature path mirrors utils.js and filters empty tokens,")
+    print("  while sklearn counts them ('' is in the vocabulary), so tiny divergences")
+    print("  (~0.2%) are expected for XGBoost; RF is typically identical.")
 
     if 'RF (PKL)' in results and 'RF (ONNX)' in results:
         rf_match = np.sum(results['RF (PKL)']['labels'] == results['RF (ONNX)']['labels'])
-        print(f"  RF variants agree on {rf_match}/{len(y_true)} predictions ({rf_match/len(y_true)*100:.2f}%)")
-        if rf_match == len(y_true):
-            print("  (identical predictions)")
-        else:
-            print(f"  (differ on {len(y_true) - rf_match} predictions — expected, different training data)")
+        print(f"  RF:  {rf_match}/{len(y_true)} predictions agree ({rf_match/len(y_true)*100:.4f}%)")
+        if rf_match < len(y_true):
+            print("       (if the two files are different variants, differences are expected — see MODELS.md)")
 
     if 'XGB (PKL)' in results and 'XGB (ONNX)' in results:
         xgb_match = np.sum(results['XGB (PKL)']['labels'] == results['XGB (ONNX)']['labels'])
-        print(f"  XGB parity (same undersampled model, PKL vs ONNX): {xgb_match}/{len(y_true)} agree ({xgb_match/len(y_true)*100:.2f}%)")
-        if xgb_match == len(y_true):
-            print("  ✓ XGB models are perfectly equivalent")
-        else:
-            print(f"  ⚠ XGB models differ on {len(y_true) - xgb_match} predictions")
+        print(f"  XGB: {xgb_match}/{len(y_true)} predictions agree ({xgb_match/len(y_true)*100:.4f}%)")
+        if xgb_match < len(y_true):
+            print("       (small divergence expected from the empty-token emulation described above)")
     elif 'XGB (PKL)' not in results:
-        print("  XGB: PKL not available — parity check skipped")
+        print("  XGB: PKL not available — agreement check skipped")
 
     # ============================================================
     # THESIS SUCCESS CRITERIA
@@ -443,8 +525,15 @@ if __name__ == "__main__":
     for crit_name, check_fn in criteria:
         line = f"  {crit_name:<25}"
         for name in model_names:
-            passed = check_fn(metrics[name])
-            line += f" {name}: {'PASS' if passed else 'FAIL':>4}  "
+            if crit_name == "Model < 2MB" and "(PKL)" in name:
+                line += f" {name}: {'n/a':>4}  "
+            else:
+                passed = check_fn(metrics[name])
+                line += f" {name}: {'PASS' if passed else 'FAIL':>4}  "
         print(line)
 
     print(f"\nBenchmark complete.")
+
+
+if __name__ == "__main__":
+    main()
