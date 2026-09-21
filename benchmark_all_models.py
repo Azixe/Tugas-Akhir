@@ -22,7 +22,7 @@ For the sampling-study models:
       --xgb-onnx sampling_results/xgb_under.onnx \
       --xgb-tfidf sampling_results/xgb_under_tfidf.json \
       --xgb-prep sampling_results/xgb_under_preprocessing.json \
-      --out benchmark_pkl_vs_onnx_under.md
+      --out docs/benchmark_pkl_vs_onnx_under.md
 
 Latency is measured per URL as the full pipeline (feature extraction +
 preprocessing + model) — the same path the extension executes at scan time.
