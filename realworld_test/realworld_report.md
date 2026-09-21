@@ -56,7 +56,7 @@ RF and XGBoost agree on 80.0% of URLs.
 
 ## Per-URL results (browser variant)
 
-Format: ✓/✗ = raw model label vs expected; the word is the extension verdict at its thresholds (>80% PHISHING, 60–80% SUSPICIOUS, <60% SAFE).
+Format: ✓/✗ = raw model label vs expected; the word is the extension verdict at its thresholds (>80% PHISHING, 60–80% SUSPICIOUS, <60% SAFE). Percentages are the model's phishing probability (skor), the same quantity the thresholds and the extension UI use.
 
 | # | Expected | URL (browser) | RF | XGB |
 |---:|---|---|---|---|

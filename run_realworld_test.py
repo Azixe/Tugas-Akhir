@@ -342,7 +342,9 @@ def main():
     md.append("## Per-URL results (browser variant)")
     md.append("")
     md.append("Format: ✓/✗ = raw model label vs expected; the word is the extension verdict "
-              "at its thresholds (>80% PHISHING, 60–80% SUSPICIOUS, <60% SAFE).")
+              "at its thresholds (>80% PHISHING, 60–80% SUSPICIOUS, <60% SAFE). "
+              "Percentages are the model's phishing probability (skor), the same quantity "
+              "the thresholds and the extension UI use.")
     md.append("")
     md.append("| # | Expected | URL (browser) | RF | XGB |")
     md.append("|---:|---|---|---|---|")
