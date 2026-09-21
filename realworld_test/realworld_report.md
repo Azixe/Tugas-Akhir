@@ -1,8 +1,8 @@
 # Real-World Validation — Live PhishTank + Legitimate URLs
 
 - Phishing source: PhishTank `online-valid` (76,683 URLs with unique domains), sampled 25 across unique domains, seed 42, collected 2026-09-20
-- Legitimate: 20 manual URLs (FP-prone sites: Steam, Reddit, Discord, ...)
-- Extension model version: v3.1  |  RF sha256 `625c9333151667c4…`  |  XGB sha256 `daa8c8d49a200ac3…`
+- Legitimate: 25 manual URLs (FP-prone sites: Steam, Reddit, Discord, ...)
+- Extension model version: v3.2  |  RF sha256 `625c9333151667c4…`  |  XGB sha256 `daa8c8d49a200ac3…`
 - Two variants scored per URL: **as-listed** (raw feed string) and **browser** (http→https upgrade + curl-resolved redirects; 5 URLs differ). The browser variant is primary.
 - URL-only analysis (same input the extension sees); liveness does not affect scoring
 - Training set (Mendeley 2024): phishing 93.8% http / 6.2% https, legitimate 0.0% http / 100.0% https — the scheme alone separates ~94% of the data
@@ -12,23 +12,23 @@
 
 | Metric | Random Forest | XGBoost |
 |---|---:|---:|
-| Accuracy | 44.44% | 55.56% |
-| Precision (phishing) | 0.00% | 77.78% |
+| Accuracy | 50.00% | 56.00% |
+| Precision (phishing) | 0.00% | 63.64% |
 | Recall (phishing) | 0.00% | 28.00% |
-| F1 (phishing) | 0.00% | 41.18% |
-| False Positive Rate | 0.00% | 10.00% |
-| TP / FP / TN / FN | 0 / 0 / 20 / 25 | 7 / 2 / 18 / 18 |
+| F1 (phishing) | 0.00% | 38.89% |
+| False Positive Rate | 0.00% | 16.00% |
+| TP / FP / TN / FN | 0 / 0 / 25 / 25 | 7 / 4 / 21 / 18 |
 
-RF and XGBoost agree on 80.0% of URLs.
+RF and XGBoost agree on 78.0% of URLs.
 
 ## Summary — as-listed (reference)
 
 | Metric | Random Forest | XGBoost |
 |---|---:|---:|
-| Accuracy | 51.11% | 64.44% |
+| Accuracy | 56.00% | 64.00% |
 | Recall (phishing) | 12.00% | 44.00% |
-| False Positive Rate | 0.00% | 10.00% |
-| TP / FP / TN / FN | 3 / 0 / 20 / 22 | 11 / 2 / 18 / 14 |
+| False Positive Rate | 0.00% | 16.00% |
+| TP / FP / TN / FN | 3 / 0 / 25 / 22 | 11 / 4 / 21 / 14 |
 
 ## Scheme sensitivity (why one letter flips the model)
 
@@ -51,8 +51,8 @@ RF and XGBoost agree on 80.0% of URLs.
 
 | Model | Blocked (>80%) | Warned (60-80%) | SAFE (<60%) |
 |---|---|---|---|
-| Random Forest | 0 (0 TP / 0 FP) | 0 | 45 |
-| XGBoost | 7 (5 TP / 2 FP) | 1 | 37 |
+| Random Forest | 0 (0 TP / 0 FP) | 0 | 50 |
+| XGBoost | 9 (5 TP / 4 FP) | 1 | 40 |
 
 ## Per-URL results (browser variant)
 
@@ -105,6 +105,11 @@ Format: ✓/✗ = raw model label vs expected; the word is the extension verdict
 | 43 | legit | https://www.cloudflare.com/ | ✓ SAFE (9.0%) | ✓ SAFE (0.0%) |
 | 44 | legit | https://web.whatsapp.com/ | ✓ SAFE (9.9%) | ✓ SAFE (2.2%) |
 | 45 | legit | https://www.tiktok.com/ | ✓ SAFE (9.0%) | ✓ SAFE (0.0%) |
+| 46 | legit | https://www.paypal.com/ | ✓ SAFE (26.6%) | ✗ PHISHING (99.4%) |
+| 47 | legit | https://www.bca.co.id/ | ✓ SAFE (12.6%) | ✓ SAFE (13.4%) |
+| 48 | legit | https://www.netflix.com/login | ✓ SAFE (35.3%) | ✗ PHISHING (99.9%) |
+| 49 | legit | https://www.lazada.co.id/ | ✓ SAFE (12.6%) | ✓ SAFE (6.9%) |
+| 50 | legit | https://www.bing.com/search?q=cara+cek+url+phishing | ✓ SAFE (8.7%) | ✓ SAFE (0.0%) |
 
 ## Errors (browser variant)
 
@@ -135,9 +140,11 @@ Format: ✓/✗ = raw model label vs expected; the word is the extension verdict
 - FN: https://www.auberge-lorraine-levaltin.fr/
 - FN: https://xfinitymail2026.weebly.com/
 
-**XGBoost** — false positives: 2, false negatives: 18
+**XGBoost** — false positives: 4, false negatives: 18
 - FP: https://steamcommunity.com/id/WhyIzMyLifeLikeDiz/
 - FP: https://steamcommunity.com/market/listings/730/AK-47%20%7C%20Redline%20%28Field-Tested%29
+- FP: https://www.paypal.com/
+- FP: https://www.netflix.com/login
 - FN: https://allegrolokalnie.oferta839174.click/milwaukee-m18-fuel-szlifierka-/14759
 - FN: https://bntp3725nhw-yfhcnfyn-7d5e0f-xk266a.pages.dev/
 - FN: https://choisir-horaire.com/
