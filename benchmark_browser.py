@@ -221,7 +221,7 @@ def main():
     a('  they are reported as a sanity baseline, not as a browser expectation.')
     a('- Parity was 100% (labels and verdicts) for both models on all 1000 URLs, max |Δp| 0.0001pp, which validates the')
     a('  JS feature pipeline end-to-end against `features.py` (including the `is_common_tld` trailing-slash fix).')
-    a('- P-02/P-03 (Task Manager memory/CPU) and the blocked/banner click tests are recorded separately in the guide and added here once measured.')
+    a('- P-02/P-03 (Task Manager memory/CPU) and the functional click tests are in the "Manual checks" section below.')
     a('')
 
     os.makedirs(os.path.dirname(args.out) or '.', exist_ok=True)
@@ -229,6 +229,14 @@ def main():
         f.write('\n'.join(lines) + '\n')
     with open(args.metrics, 'w', encoding='utf-8') as f:
         json.dump(metrics, f, indent=2)
+
+    manual_path = os.path.join('browser_bench', 'manual_findings.md')
+    if os.path.exists(manual_path):
+        with open(manual_path, encoding='utf-8') as f:
+            manual = f.read()
+        with open(args.out, 'a', encoding='utf-8') as f:
+            f.write('\n---\n\n' + manual)
+        print(f"Manual findings appended from {manual_path}")
 
     print(f"Report: {args.out}")
     print(f"Metrics: {args.metrics}")

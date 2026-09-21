@@ -37,10 +37,10 @@ Persiapan: tutup tab yang tidak perlu, satu jendela Chrome saja.
 
 | Kondisi | Memori (MB) | Screenshot |
 |---|---|---|
-| Idle setelah load (popup ditutup, belum scan) | | |
-| Setelah scan halaman legitimate (mis. `https://www.youtube.com/`) | | |
-| Setelah scan halaman phishing (dari hasil P-01, URL terpilih) | | |
-| Setelah ganti model RF ⇄ XGB di popup | | |
+| Idle setelah load (popup ditutup, belum scan) | Anehnya, saya tidak bisa melihat penggunaan memorinya di Task Manager; angka penggunaan memori baru muncul setelah saya membuka jendela *pop-up* atau saat sistem mendeteksi situs *phishing*. Saat *pop-up* dibuka, angkanya sempat tinggi di 110 MB, namun kemudian turun dan stabil di angka 52.952 MB. | ![alt text](image.png)|
+| Setelah scan halaman legitimate (mis. `https://www.youtube.com/`) | 121.728 MB |![alt text](image-1.png) |
+| Setelah scan halaman phishing (dari hasil P-01, URL terpilih) | 138.267 MB | ![alt text](image-4.png)|
+| Setelah ganti model RF ⇄ XGB di popup | 127.296 MB | ![alt text](image-5.png)|
 
 Target dari Bab 3: idle **< 50 MB**, peak **< 150 MB**.
 Cara scan: buka popup → **Scan Current Tab**.
@@ -55,8 +55,8 @@ Cara scan: buka popup → **Scan Current Tab**.
 
 | Kondisi | CPU (%) | Screenshot |
 |---|---|---|
-| Idle | | |
-| Saat scan halaman | | |
+| Idle | 0% | ![alt text](image-2.png) |
+| Saat scan halaman | 4.5% | ![alt text](image-3.png)|
 
 Target: spike **< 30%**.
 
@@ -91,7 +91,7 @@ URL uji: `https://example.com/recovery-customer-login.php` — pakai model **Ran
 
 | Model | Skor | Banner muncul? | Details/Dismiss/Trust berfungsi? |
 |---|---|---|---|
-| Random Forest | 70,0% (SUSPICIOUS) | | |
+| Random Forest | 70,0% (SUSPICIOUS) | Yes. ![alt text](image-6.png)| Berfungsi |
 
 Langkah: pilih **Random Forest** di popup → kunjungi URL → banner oranye
 "70.0% phishing probability" muncul di atas halaman.
