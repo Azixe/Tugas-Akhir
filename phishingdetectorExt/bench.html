@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Phishing Detector — Browser Benchmark (P-01)</title>
+    <style>
+        :root {
+            --bg: #0f0f1a;
+            --card: #1a1a2e;
+            --border: rgba(255, 255, 255, 0.12);
+            --text: #e8e8f0;
+            --muted: #8888a4;
+            --accent: #667eea;
+            --danger: #ff5252;
+            --safe: #66ffa6;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 28px;
+            max-width: 1080px;
+            margin: 0 auto;
+        }
+        h1 { font-size: 20px; margin-bottom: 6px; }
+        h1 span { color: var(--accent); }
+        .hint { color: var(--muted); font-size: 12px; line-height: 1.6; margin-bottom: 16px; }
+        .hint code { background: var(--card); padding: 1px 5px; border-radius: 4px; }
+        .note {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--accent);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.6;
+            margin-bottom: 18px;
+        }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .controls label { font-size: 12px; color: var(--muted); }
+        .controls input {
+            width: 90px;
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--text);
+            font-size: 12px;
+        }
+        button {
+            padding: 9px 16px;
+            border: none;
+            border-radius: 6px;
+            background: var(--accent);
+            color: #fff;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        button:disabled { opacity: 0.35; cursor: not-allowed; }
+        #stop { background: var(--danger); }
+        #download { background: #2ecc71; color: #06351c; }
+        #status { font-size: 12px; color: var(--muted); margin-bottom: 10px; min-height: 16px; }
+        .bar { height: 6px; background: var(--card); border-radius: 3px; overflow: hidden; margin-bottom: 20px; }
+        #bar-fill { height: 100%; width: 0; background: linear-gradient(90deg, #667eea, #764ba2); transition: width 0.15s; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 4px; }
+        th, td { padding: 8px 6px; text-align: right; border-bottom: 1px solid var(--border); white-space: nowrap; }
+        th:first-child, td:first-child { text-align: left; }
+        th { color: var(--muted); font-weight: 600; }
+        .verdicts { font-size: 11px; color: var(--muted); margin-bottom: 18px; }
+        pre#log {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 11px;
+            line-height: 1.6;
+            max-height: 240px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .cold-note b { color: var(--text); }
+    </style>
+</head>
+<body>
+    <h1>Browser Benchmark <span>P-01 Latency</span></h1>
+    <p class="hint">
+        Measures the extension's own scan pipeline (same path as the popup) over
+        <b id="url-total">…</b> URLs from <code>bench_urls.json</code>, for each model.
+        Per URL it records the message round-trip and the pipeline time reported by the
+        service worker.
+    </p>
+    <div class="note cold-note">
+        <b>Cold start:</b> reload the extension in <code>chrome://extensions</code>, then open this page and press Run.
+        The first <code>switchModel</code> of each model includes its ONNX download and WASM session creation.
+        Do not open the service worker DevTools first, it keeps the worker alive and hides the cold number.
+    </div>
+
+    <div class="controls">
+        <label>URLs per model: <input id="url-count" type="number" min="1" step="1" value="1000"></label>
+        <button id="run-rf">Run RF</button>
+        <button id="run-xgb">Run XGBoost</button>
+        <button id="run-both">Run both</button>
+        <button id="stop" disabled>Stop</button>
+        <button id="download" disabled>Download JSON</button>
+    </div>
+    <div id="status">Loading…</div>
+    <div class="bar"><div id="bar-fill"></div></div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Model</th>
+                <th>Init (ms)</th>
+                <th>n</th>
+                <th>RT min</th>
+                <th>RT med</th>
+                <th>RT avg</th>
+                <th>RT p95</th>
+                <th>RT max</th>
+                <th>Pipe avg</th>
+                <th>Pipe p95</th>
+                <th>Errors</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr id="row-rf">
+                <td>Random Forest</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
+                <td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
+            </tr>
+            <tr id="row-xgb">
+                <td>XGBoost</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
+                <td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="verdicts">RF: <span id="verdicts-rf">-</span></div>
+    <div class="verdicts">XGB: <span id="verdicts-xgb">-</span></div>
+
+    <pre id="log"></pre>
+
+    <script src="bench.js"></script>
+</body>
+</html>
