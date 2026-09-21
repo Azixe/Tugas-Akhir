@@ -160,9 +160,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
             
-            // Display result
+            // Display result (all percentages are the phishing risk score,
+            // the same quantity the 60/80 thresholds use)
             const phishingProb = r.phishingProbability ?? (r.isPhishing ? r.confidence : 100 - r.confidence);
-            const legitProb = r.legitimateProbability ?? (100 - phishingProb);
             const modelName = r.model === 'xgb' ? 'XGBoost' : 'Random Forest';
             const verdictIcon = $('verdict-icon');
             
@@ -181,7 +181,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 verdictIcon.textContent = '✅';
                 verdict.textContent = 'SAFE';
                 result.className = 'result-box safe';
-                conf.textContent = `Confidence: ${legitProb.toFixed(1)}%`;
+                conf.textContent = `Low Risk (${phishingProb.toFixed(1)}%)`;
             }
             
             modelTag.textContent = `${modelName} · ${r.inferenceTime.toFixed(1)}ms`;
