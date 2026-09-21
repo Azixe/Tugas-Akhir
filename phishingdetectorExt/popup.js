@@ -11,12 +11,12 @@ async function getWhitelist() {
 
 async function addToWhitelist(domain) {
     const list = await getWhitelist();
-    domain = domain.toLowerCase().replace(/^https?:\/\//, '').split('/')[0].trim();
-    if (!list.includes(domain) && domain) {
-        list.push(domain);
-        await chrome.storage.local.set({ userWhitelist: list });
-    }
-    return list;
+    domain = normalizeDomain(domain);
+    if (!domain) return list;
+    const clean = [...new Set(list.map(normalizeDomain).filter(Boolean))];
+    if (!clean.includes(domain)) clean.push(domain);
+    await chrome.storage.local.set({ userWhitelist: clean });
+    return clean;
 }
 
 async function removeFromWhitelist(domain) {
@@ -28,23 +28,31 @@ async function removeFromWhitelist(domain) {
 
 function renderWhitelist(list) {
     const container = $('wl-list');
+    container.textContent = '';
     if (list.length === 0) {
-        container.innerHTML = '<div class="empty">No whitelisted domains</div>';
+        const empty = document.createElement('div');
+        empty.className = 'empty';
+        empty.textContent = 'No whitelisted domains';
+        container.appendChild(empty);
         return;
     }
-    container.innerHTML = list.map(d => `
-        <div class="wl-item">
-            <span>${d}</span>
-            <button class="del" data-domain="${d}">&times;</button>
-        </div>
-    `).join('');
-    
-    container.querySelectorAll('.del').forEach(btn => {
-        btn.onclick = async () => {
-            const newList = await removeFromWhitelist(btn.dataset.domain);
-            renderWhitelist(newList);
-        };
-    });
+    for (const domain of list) {
+        const item = document.createElement('div');
+        item.className = 'wl-item';
+
+        const name = document.createElement('span');
+        name.textContent = domain;
+
+        const del = document.createElement('button');
+        del.className = 'del';
+        del.textContent = '\u00d7';
+        del.addEventListener('click', async () => {
+            renderWhitelist(await removeFromWhitelist(domain));
+        });
+
+        item.append(name, del);
+        container.appendChild(item);
+    }
 }
 
 document.addEventListener('DOMContentLoaded', async () => {

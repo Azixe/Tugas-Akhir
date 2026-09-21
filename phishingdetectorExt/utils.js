@@ -64,10 +64,33 @@ function structural(url) {
     return [len, dots, slashes, dashes, ats, len > 0 ? digits/len : 0, entropy(s), isTld, subLevel];
 }
 
-// Check if a hostname matches a domain or any of its subdomains
+// Normalize a user-entered domain/host to a bare lowercase hostname.
+// Strips scheme, userinfo, port, path, query, fragment and trailing dots:
+//   "https://user:pw@Example.com:8080/path" -> "example.com"
+function normalizeDomain(value) {
+    if (typeof value !== 'string') return '';
+    let v = value.trim().toLowerCase().replace(/^\.+/, '');
+    if (!v) return '';
+    try {
+        v = new URL(v.includes('://') ? v : 'http://' + v).hostname;
+    } catch {
+        v = v.replace(/^https?:\/\//, '');
+        const at = v.lastIndexOf('@');
+        if (at !== -1) v = v.slice(at + 1);
+        v = v.split('/')[0].split('?')[0].split('#')[0].split(':')[0];
+    }
+    return v.replace(/\.+$/, '');
+}
+
+// Check if a hostname matches a domain or any of its subdomains.
+// Entries are normalized on the fly so legacy stored values (with port or
+// userinfo) still match against URL hostnames.
 function isDomainWhitelisted(host, list) {
     if (!host || !list || !list.length) return false;
-    return list.some(d => host === d || host.endsWith('.' + d));
+    return list.some(d => {
+        const nd = normalizeDomain(d);
+        return nd !== '' && (host === nd || host.endsWith('.' + nd));
+    });
 }
 
 // Check if URL should be scanned
