@@ -64,19 +64,20 @@ Target: spike **< 30%**.
 
 ## Uji fungsional halaman blokir (klik)
 
-Model **XGBoost** (pilih di popup). Dua URL legitimate yang memang diprediksi
-tinggi oleh XGB (false positive dari validasi sebelumnya, aman dikunjungi):
+URL uji aman (domain `example.com`, sengaja memakai token yang diberi bobot
+tinggi oleh model; paritas browser = Python 100%):
 
-- `https://steamcommunity.com/id/WhyIzMyLifeLikeDiz/` (≈89,9%)
-- `https://steamcommunity.com/market/listings/730/AK-47%20%7C%20Redline%20%28Field-Tested%29` (≈94,6%)
+`https://example.com/recovery-customer-login.php`
 
-Langkah:
-1. Buka URL pertama → `blocked.html` harus muncul (persentase tampil).
-2. Uji tombol:
+Skor terverifikasi: **RF 70,0% (SUSPICIOUS)**, **XGB 99,3% (PHISHING)**.
+
+1. Pilih model **XGBoost** di popup.
+2. Buka URL di atas → `blocked.html` harus muncul (High Risk 99,3%).
+3. Uji tombol:
    - **Go Back** → kembali.
-   - **Continue** → konfirmasi → halaman terbuka sekali. Buka URL yang sama lagi → diblokir lagi (bypass sekali pakai).
-   - **Trust Site** → domain masuk whitelist; uji dengan URL kedua, lalu **hapus `steamcommunity.com` dari whitelist** lewat popup setelah selesai.
-3. Alternatif uji tampilan tanpa model:
+   - **Continue** → halaman example.com terbuka sekali; buka URL yang sama lagi → diblokir lagi (bypass sekali pakai).
+   - **Trust Site** → `example.com` masuk whitelist; **hapus lagi lewat popup setelah selesai**.
+4. Alternatif uji tampilan tanpa model:
    `chrome-extension://<ID>/blocked.html?url=https%3A%2F%2Fexample.com&conf=95`
 
 Catatan: kalau situs melakukan redirect, bypass hanya berlaku untuk URL persis yang diblokir
@@ -86,15 +87,27 @@ Catatan: kalau situs melakukan redirect, bypass hanya berlaku untuk URL persis y
 
 ## Uji banner peringatan (skor 60–80%)
 
-URL uji diisi setelah P-01 selesai (dipilih dari hasil bench supaya pasti masuk
-band 60–80% pada model yang dipakai):
+URL uji: `https://example.com/recovery-customer-login.php` — pakai model **Random Forest**.
 
-| Model | URL | Banner muncul? | Trust/Dismiss/Details berfungsi? |
+| Model | Skor | Banner muncul? | Details/Dismiss/Trust berfungsi? |
 |---|---|---|---|
-| | | | |
+| Random Forest | 70,0% (SUSPICIOUS) | | |
 
-Langkah: pilih model di popup → kunjungi URL → banner oranye harus muncul di atas
-halaman dengan teks "…% phishing probability".
+Langkah: pilih **Random Forest** di popup → kunjungi URL → banner oranye
+"70.0% phishing probability" muncul di atas halaman.
+
+Catatan: XGB memblokir URL ini (99,3%) — jangan pakai XGB untuk uji banner.
+Trust Site akan menambah `example.com` ke whitelist; hapus setelah uji.
+
+---
+
+## Tangkapan layar popup (tiga verdict)
+
+| Verdict | Model | URL | Harapan |
+|---|---|---|---|
+| SAFE | RF atau XGB | `https://www.wikipedia.org/` | ✅ SAFE · Low Risk (RF 6,9% / XGB 45,4%) |
+| SUSPICIOUS | RF | `https://example.com/recovery-customer-login.php` | ⚠️ SUSPICIOUS · Medium Risk (70,0%) |
+| PHISHING | XGB | `https://example.com/recovery-customer-login.php` | 🚨 PHISHING · High Risk (99,3%) |
 
 ---
 

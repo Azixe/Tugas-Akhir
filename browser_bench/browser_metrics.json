@@ -1,0 +1,124 @@
+{
+  "source": "bench_browser_v3.2_2026-09-21-10-36-20.json",
+  "meta": {
+    "generatedAt": "2026-09-21T10:36:20.247Z",
+    "extensionVersion": "3.2",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",
+    "hardwareConcurrency": 12,
+    "deviceMemoryGB": 32,
+    "urlSource": "bench_urls.json (common test split, seed 42, same as the Python benchmark)",
+    "urlsInFile": 1000,
+    "urlsRequestedPerModel": 1000,
+    "warmupScans": 5
+  },
+  "models": {
+    "rf": {
+      "browser": {
+        "initMs": 410,
+        "wallMs": 920.4,
+        "errors": 0,
+        "roundTripMs": {
+          "n": 1000,
+          "min": 0.6,
+          "median": 0.8,
+          "avg": 0.912,
+          "p95": 1.5,
+          "max": 2.9
+        },
+        "pipelineMs": {
+          "n": 1000,
+          "min": 0.1,
+          "median": 0.2,
+          "avg": 0.263,
+          "p95": 0.5,
+          "max": 1.4
+        },
+        "verdicts": {
+          "PHISHING": 74,
+          "SUSPICIOUS": 146,
+          "SAFE": 780
+        }
+      },
+      "python": {
+        "pipelineMs": {
+          "n": 1000,
+          "min": 4.295,
+          "median": 5.372,
+          "avg": 5.294,
+          "p95": 5.905,
+          "max": 15.889
+        },
+        "verdicts": {
+          "PHISHING": 74,
+          "SUSPICIOUS": 146,
+          "SAFE": 780
+        }
+      },
+      "parity": {
+        "n": 1000,
+        "labelAgreementPct": 100.0,
+        "verdictAgreementPct": 100.0,
+        "probDeltaPct": {
+          "mean": 0.0,
+          "max": 0.0001,
+          "over1pp": 0,
+          "examples": []
+        }
+      }
+    },
+    "xgb": {
+      "browser": {
+        "initMs": 239.9,
+        "wallMs": 1069.7,
+        "errors": 0,
+        "roundTripMs": {
+          "n": 1000,
+          "min": 0.6,
+          "median": 0.9,
+          "avg": 1.063,
+          "p95": 1.8,
+          "max": 3.6
+        },
+        "pipelineMs": {
+          "n": 1000,
+          "min": 0.1,
+          "median": 0.3,
+          "avg": 0.349,
+          "p95": 0.6,
+          "max": 0.8
+        },
+        "verdicts": {
+          "PHISHING": 242,
+          "SUSPICIOUS": 0,
+          "SAFE": 758
+        }
+      },
+      "python": {
+        "pipelineMs": {
+          "n": 1000,
+          "min": 5.768,
+          "median": 7.105,
+          "avg": 7.009,
+          "p95": 7.719,
+          "max": 10.501
+        },
+        "verdicts": {
+          "PHISHING": 242,
+          "SUSPICIOUS": 0,
+          "SAFE": 758
+        }
+      },
+      "parity": {
+        "n": 1000,
+        "labelAgreementPct": 100.0,
+        "verdictAgreementPct": 100.0,
+        "probDeltaPct": {
+          "mean": 0.0,
+          "max": 0.0,
+          "over1pp": 0,
+          "examples": []
+        }
+      }
+    }
+  }
+}
