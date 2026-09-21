@@ -60,8 +60,14 @@ function structural(url) {
     const digits = (s.match(/\d/g)||[]).length;
     const domain = s.replace(/^https?:\/\//,'').split('/')[0];
     const subLevel = (domain.match(/\./g)||[]).length;
-    const isTld = COMMON_TLDS.some(t => s.endsWith(t)) ? 1 : 0;
+    const isTld = COMMON_TLDS.some(t => s.endsWith(t) || s.endsWith(t + '/')) ? 1 : 0;
     return [len, dots, slashes, dashes, ats, len > 0 ? digits/len : 0, entropy(s), isTld, subLevel];
+}
+
+// Check if a hostname matches a domain or any of its subdomains
+function isDomainWhitelisted(host, list) {
+    if (!host || !list || !list.length) return false;
+    return list.some(d => host === d || host.endsWith('.' + d));
 }
 
 // Check if URL should be scanned
@@ -70,7 +76,7 @@ function shouldScan(url) {
     if (url.startsWith('chrome://') || url.startsWith('chrome-extension://')) return false;
     try {
         const host = new URL(url).hostname.toLowerCase();
-        return !WHITELIST.some(d => host.includes(d));
+        return !isDomainWhitelisted(host, WHITELIST);
     } catch { return false; }
 }
 

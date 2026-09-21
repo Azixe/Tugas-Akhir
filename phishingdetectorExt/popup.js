@@ -11,7 +11,7 @@ async function getWhitelist() {
 
 async function addToWhitelist(domain) {
     const list = await getWhitelist();
-    domain = domain.toLowerCase().replace(/^https?:\/\//, '').split('/')[0];
+    domain = domain.toLowerCase().replace(/^https?:\/\//, '').split('/')[0].trim();
     if (!list.includes(domain) && domain) {
         list.push(domain);
         await chrome.storage.local.set({ userWhitelist: list });
@@ -153,27 +153,27 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             
             // Display result
-            const label = r.isPhishing;
-            const prob = r.confidence;
+            const phishingProb = r.phishingProbability ?? (r.isPhishing ? r.confidence : 100 - r.confidence);
+            const legitProb = r.legitimateProbability ?? (100 - phishingProb);
             const modelName = r.model === 'xgb' ? 'XGBoost' : 'Random Forest';
             const verdictIcon = $('verdict-icon');
             
             result.style.display = 'block';
-            if (label && prob > 80) {
+            if (phishingProb > 80) {
                 verdictIcon.textContent = '🚨';
                 verdict.textContent = 'PHISHING';
                 result.className = 'result-box danger';
-                conf.textContent = `High Risk (${prob.toFixed(1)}%)`;
-            } else if (label && prob > 60) {
+                conf.textContent = `High Risk (${phishingProb.toFixed(1)}%)`;
+            } else if (phishingProb > 60) {
                 verdictIcon.textContent = '⚠️';
                 verdict.textContent = 'SUSPICIOUS';
                 result.className = 'result-box warning';
-                conf.textContent = `Medium Risk (${prob.toFixed(1)}%)`;
+                conf.textContent = `Medium Risk (${phishingProb.toFixed(1)}%)`;
             } else {
                 verdictIcon.textContent = '✅';
                 verdict.textContent = 'SAFE';
                 result.className = 'result-box safe';
-                conf.textContent = `Confidence: ${(100-prob).toFixed(1)}%`;
+                conf.textContent = `Confidence: ${legitProb.toFixed(1)}%`;
             }
             
             modelTag.textContent = `${modelName} · ${r.inferenceTime.toFixed(1)}ms`;

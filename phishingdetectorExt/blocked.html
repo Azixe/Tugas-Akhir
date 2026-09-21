@@ -47,9 +47,9 @@
                 <div class="conf-bar"><div class="conf-fill" id="conf-bar"></div></div>
             </div>
             <div class="buttons" id="buttons">
-                <button class="btn btn-safe" onclick="goBack()">← Go Back</button>
-                <button class="btn btn-trust" onclick="trustSite()">✓ Trust Site</button>
-                <button class="btn btn-danger" onclick="proceed()">Continue</button>
+                <button class="btn btn-safe" id="btn-back">← Go Back</button>
+                <button class="btn btn-trust" id="btn-trust">✓ Trust Site</button>
+                <button class="btn btn-danger" id="btn-continue">Continue</button>
             </div>
             <ul class="tips">
                 <li>Don't enter passwords on suspicious sites</li>
@@ -58,36 +58,6 @@
             </ul>
         </div>
     </div>
-    <script>
-        const params = new URLSearchParams(location.search);
-        const url = params.get('url') || 'Unknown';
-        const conf = parseFloat(params.get('conf')) || 0;
-        const domain = url.replace(/^https?:\/\//, '').split('/')[0];
-        
-        document.getElementById('url').textContent = url;
-        document.getElementById('conf-val').textContent = conf.toFixed(1) + '%';
-        document.getElementById('conf-bar').style.width = conf + '%';
-        
-        function goBack() { 
-            history.length > 1 ? history.back() : location.href = 'https://google.com'; 
-        }
-        
-        function proceed() { 
-            if (confirm('⚠️ Are you sure? This site may steal your data.')) location.href = url; 
-        }
-        
-        function trustSite() {
-            chrome.runtime.sendMessage({ action: 'addWhitelist', domain }, (response) => {
-                if (response?.success) {
-                    document.getElementById('header').style.background = 'linear-gradient(135deg,#27ae60,#2ecc71)';
-                    document.getElementById('header').querySelector('h1').textContent = '✓ Site Trusted';
-                    document.getElementById('header').querySelector('p').textContent = 'Added to whitelist';
-                    document.getElementById('alert').className = 'alert success';
-                    document.getElementById('alert').textContent = '✓ ' + domain + ' has been added to your whitelist.';
-                    document.getElementById('buttons').innerHTML = '<button class="btn btn-safe" style="width:100%" onclick="location.href=\'' + url + '\'">Continue to Site →</button>';
-                }
-            });
-        }
-    </script>
+    <script src="blocked.js"></script>
 </body>
 </html>

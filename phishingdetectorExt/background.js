@@ -62,7 +62,7 @@ async function predict(url) {
 
     let inputFeatures;
     if (currentModel === 'xgb') {
-        // XGBoost: scale → select → PCA → 160 features
+        // XGBoost: scale → select (179) → PCA → 151 features
         inputFeatures = preprocessXgb(rawFeatures, m.prepData);
     } else {
         // RF: use raw 1509 features directly
@@ -74,12 +74,22 @@ async function predict(url) {
 
     const label = Number(results[m.session.outputNames[0]].data[0]);
     const probs = results[m.session.outputNames[1]].data;
-    const conf = (label === 1 ? probs[1] : probs[0]) * 100;
+    const phishingProb = probs[1] * 100;
+    const legitProb = probs[0] * 100;
+    const conf = (label === 1 ? phishingProb : legitProb);
 
     const inferenceTime = performance.now() - startTime;
     console.log(`[BG] [${currentModel.toUpperCase()}] ${label === 1 ? 'PHISHING' : 'SAFE'} ${url} ${conf.toFixed(1)}% (${inferenceTime.toFixed(2)}ms)`);
 
-    return { isPhishing: label === 1, confidence: conf, url, inferenceTime, model: currentModel };
+    return {
+        isPhishing: label === 1,
+        phishingProbability: phishingProb,
+        legitimateProbability: legitProb,
+        confidence: conf,
+        url,
+        inferenceTime,
+        model: currentModel
+    };
 }
 
 // Check if URL is in user whitelist
@@ -87,14 +97,14 @@ async function isUserWhitelisted(url) {
     try {
         const { userWhitelist = [] } = await chrome.storage.local.get('userWhitelist');
         const host = new URL(url).hostname.toLowerCase();
-        return userWhitelist.some(d => host.includes(d) || d.includes(host));
+        return isDomainWhitelisted(host, userWhitelist);
     } catch { return false; }
 }
 
 // Add domain to whitelist
 async function addToWhitelist(domain) {
     const { userWhitelist = [] } = await chrome.storage.local.get('userWhitelist');
-    domain = domain.toLowerCase().replace(/^https?:\/\//, '').split('/')[0];
+    domain = domain.toLowerCase().replace(/^https?:\/\//, '').split('/')[0].trim();
     if (!userWhitelist.includes(domain) && domain) {
         userWhitelist.push(domain);
         await chrome.storage.local.set({ userWhitelist });
@@ -102,9 +112,20 @@ async function addToWhitelist(domain) {
     return userWhitelist;
 }
 
-// Navigation listener
-chrome.webNavigation.onCompleted.addListener(async ({ frameId, tabId, url }) => {
+// Session bypass set for one-time continuation from blocked page
+const sessionBypass = new Set();
+const pendingWarnings = new Map();
+
+// Navigation listeners:
+// 1. Intercept before navigation starts (blocks high-confidence phishing before scripts run)
+chrome.webNavigation.onBeforeNavigate.addListener(async ({ frameId, tabId, url }) => {
     if (frameId !== 0 || !shouldScan(url)) return;
+
+    // Check one-time session bypass (e.g. user clicked "Continue" on blocked.html)
+    if (sessionBypass.has(url)) {
+        sessionBypass.delete(url);
+        return;
+    }
 
     // Check user whitelist
     if (await isUserWhitelisted(url)) {
@@ -117,20 +138,32 @@ chrome.webNavigation.onCompleted.addListener(async ({ frameId, tabId, url }) => 
     try {
         const r = await predict(url);
 
-        if (r.isPhishing && r.confidence > 80) {
+        if (r.isPhishing && r.phishingProbability > 80) {
             chrome.tabs.update(tabId, {
                 url: chrome.runtime.getURL('blocked.html') +
-                    `?url=${encodeURIComponent(url)}&conf=${r.confidence.toFixed(1)}`
+                    `?url=${encodeURIComponent(url)}&conf=${r.phishingProbability.toFixed(1)}`
             });
-        } else if (r.isPhishing && r.confidence > 60) {
-            chrome.tabs.sendMessage(tabId, { action: 'warn', ...r }).catch(() => {});
+        } else if (r.isPhishing && r.phishingProbability > 60) {
+            pendingWarnings.set(tabId, { url, ...r });
         }
     } catch (e) {
-        console.error('[BG] Error:', e);
+        console.error('[BG] Navigation intercept error:', e);
     }
 });
 
-// Message handler for popup and content script
+// 2. Deliver warning banner to content script once the DOM has loaded
+chrome.webNavigation.onCompleted.addListener(async ({ frameId, tabId, url }) => {
+    if (frameId !== 0) return;
+    if (pendingWarnings.has(tabId)) {
+        const warnData = pendingWarnings.get(tabId);
+        if (warnData.url === url) {
+            chrome.tabs.sendMessage(tabId, { action: 'warn', ...warnData }).catch(() => {});
+        }
+        pendingWarnings.delete(tabId);
+    }
+});
+
+// Message handler for popup, content script, and blocked page
 chrome.runtime.onMessage.addListener((req, _, res) => {
     if (req.action === 'scan') {
         initModel(currentModel).then(ok =>
@@ -142,7 +175,6 @@ chrome.runtime.onMessage.addListener((req, _, res) => {
     if (req.action === 'switchModel') {
         currentModel = req.model;
         chrome.storage.local.set({ selectedModel: currentModel });
-        // Pre-load the newly selected model
         initModel(currentModel).then(ok => {
             res({ success: ok, model: currentModel });
         });
@@ -154,6 +186,11 @@ chrome.runtime.onMessage.addListener((req, _, res) => {
     }
     if (req.action === 'addWhitelist') {
         addToWhitelist(req.domain).then(list => res({ success: true, list }));
+        return true;
+    }
+    if (req.action === 'bypassUrl') {
+        sessionBypass.add(req.url);
+        res({ success: true });
         return true;
     }
 });
