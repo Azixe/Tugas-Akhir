@@ -60,10 +60,10 @@
 
 | Condition | Task Manager | ≈ MiB | Screenshot |
 |---|---:|---:|---|
-| Idle after load (popup closed) | 52,952K | 51.7 | `image.png` |
-| After a legitimate scan (YouTube) | 121,728K | 118.9 | `image-1.png` |
-| After switching models (RF ⇄ XGB) | 127,296K | 124.3 | `image-5.png` |
-| Blocked page open ("⚠ Blocked" entry) | 138,276K | 135.0 | `image-4.png` |
+| Idle after load (popup closed) | 52,952K | 51.7 | `screenshots/p02_memory_idle.png` |
+| After a legitimate scan (YouTube) | 121,728K | 118.9 | `screenshots/p02_memory_scan_legit.png` |
+| After switching models (RF ⇄ XGB) | 127,296K | 124.3 | `screenshots/p02_p03_model_switch.png` |
+| Blocked page open ("⚠ Blocked" entry) | 138,276K | 135.0 | `screenshots/p02_memory_blocked_page.png` |
 
 - The "⚠ Blocked" row is a **separate extension process** for `blocked.html`, not the service worker.
 - The process entry only appears once the MV3 service worker has started; opening the popup briefly showed ~110 MB before settling at 52.9 MB.
@@ -73,9 +73,9 @@
 
 | Condition | CPU | Screenshot |
 |---|---:|---|
-| Idle | 0.0% | `image-2.png` |
-| Scan with the model loaded | 4.5% | `image-3.png` |
-| Model switch / session init transient | 49.3% | `image-5.png` |
+| Idle | 0.0% | `screenshots/p03_cpu_idle.png` |
+| Scan with the model loaded | 4.5% | `screenshots/p03_cpu_scan.png` |
+| Model switch / session init transient | 49.3% | `screenshots/p02_p03_model_switch.png` |
 
 - Steady-state scans stay at ~4.5% (target < 30%). The 49.3% reading is the one-time
   ONNX/WASM session load (~240 ms); because MV3 evicts the idle service worker, this
@@ -85,10 +85,10 @@
 
 | Check | Result | Screenshot |
 |---|---|---|
-| Warning banner (RF, 70.0%, crafted safe URL) | Banner displayed; Trust / Details / Dismiss work | `image-6.png` |
-| Blocked page (XGB, live PhishTank URL, 81.4%) | URL + confidence render; Go Back / Continue (one-time bypass) / Trust Site all work | `Halaman Blokir.png` |
-| Popup PHISHING | "High Risk (81.4%)" · XGBoost · 2.6 ms | `High risk pop-up.png` |
-| Popup SAFE | "Low Risk (7.8%)" · Random Forest · 1.0 ms | `Safe pop-up.png` |
+| Warning banner (RF, 70.0%, crafted safe URL) | Banner displayed; Trust / Details / Dismiss work | `screenshots/functional_banner_70pct.png` |
+| Blocked page (XGB, live PhishTank URL, 81.4%) | URL + confidence render; Go Back / Continue (one-time bypass) / Trust Site all work | `screenshots/functional_blocked_page_81pct.png` |
+| Popup PHISHING | "High Risk (81.4%)" · XGBoost · 2.6 ms | `screenshots/popup_phishing_xgb.png` |
+| Popup SAFE | "Low Risk (7.8%)" · Random Forest · 1.0 ms | `screenshots/popup_safe_rf.png` |
 
 - The blocked URL (`zyncrogeldplatform.de`) was a fresh PhishTank `online-valid` sample
   collected on 2026-09-21.
