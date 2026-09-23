@@ -2,10 +2,8 @@
 ### Komparasi Kinerja Algoritma Random Forest dan XGBoost via ONNX Runtime Web
 
 > **Repositori Tugas Akhir**  
-> **Program Studi:** Informatika / Ilmu Komputer  
+> **Program Studi:** Informatika 
 > **NIM:** 2211102226  
-> **Topik:** Keamanan Siber & Rekayasa Perangkat Lunak (Browser-Based Machine Learning)  
-> **Versi Ekstensi:** 3.1 (Manifest V3 — Siap Diuji)
 
 ---
 
@@ -60,9 +58,6 @@ Struktur proyek disusun secara modular agar memudahkan penelusuran tahapan penel
 
 ```
 Tugas Akhir/
-├── proposal/                      # Dokumen naskah proposal & draf revisi tugas akhir (.docx)
-│   ├── Proposal_2211102226_Revisi 2 (koreksi referensi).docx
-│   └── extract_docx.py            # Skrip utilitas inspeksi naskah proposal
 │
 ├── phishingdetectorExt/           # PRODUK: Paket Chrome Extension (Manifest V3)
 │   ├── manifest.json              # Konfigurasi ekstensi & deklarasi permissions
