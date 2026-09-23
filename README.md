@@ -2,7 +2,7 @@
 ### Komparasi Kinerja Algoritma Random Forest dan XGBoost via ONNX Runtime Web
 
 > **Repositori Tugas Akhir**  
-> **Program Studi:** Informatika 
+> **Program Studi:** Informatika  
 > **NIM:** 2211102226  
 
 ---
@@ -125,7 +125,7 @@ Tidak seperti metode berbasis konten yang mengunduh seluruh halaman HTML, sistem
 
 *Catatan Paritas:* Logika ekstraksi fitur di `phishingdetectorExt/utils.js` telah diselaraskan 100% dengan `features.py` pada lingkungan Python (termasuk normalisasi URL berakhiran *trailing slash*).
 
-### 3. Spesifikasi Model yang Di-deploy pada Ekstensi (Versi 3.1)
+### 3. Spesifikasi Model yang Di-deploy pada Ekstensi
 
 | Parameter / Aspek | Random Forest (Acuan) | XGBoost (Komparasi) |
 |---|---|---|
@@ -150,7 +150,7 @@ Seluruh pengujian dievaluasi pada data uji bersama (*unseen test set*) sebesar *
 | **XGBoost (Undersampled) ⭐**| 167.100 | 99,46% | 98,83% | **98,87%** | **98,85%** | 0,354% | 245 |
 | **XGBoost (Full Dataset)** | 360.140 | **99,55%** | 99,57% | 98,48% | 99,03% | 0,127% | 88 |
 
-*Keterangan: Tanda ⭐ menandakan model yang diintegrasikan ke dalam paket Chrome Extension v3.1.*
+*Keterangan: Tanda ⭐ menandakan model yang diintegrasikan ke dalam paket Chrome Extension*
 
 ### 2. Evaluasi Format PKL vs ONNX (Efisiensi Komputasi)
 
