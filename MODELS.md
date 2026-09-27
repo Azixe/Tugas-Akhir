@@ -1,18 +1,18 @@
 # Model Artifacts — Provenance & Checksums
 
-> Single source of truth for *which model file is which*. Updated 2026-09-20.
+> Single source of truth for *which model file is which*. Updated 2026-09-27.
 > Verify any file with: `sha256sum <path>` (WSL) or `Get-FileHash <path>` (PowerShell).
 
 ## Deployed in the extension
 
-Both models refreshed 2026-09-20 from the locally trained sampling-study artifacts (same configurations as before: RF = full dataset, XGB = undersampled).
+Both deployed models now use the **full dataset** (no undersampling). 2026-09-27: XGBoost switched from the undersampled to the full-dataset variant so both models follow the same selection rationale — the full variants cut false positives sharply (RF 61→1 FP, XGB 245→88 FP), which matters most for user trust.
 
 | Artifact | Variant | Features | Origin | Size | SHA-256 | Paired files |
 |---|---|---|---|---|---|---|
 | `phishingdetectorExt/phishing_rf.onnx` | RF — **no undersampling** | 1509 (1500 TF-IDF + 9 struct) | Local retrain, 2026-09-20 (`sampling_results/rf_full.pkl`) | 730 KB | `625c9333151667c478a59dccf66095e69338996033627d85bb493b596ac95135` | `phishingdetectorExt/tfidf_data.json` (`594309360bc559b63d7ec78585f4ac111898be9f991f2bf334a200b630a32c7d`) |
-| `phishingdetectorExt/phishing_xgb.onnx` | XGB — undersampled | 151 (PCA of 179) | Local retrain, 2026-09-20 (`sampling_results/xgb_under.pkl`) | 1,253 KB | `daa8c8d49a200ac3061720f052cc82788b753b3b4fd07f20e8f6e605f105f21f` | `tfidf_data_xgb.json` (`57f715b79a084bd37588ea11e0e05d11c73b8efb4d65dd714f21a519ce878faf`), `xgb_preprocessing.json` (`9a87f5a92e9d31fd8b3b1271f9706ed459327394de3866eb83329a9391e9eeba`) |
+| `phishingdetectorExt/phishing_xgb.onnx` | XGB — **full dataset** (no undersampling) | 151 (PCA of 179) | Local retrain, 2026-09-20 (`sampling_results/xgb_full.pkl`) | 1,291 KB | `4efd7ead699770a04423bd436464b070365980b83f2a36a9608dd7c781b2c702` | `tfidf_data_xgb.json` (`7885a6b1c2bc516b2f77c29a12054da13d5daceb92efb87bce75d13d61949094`), `xgb_preprocessing.json` (`54e37c7fdac56ed7cf462c2b2363c2e9b4820992dbf67b4e919eba85db95c289`) |
 
-Extension version bumped to 3.1 in `manifest.json`. Previous deployed files (for reference): RF `0a8f995b…` (901 KB, Gen-3 non-undersampled, pkl lost) and XGB `1c1965eb…` (1,277 KB, Colab-tuned undersampled).
+Extension version bumped to **3.3** in `manifest.json` (3.2 = UI/navigation fixes; 3.1 = model refresh). Previous deployed files (for reference): RF `0a8f995b…` (901 KB, Gen-3 non-undersampled, pkl lost); XGB `daa8c8d4…` (1,253 KB, undersampled, deployed 20–27 Sep 2026); XGB `1c1965eb…` (1,277 KB, Colab-tuned undersampled).
 
 ## RF variants & history (`rf_models/`)
 
