@@ -41,7 +41,7 @@ MODELS = {
     'rf_pkl':   {'label': 'RF (.pkl)',   'pkl': os.path.join(OUTDIR, 'rf_full.pkl')},
     'rf_onnx':  {'label': 'RF (.onnx)',  'onnx': os.path.join(EXT, 'phishing_rf.onnx'),
                  'tfidf': os.path.join(EXT, 'tfidf_data.json')},
-    'xgb_pkl':  {'label': 'XGBoost (.pkl)',  'pkl': os.path.join(OUTDIR, 'xgb_under.pkl')},
+    'xgb_pkl':  {'label': 'XGBoost (.pkl)',  'pkl': os.path.join(OUTDIR, 'xgb_full.pkl')},
     'xgb_onnx': {'label': 'XGBoost (.onnx)', 'onnx': os.path.join(EXT, 'phishing_xgb.onnx'),
                  'tfidf': os.path.join(EXT, 'tfidf_data_xgb.json'),
                  'prep': os.path.join(EXT, 'xgb_preprocessing.json')},
@@ -55,6 +55,9 @@ def parse_args():
     p.add_argument('--interval-ms', type=float, default=5.0,
                    help="RSS sampling interval in ms (default: %(default)s)")
     p.add_argument('--outdir', default=OUTDIR)
+    p.add_argument('--only', default=None,
+                   help="comma-separated subset of workers to re-measure, e.g. xgb_pkl,xgb_onnx "
+                        "(default: all; results are merged with any existing memory_metrics.json)")
     # internal worker mode
     p.add_argument('--worker', default=None, choices=list(MODELS))
     p.add_argument('--urls-file', default=None)
@@ -194,7 +197,10 @@ def main():
     print(f"URLs file: {URLS_FILE} ({args.samples} URLs)")
 
     results = []
+    only = set(args.only.split(',')) if args.only else None
     for key in MODELS:
+        if only and key not in only:
+            continue
         label = MODELS[key]['label']
         files = [v for k, v in MODELS[key].items() if k != 'label']
         missing = [p for p in files if not os.path.exists(p)]
@@ -217,8 +223,19 @@ def main():
               f"(+{r['load_delta_mb']}) | scan min/max/avg "
               f"{r['rss_min_mb']}/{r['rss_max_mb']}/{r['rss_avg_mb']} MB")
 
-    # ---- outputs ----
+    # ---- outputs (merge with any existing rows so --only keeps the other models) ----
     json_path = os.path.join(args.outdir, 'memory_metrics.json')
+    merged = {}
+    if os.path.exists(json_path):
+        try:
+            for r in json.load(open(json_path)):
+                merged[r['label']] = r
+        except Exception:
+            merged = {}
+    for r in results:
+        merged[r['label']] = r
+    order = [MODELS[k]['label'] for k in MODELS]
+    results = [merged[l] for l in order if l in merged]
     with open(json_path, 'w') as f:
         json.dump(results, f, indent=2)
 
@@ -237,7 +254,7 @@ def main():
               "> Python-process RSS. Browser (extension) memory is measured separately "
               "via Chrome Task Manager (P-02) and is not the same quantity."]
     md_path = os.path.join(args.outdir, 'memory_report.md')
-    with open(md_path, 'w') as f:
+    with open(md_path, 'w', encoding='utf-8') as f:
         f.write("\n".join(lines) + "\n")
 
     print(f"\nSaved: {json_path}")
