@@ -1,8 +1,8 @@
 {
-  "source": "bench_browser_v3.2_2026-09-21-10-36-20.json",
+  "source": "bench_browser_v3.3_2026-09-27-15-58-18.json",
   "meta": {
-    "generatedAt": "2026-09-21T10:36:20.247Z",
-    "extensionVersion": "3.2",
+    "generatedAt": "2026-09-27T15:58:18.191Z",
+    "extensionVersion": "3.3",
     "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",
     "hardwareConcurrency": 12,
     "deviceMemoryGB": 32,
@@ -14,24 +14,24 @@
   "models": {
     "rf": {
       "browser": {
-        "initMs": 410,
-        "wallMs": 920.4,
+        "initMs": 122.7,
+        "wallMs": 1346.9,
         "errors": 0,
         "roundTripMs": {
           "n": 1000,
-          "min": 0.6,
-          "median": 0.8,
-          "avg": 0.912,
-          "p95": 1.5,
-          "max": 2.9
+          "min": 0.7,
+          "median": 1.2,
+          "avg": 1.337,
+          "p95": 2.205,
+          "max": 11.2
         },
         "pipelineMs": {
           "n": 1000,
           "min": 0.1,
-          "median": 0.2,
-          "avg": 0.263,
-          "p95": 0.5,
-          "max": 1.4
+          "median": 0.4,
+          "avg": 0.372,
+          "p95": 0.6,
+          "max": 1.1
         },
         "verdicts": {
           "PHISHING": 74,
@@ -42,11 +42,11 @@
       "python": {
         "pipelineMs": {
           "n": 1000,
-          "min": 4.295,
-          "median": 5.372,
-          "avg": 5.294,
-          "p95": 5.905,
-          "max": 15.889
+          "min": 4.384,
+          "median": 5.791,
+          "avg": 6.164,
+          "p95": 8.32,
+          "max": 30.206
         },
         "verdicts": {
           "PHISHING": 74,
@@ -68,44 +68,44 @@
     },
     "xgb": {
       "browser": {
-        "initMs": 239.9,
-        "wallMs": 1069.7,
+        "initMs": 254.6,
+        "wallMs": 1352.1,
         "errors": 0,
         "roundTripMs": {
           "n": 1000,
-          "min": 0.6,
-          "median": 0.9,
-          "avg": 1.063,
-          "p95": 1.8,
-          "max": 3.6
+          "min": 0.7,
+          "median": 1.3,
+          "avg": 1.343,
+          "p95": 2.0,
+          "max": 3.8
         },
         "pipelineMs": {
           "n": 1000,
-          "min": 0.1,
-          "median": 0.3,
-          "avg": 0.349,
-          "p95": 0.6,
-          "max": 0.8
+          "min": 0.2,
+          "median": 0.5,
+          "avg": 0.471,
+          "p95": 0.7,
+          "max": 1.0
         },
         "verdicts": {
-          "PHISHING": 242,
-          "SUSPICIOUS": 0,
-          "SAFE": 758
+          "PHISHING": 237,
+          "SUSPICIOUS": 1,
+          "SAFE": 762
         }
       },
       "python": {
         "pipelineMs": {
           "n": 1000,
-          "min": 5.768,
-          "median": 7.105,
-          "avg": 7.009,
-          "p95": 7.719,
-          "max": 10.501
+          "min": 6.316,
+          "median": 7.869,
+          "avg": 8.473,
+          "p95": 11.986,
+          "max": 33.914
         },
         "verdicts": {
-          "PHISHING": 242,
-          "SUSPICIOUS": 0,
-          "SAFE": 758
+          "PHISHING": 237,
+          "SUSPICIOUS": 1,
+          "SAFE": 762
         }
       },
       "parity": {

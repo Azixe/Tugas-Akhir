@@ -1,6 +1,6 @@
 # Manual checks — P-02 / P-03 / functional (2026-09-21)
 
-> Same machine and session as the P-01 run: extension v3.2 on Chrome 153 (Windows, 12 logical cores, 32 GB).
+> Machine: Chrome 153 (Windows, 12 logical cores, 32 GB). P-02/P-03 and the functional clicks were measured on **v3.2** (2026-09-21); the P-01 numbers in this report were re-measured on **v3.3** (full-dataset XGBoost, 2026-09-27).
 > Screenshots live in this folder.
 
 ## P-02 — Extension memory (Chrome Task Manager)
@@ -43,3 +43,5 @@
   was blocked, so the page showed "Loading…" and the buttons were dead.
 - The SAFE popup used `https://www.youtube.com/`; the popup scan path scores the active
   tab directly and does not consult the static whitelist (by design).
+- v3.3 spot check (Python, same crafted URL): XGB blocks it at 100.0% and RF scores
+  70.0% (banner); the v3.2 screenshots remain representative of the UI.

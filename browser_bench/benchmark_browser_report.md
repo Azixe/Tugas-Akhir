@@ -1,6 +1,6 @@
 # Browser Benchmark — P-01 Latency vs Python (deployed models)
 
-- Date: 2026-09-21T10:36:20.247Z · Extension v3.2 (deployed models, hashes below)
+- Date: 2026-09-27T15:58:18.191Z · Extension v3.3 (deployed models, hashes below)
 - Browser: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 · 12 logical cores · 32 GB RAM
 - URL set: `bench_urls.json`, 1000 URLs (common test split, seed 42) — identical to the Python benchmark
 - Method: 5 warm-up scans per model, then per-URL timing through the extension's scan path (popup-like message path); Python side re-measured here with `features.py` + the deployed ONNX files on the same URLs
@@ -10,24 +10,24 @@
 | File | SHA-256 | Checked against bench output |
 |---|---|---|
 | `phishing_rf.onnx` | `625c9333151667c4…` | MATCH |
-| `phishing_xgb.onnx` | `daa8c8d49a200ac3…` | MATCH |
+| `phishing_xgb.onnx` | `4efd7ead699770a0…` | MATCH |
 | `tfidf_data.json` | `594309360bc559b6…` | MATCH |
-| `tfidf_data_xgb.json` | `57f715b79a084bd3…` | MATCH |
-| `xgb_preprocessing.json` | `9a87f5a92e9d31fd…` | MATCH |
+| `tfidf_data_xgb.json` | `7885a6b1c2bc516b…` | MATCH |
+| `xgb_preprocessing.json` | `54e37c7fdac56ed7…` | MATCH |
 
 ## Latency (ms, warm; min / median / avg / p95 / max)
 
 | Model | Init (cold) | Browser round-trip | Browser pipeline | Python pipeline (same files, same URLs) |
 |---|---|---|---|---|
-| RF | 410.0 | 0.6 / 0.8 / 0.912 / 1.5 / 2.9 | 0.1 / 0.2 / 0.263 / 0.5 / 1.4 | 4.295 / 5.372 / 5.294 / 5.905 / 15.889 |
-| XGB | 239.9 | 0.6 / 0.9 / 1.063 / 1.8 / 3.6 | 0.1 / 0.3 / 0.349 / 0.6 / 0.8 | 5.768 / 7.105 / 7.009 / 7.719 / 10.501 |
+| RF | 122.7 | 0.7 / 1.2 / 1.337 / 2.205 / 11.2 | 0.1 / 0.4 / 0.372 / 0.6 / 1.1 | 4.384 / 5.791 / 6.164 / 8.32 / 30.206 |
+| XGB | 254.6 | 0.7 / 1.3 / 1.343 / 2.0 / 3.8 | 0.2 / 0.5 / 0.471 / 0.7 / 1.0 | 6.316 / 7.869 / 8.473 / 11.986 / 33.914 |
 
 ## Verdict distribution
 
 | Model | Browser | Python |
 |---|---|---|
 | RF | PHISHING 74 · SUSPICIOUS 146 · SAFE 780 | PHISHING 74 · SUSPICIOUS 146 · SAFE 780 |
-| XGB | PHISHING 242 · SUSPICIOUS 0 · SAFE 758 | PHISHING 242 · SUSPICIOUS 0 · SAFE 758 |
+| XGB | PHISHING 237 · SUSPICIOUS 1 · SAFE 762 | PHISHING 237 · SUSPICIOUS 1 · SAFE 762 |
 
 ## Browser vs Python parity (identical URLs)
 
@@ -53,7 +53,7 @@
 
 # Manual checks — P-02 / P-03 / functional (2026-09-21)
 
-> Same machine and session as the P-01 run: extension v3.2 on Chrome 153 (Windows, 12 logical cores, 32 GB).
+> Machine: Chrome 153 (Windows, 12 logical cores, 32 GB). P-02/P-03 and the functional clicks were measured on **v3.2** (2026-09-21); the P-01 numbers in this report were re-measured on **v3.3** (full-dataset XGBoost, 2026-09-27).
 > Screenshots live in this folder.
 
 ## P-02 — Extension memory (Chrome Task Manager)
@@ -96,3 +96,5 @@
   was blocked, so the page showed "Loading…" and the buttons were dead.
 - The SAFE popup used `https://www.youtube.com/`; the popup scan path scores the active
   tab directly and does not consult the static whitelist (by design).
+- v3.3 spot check (Python, same crafted URL): XGB blocks it at 100.0% and RF scores
+  70.0% (banner); the v3.2 screenshots remain representative of the UI.
