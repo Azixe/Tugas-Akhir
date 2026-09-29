@@ -55,7 +55,7 @@ def probs_cb(art, urls):
 
 
 def metrics_at(y, probs, t):
-    pred = probs >= t
+    pred = probs > t  # matches the extension's strict > convention
     tp = int(((y == 1) & pred).sum())
     fp = int(((y == 0) & pred).sum())
     fn = int(((y == 1) & ~pred).sum())
@@ -101,23 +101,23 @@ def main():
     ]
     for key, probs in models.items():
         rows = [metrics_at(y, probs, t) for t in THRESHOLDS]
-        blocked = probs >= 0.8
-        warned = (probs >= 0.6) & (probs < 0.8)
+        blocked = probs > 0.8
+        warned = (probs > 0.6) & (probs <= 0.8)
         rule = {
             'blocked_tp': int(((y == 1) & blocked).sum()), 'blocked_fp': int(((y == 0) & blocked).sum()),
             'warned_tp': int(((y == 1) & warned).sum()), 'warned_fp': int(((y == 0) & warned).sum()),
-            'detected_tp': int(((y == 1) & (probs >= 0.6)).sum()),
-            'flagged_fp': int(((y == 0) & (probs >= 0.6)).sum()),
+            'detected_tp': int(((y == 1) & (probs > 0.6)).sum()),
+            'flagged_fp': int(((y == 0) & (probs > 0.6)).sum()),
         }
         result['models'][key] = {'label': labels[key], 'by_threshold': rows, 'extension_rule': rule}
 
         lines += [f"## {labels[key]}", "",
                   "| Threshold | Precision | Recall | F1 | FPR | FP | FN |", "|---:|---:|---:|---:|---:|---:|---:|"]
         for r in rows:
-            lines.append(f"| ≥ {r['threshold']:.1f} | {r['precision']:.4f} | {r['recall']:.4f} | "
+            lines.append(f"| > {r['threshold']:.1f} | {r['precision']:.4f} | {r['recall']:.4f} | "
                          f"{r['f1']:.4f} | {r['fpr']*100:.4f}% | {r['fp']} | {r['fn']} |")
         lines += ["",
-                  f"Extension rule simulation (block >0.8, warn 0.6–0.8): blocked {rule['blocked_tp']} TP / "
+                  f"Extension rule simulation (block >0.8; warn 0.6<p≤0.8): blocked {rule['blocked_tp']} TP / "
                   f"{rule['blocked_fp']} FP · warned {rule['warned_tp']} TP / {rule['warned_fp']} FP · "
                   f"detected (≥0.6) {rule['detected_tp']} TP / {rule['flagged_fp']} FP", ""]
 
