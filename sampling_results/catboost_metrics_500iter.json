@@ -1,0 +1,31 @@
+[
+  {
+    "variant": "full",
+    "n_train": 360140,
+    "train_seconds": 93.8,
+    "pkl_kb": 7237,
+    "onnx_kb": 2716,
+    "onnx_sha256": "ee0b460b0a75f047f9d55b77ee8066ca8c84732513bee627f5ea77abfe0e103b",
+    "params": {
+      "iterations": 500,
+      "depth": 6,
+      "learning_rate": 0.1,
+      "loss_function": "Logloss",
+      "random_seed": 42,
+      "thread_count": -1,
+      "verbose": 100,
+      "allow_writing_files": false
+    },
+    "n_test": 90036,
+    "accuracy": 0.9962,
+    "precision_phish": 0.9989,
+    "recall_phish": 0.9846,
+    "f1_phish": 0.9917,
+    "fpr": 0.000333,
+    "tn": 69125,
+    "fp": 23,
+    "fn": 321,
+    "tp": 20567,
+    "prob_mean_phish": 0.9832
+  }
+]
