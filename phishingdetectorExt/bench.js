@@ -193,7 +193,7 @@ async function sha256Hex(path) {
 async function buildResults() {
     const manifest = chrome.runtime.getManifest();
     const files = {};
-    for (const path of ['phishing_rf.onnx', 'phishing_xgb.onnx', 'tfidf_data.json', 'tfidf_data_xgb.json', 'xgb_preprocessing.json']) {
+    for (const path of ['phishing_rf.onnx', 'phishing_xgb.onnx', 'phishing_catboost.onnx', 'tfidf_data.json', 'tfidf_data_xgb.json', 'xgb_preprocessing.json']) {
         files[path] = await sha256Hex(path);
     }
     const runs = {};
