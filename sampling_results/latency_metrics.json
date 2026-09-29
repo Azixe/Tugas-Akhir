@@ -2,33 +2,70 @@
   {
     "label": "RF (.pkl)",
     "n": 1000,
-    "min_ms": 21.959,
-    "max_ms": 123.608,
-    "avg_ms": 24.308,
-    "p95_ms": 25.288
+    "min_ms": 22.491,
+    "max_ms": 136.792,
+    "avg_ms": 25.799,
+    "p95_ms": 29.634,
+    "model_only": null
   },
   {
     "label": "RF (.onnx)",
     "n": 1000,
-    "min_ms": 4.434,
-    "max_ms": 8.501,
-    "avg_ms": 5.242,
-    "p95_ms": 5.77
+    "min_ms": 4.365,
+    "max_ms": 9.206,
+    "avg_ms": 5.24,
+    "p95_ms": 5.816,
+    "model_only": {
+      "min_ms": 0.0304,
+      "max_ms": 0.2377,
+      "avg_ms": 0.0378,
+      "p95_ms": 0.0527
+    }
   },
   {
     "label": "XGBoost (.pkl)",
     "n": 1000,
-    "min_ms": 3.223,
-    "max_ms": 83.249,
-    "avg_ms": 3.973,
-    "p95_ms": 4.526
+    "min_ms": 3.136,
+    "max_ms": 85.018,
+    "avg_ms": 3.877,
+    "p95_ms": 4.568,
+    "model_only": null
   },
   {
     "label": "XGBoost (.onnx)",
     "n": 1000,
-    "min_ms": 5.902,
-    "max_ms": 21.967,
-    "avg_ms": 7.118,
-    "p95_ms": 7.767
+    "min_ms": 5.797,
+    "max_ms": 28.558,
+    "avg_ms": 7.198,
+    "p95_ms": 8.436,
+    "model_only": {
+      "min_ms": 0.0392,
+      "max_ms": 0.2722,
+      "avg_ms": 0.051,
+      "p95_ms": 0.067
+    }
+  },
+  {
+    "label": "CatBoost (.pkl)",
+    "n": 1000,
+    "min_ms": 6.576,
+    "max_ms": 58.354,
+    "avg_ms": 7.208,
+    "p95_ms": 7.663,
+    "model_only": null
+  },
+  {
+    "label": "CatBoost (.onnx)",
+    "n": 1000,
+    "min_ms": 4.37,
+    "max_ms": 8.993,
+    "avg_ms": 5.192,
+    "p95_ms": 5.765,
+    "model_only": {
+      "min_ms": 0.0388,
+      "max_ms": 0.2356,
+      "avg_ms": 0.0459,
+      "p95_ms": 0.0552
+    }
   }
 ]
