@@ -2,6 +2,7 @@
 // Delegates all inference to background.js via message passing
 
 const $ = id => document.getElementById(id);
+const MODEL_LABELS = { rf: 'Random Forest', xgb: 'XGBoost', catboost: 'CatBoost' };
 
 // Whitelist Management
 async function getWhitelist() {
@@ -74,13 +75,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Handle model switch
     modelSelect.onchange = () => {
         const newModel = modelSelect.value;
-        status.textContent = `Switching to ${newModel === 'rf' ? 'Random Forest' : 'XGBoost'}...`;
+        status.textContent = `Switching to ${MODEL_LABELS[newModel] ?? newModel}...`;
         btn.disabled = true;
         result.style.display = 'none';
         
         chrome.runtime.sendMessage({ action: 'switchModel', model: newModel }, (response) => {
             if (response && response.success) {
-                status.textContent = `${newModel === 'rf' ? 'Random Forest' : 'XGBoost'} ready`;
+                status.textContent = `${MODEL_LABELS[newModel] ?? newModel} ready`;
                 btn.disabled = false;
                 setTimeout(() => { if (status.textContent.includes('ready')) status.textContent = ''; }, 2000);
             } else {
@@ -163,7 +164,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Display result (all percentages are the phishing risk score,
             // the same quantity the 60/80 thresholds use)
             const phishingProb = r.phishingProbability ?? (r.isPhishing ? r.confidence : 100 - r.confidence);
-            const modelName = r.model === 'xgb' ? 'XGBoost' : 'Random Forest';
+            const modelName = MODEL_LABELS[r.model] ?? 'Random Forest';
             const verdictIcon = $('verdict-icon');
             
             result.style.display = 'block';

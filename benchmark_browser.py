@@ -35,6 +35,7 @@ EXT = 'phishingdetectorExt'
 FILES = {
     'phishing_rf.onnx': os.path.join(EXT, 'phishing_rf.onnx'),
     'phishing_xgb.onnx': os.path.join(EXT, 'phishing_xgb.onnx'),
+    'phishing_catboost.onnx': os.path.join(EXT, 'phishing_catboost.onnx'),
     'tfidf_data.json': os.path.join(EXT, 'tfidf_data.json'),
     'tfidf_data_xgb.json': os.path.join(EXT, 'tfidf_data_xgb.json'),
     'xgb_preprocessing.json': os.path.join(EXT, 'xgb_preprocessing.json'),
@@ -72,7 +73,8 @@ def verdict(is_phishing, phishing_pct):
 def run_python(model, urls, bundle):
     """Full-pipeline per-URL latency + predictions with the deployed files."""
     sess = bundle[f'{model}_sess']
-    tfidf = bundle[f'{model}_tfidf']
+    # CatBoost shares the RF feature block (word TF-IDF + structural)
+    tfidf = bundle['rf_tfidf'] if model in ('rf', 'cb') else bundle['xgb_tfidf']
     prep = bundle.get('xgb_prep') if model == 'xgb' else None
     input_name = sess.get_inputs()[0].name
 
@@ -116,6 +118,7 @@ def main():
     bundle = {
         'rf_sess': ort.InferenceSession(FILES['phishing_rf.onnx'], providers=['CPUExecutionProvider']),
         'xgb_sess': ort.InferenceSession(FILES['phishing_xgb.onnx'], providers=['CPUExecutionProvider']),
+        'cb_sess': ort.InferenceSession(FILES['phishing_catboost.onnx'], providers=['CPUExecutionProvider']),
         'rf_tfidf': rf_tfidf,
         'xgb_tfidf': xgb_tfidf,
         'xgb_prep': xgb_prep,

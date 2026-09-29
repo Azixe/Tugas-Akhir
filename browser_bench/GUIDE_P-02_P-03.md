@@ -14,7 +14,8 @@ Halaman bench memanggil jalur `scan` yang sama dengan popup, untuk 1.000 URL
 1. **Reload ekstensi** di `chrome://extensions`. Jangan buka popup dulu.
 2. Buka tab baru: `chrome-extension://<ID>/bench.html`
 3. Pastikan "URLs per model" = `1000`.
-4. Klik **Run both** (RF lalu XGB). Progress dan ringkasan tampil di halaman.
+4. Klik **Run all three** (RF, XGBoost, CatBoost). Progress dan ringkasan tampil di halaman.
+   (Tombol terpisah **Run RF / Run XGBoost / Run CatBoost** juga tersedia.)
    Perkiraan: beberapa menit untuk 2 × 1.000 scan.
 5. Setelah status **Finished**, klik **Download JSON**.
    File `bench_browser_v3.2_<timestamp>.json` tersimpan di folder **Downloads**.

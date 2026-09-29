@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Phishing Detector (RF + XGBoost)",
-  "version": "3.3",
-  "description": "Deteksi URL phishing menggunakan Random Forest & XGBoost secara lokal via ONNX Runtime.",
+  "name": "Phishing Detector (RF + XGBoost + CatBoost)",
+  "version": "3.4",
+  "description": "Deteksi URL phishing menggunakan Random Forest, XGBoost, dan CatBoost secara lokal via ONNX Runtime.",
   "permissions": [
     "activeTab",
     "tabs",
@@ -16,14 +16,19 @@
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
-      "16": "icons/favicon-16x16.png", 
+      "16": "icons/favicon-16x16.png",
       "32": "icons/favicon-32x32.png"
     }
   },
   "content_scripts": [
     {
-      "matches": ["http://*/*", "https://*/*"],
-      "js": ["content.js"],
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "content.js"
+      ],
       "run_at": "document_idle"
     }
   ],
@@ -33,17 +38,20 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "libs/ort-wasm-simd.wasm", 
+        "libs/ort-wasm-simd.wasm",
         "libs/ort-wasm.wasm",
         "libs/ort.min.js",
         "tfidf_data.json",
         "phishing_rf.onnx",
         "tfidf_data_xgb.json",
         "phishing_xgb.onnx",
+        "phishing_catboost.onnx",
         "xgb_preprocessing.json",
         "blocked.html"
       ],
-      "matches": ["<all_urls>"]
+      "matches": [
+        "<all_urls>"
+      ]
     }
   ]
 }

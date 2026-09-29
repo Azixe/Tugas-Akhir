@@ -85,6 +85,8 @@ def load_models():
                                         providers=['CPUExecutionProvider']),
         'xgb_sess': ort.InferenceSession(os.path.join(EXT, 'phishing_xgb.onnx'),
                                          providers=['CPUExecutionProvider']),
+        'cb_sess': ort.InferenceSession(os.path.join(EXT, 'phishing_catboost.onnx'),
+                                        providers=['CPUExecutionProvider']),
         'rf_tfidf': rf_tfidf,
         'xgb_tfidf': xgb_tfidf,
         'xgb_prep': xgb_prep,
@@ -107,16 +109,20 @@ def verdict(label, conf_pct):
 
 
 def evaluate(models, url):
-    rf_label, rf_p = onnx_predict(
-        models['rf_sess'], extract_features_onnx([url], models['rf_tfidf']))
+    rf_feats = extract_features_onnx([url], models['rf_tfidf'])
+    rf_label, rf_p = onnx_predict(models['rf_sess'], rf_feats)
     xgb_label, xgb_p = onnx_predict(
         models['xgb_sess'],
         preprocess_xgb(extract_features_onnx([url], models['xgb_tfidf']), models['xgb_prep']))
+    # CatBoost uses the same raw features as RF (word TF-IDF + structural)
+    cb_label, cb_p = onnx_predict(models['cb_sess'], rf_feats)
     return {
         'rf_label': rf_label, 'rf_conf': round(rf_p * 100, 2),
         'rf_verdict': verdict(rf_label, rf_p * 100),
         'xgb_label': xgb_label, 'xgb_conf': round(xgb_p * 100, 2),
         'xgb_verdict': verdict(xgb_label, xgb_p * 100),
+        'cb_label': cb_label, 'cb_conf': round(cb_p * 100, 2),
+        'cb_verdict': verdict(cb_label, cb_p * 100),
     }
 
 
@@ -154,10 +160,9 @@ def summarize(results, variant):
     def pick(r, field):
         return r[f'{field}_browser'] if variant == 'browser' else r[field]
 
-    pred = [pick(r, f'{m}_label') for r in results for m in ('rf', 'xgb')]
     out = {}
     true = [r['label'] for r in results]
-    for model in ('rf', 'xgb'):
+    for model in ('rf', 'xgb', 'cb'):
         pred = [pick(r, f'{model}_label') for r in results]
         tp = sum(1 for p, t in zip(pred, true) if p == 1 and t == 1)
         fp = sum(1 for p, t in zip(pred, true) if p == 1 and t == 0)
@@ -230,17 +235,24 @@ def main():
             'xgb_correct': int(listed['xgb_label'] == row['label']),
             'rf_correct_browser': int(browser['rf_label'] == row['label']),
             'xgb_correct_browser': int(browser['xgb_label'] == row['label']),
+            'cb_correct': int(listed['cb_label'] == row['label']),
+            'cb_correct_browser': int(browser['cb_label'] == row['label']),
             'scheme_changed': int(burl != url),
         })
         flag = ' [scheme/redirect variant]' if burl != url else ''
         print(f"  {'phish' if row['label'] else 'legit'} | RF {listed['rf_label']}/"
               f"{listed['rf_conf']:5.1f}% (browser {browser['rf_label']}/{browser['rf_conf']:5.1f}%) | "
               f"XGB {listed['xgb_label']}/{listed['xgb_conf']:5.1f}% "
-              f"(browser {browser['xgb_label']}/{browser['xgb_conf']:5.1f}%) | {url[:60]}{flag}")
+              f"(browser {browser['xgb_label']}/{browser['xgb_conf']:5.1f}%) | "
+              f"CB {listed['cb_label']}/{listed['cb_conf']:5.1f}% "
+              f"(browser {browser['cb_label']}/{browser['cb_conf']:5.1f}%) | {url[:60]}{flag}")
 
     listed_sum = summarize(results, 'listed')
     browser_sum = summarize(results, 'browser')
-    agreement = np.mean([r['rf_label_browser'] == r['xgb_label_browser'] for r in results]) * 100
+    agree = {}
+    for a, b in (('rf', 'xgb'), ('rf', 'cb'), ('xgb', 'cb')):
+        agree[f'{a}_{b}'] = np.mean(
+            [r[f'{a}_label_browser'] == r[f'{b}_label_browser'] for r in results]) * 100
     changed = [r for r in results if r['scheme_changed']]
 
     # ---- per-URL CSV ----
@@ -261,7 +273,8 @@ def main():
     md.append(f"- Legitimate: {len(legit)} manual URLs (FP-prone sites: Steam, Reddit, Discord, ...)")
     md.append(f"- Extension model version: v{ext_manifest['version']}  |  "
               f"RF sha256 `{sha256(os.path.join(EXT, 'phishing_rf.onnx'))[:16]}…`  |  "
-              f"XGB sha256 `{sha256(os.path.join(EXT, 'phishing_xgb.onnx'))[:16]}…`")
+              f"XGB sha256 `{sha256(os.path.join(EXT, 'phishing_xgb.onnx'))[:16]}…`  |  "
+              f"CatBoost sha256 `{sha256(os.path.join(EXT, 'phishing_catboost.onnx'))[:16]}…`")
     md.append(f"- Two variants scored per URL: **as-listed** (raw feed string) and **browser** "
               f"(http→https upgrade + curl-resolved redirects; {len(changed)} URLs differ). "
               f"The browser variant is primary.")
@@ -279,57 +292,62 @@ def main():
     md.append("")
     md.append("## Summary — browser-observed (primary)")
     md.append("")
-    md.append("| Metric | Random Forest | XGBoost |")
-    md.append("|---|---:|---:|")
+    md.append("| Metric | Random Forest | XGBoost | CatBoost |")
+    md.append("|---|---:|---:|---:|")
     for label, key, fmt in [
             ('Accuracy', 'acc', '{:.2f}%'), ('Precision (phishing)', 'prec', '{:.2f}%'),
             ('Recall (phishing)', 'rec', '{:.2f}%'), ('F1 (phishing)', 'f1', '{:.2f}%'),
             ('False Positive Rate', 'fpr', '{:.2f}%')]:
         md.append(f"| {label} | " +
-                  " | ".join(fmt.format(browser_sum[m][key] * 100) for m in ('rf', 'xgb')) + " |")
+                  " | ".join(fmt.format(browser_sum[m][key] * 100) for m in ('rf', 'xgb', 'cb')) + " |")
     md.append(f"| TP / FP / TN / FN | " +
               " | ".join(f"{browser_sum[m]['tp']} / {browser_sum[m]['fp']} / "
-                         f"{browser_sum[m]['tn']} / {browser_sum[m]['fn']}" for m in ('rf', 'xgb')) + " |")
+                         f"{browser_sum[m]['tn']} / {browser_sum[m]['fn']}" for m in ('rf', 'xgb', 'cb')) + " |")
     md.append("")
-    md.append(f"RF and XGBoost agree on {agreement:.1f}% of URLs.")
+    md.append(f"Model agreement (browser variant): RF↔XGB {agree['rf_xgb']:.1f}% | "
+              f"RF↔CatBoost {agree['rf_cb']:.1f}% | XGB↔CatBoost {agree['xgb_cb']:.1f}%.")
     md.append("")
     md.append("## Summary — as-listed (reference)")
     md.append("")
-    md.append("| Metric | Random Forest | XGBoost |")
-    md.append("|---|---:|---:|")
+    md.append("| Metric | Random Forest | XGBoost | CatBoost |")
+    md.append("|---|---:|---:|---:|")
     for label, key, fmt in [
             ('Accuracy', 'acc', '{:.2f}%'), ('Recall (phishing)', 'rec', '{:.2f}%'),
             ('False Positive Rate', 'fpr', '{:.2f}%')]:
         md.append(f"| {label} | " +
-                  " | ".join(fmt.format(listed_sum[m][key] * 100) for m in ('rf', 'xgb')) + " |")
+                  " | ".join(fmt.format(listed_sum[m][key] * 100) for m in ('rf', 'xgb', 'cb')) + " |")
     md.append(f"| TP / FP / TN / FN | " +
               " | ".join(f"{listed_sum[m]['tp']} / {listed_sum[m]['fp']} / "
-                         f"{listed_sum[m]['tn']} / {listed_sum[m]['fn']}" for m in ('rf', 'xgb')) + " |")
+                         f"{listed_sum[m]['tn']} / {listed_sum[m]['fn']}" for m in ('rf', 'xgb', 'cb')) + " |")
     md.append("")
     md.append("## Scheme sensitivity (why one letter flips the model)")
     md.append("")
-    md.append("| URL (as-listed) | RF as-listed | RF browser | XGB as-listed | XGB browser |")
-    md.append("|---|---:|---:|---:|---:|")
+    md.append("| URL (as-listed) | RF as-listed | RF browser | XGB as-listed | XGB browser "
+              "| CatBoost as-listed | CatBoost browser |")
+    md.append("|---|---:|---:|---:|---:|---:|---:|")
     for r in changed:
         md.append(f"| {r['url']} | {r['rf_label']} / {r['rf_conf']:.1f}% "
                   f"| {r['rf_label_browser']} / {r['rf_conf_browser']:.1f}% "
                   f"| {r['xgb_label']} / {r['xgb_conf']:.1f}% "
-                  f"| {r['xgb_label_browser']} / {r['xgb_conf_browser']:.1f}% |")
+                  f"| {r['xgb_label_browser']} / {r['xgb_conf_browser']:.1f}% "
+                  f"| {r['cb_label']} / {r['cb_conf']:.1f}% "
+                  f"| {r['cb_label_browser']} / {r['cb_conf_browser']:.1f}% |")
     md.append("")
     md.append("## Phishing sample by domain type (browser variant)")
     md.append("")
-    md.append("| Domain type | n | RF caught | XGBoost caught |")
-    md.append("|---|---:|---:|---:|")
+    md.append("| Domain type | n | RF caught | XGBoost caught | CatBoost caught |")
+    md.append("|---|---:|---:|---:|---:|")
     for group in ('free-hosting', 'owned-domain'):
         rows = [r for r in results if r['label'] == 1 and r['group'] == group]
         md.append(f"| {group} | {len(rows)} | {sum(r['rf_label_browser'] for r in rows)}/{len(rows)} "
-                  f"| {sum(r['xgb_label_browser'] for r in rows)}/{len(rows)} |")
+                  f"| {sum(r['xgb_label_browser'] for r in rows)}/{len(rows)} "
+                  f"| {sum(r['cb_label_browser'] for r in rows)}/{len(rows)} |")
     md.append("")
     md.append("## Extension behavior (decision thresholds, browser variant)")
     md.append("")
     md.append("| Model | Blocked (>80%) | Warned (60-80%) | SAFE (<60%) |")
     md.append("|---|---|---|---|")
-    for model, label in [('rf', 'Random Forest'), ('xgb', 'XGBoost')]:
+    for model, label in [('rf', 'Random Forest'), ('xgb', 'XGBoost'), ('cb', 'CatBoost')]:
         blocked_tp = sum(1 for r in results if r['label'] == 1
                          and r[f'{model}_verdict_browser'] == 'PHISHING')
         blocked_fp = sum(1 for r in results if r['label'] == 0
@@ -346,20 +364,22 @@ def main():
               "Percentages are the model's phishing probability (skor), the same quantity "
               "the thresholds and the extension UI use.")
     md.append("")
-    md.append("| # | Expected | URL (browser) | RF | XGB |")
-    md.append("|---:|---|---|---|---|")
+    md.append("| # | Expected | URL (browser) | RF | XGB | CatBoost |")
+    md.append("|---:|---|---|---|---|---|")
     for i, r in enumerate(results, 1):
         exp = 'phish' if r['label'] == 1 else 'legit'
         rf_mark = '✓' if r['rf_correct_browser'] else '✗'
         xgb_mark = '✓' if r['xgb_correct_browser'] else '✗'
+        cb_mark = '✓' if r['cb_correct_browser'] else '✗'
         url = r['url_browser'].replace('|', '%7C')
         md.append(f"| {i} | {exp} | {url} | {rf_mark} {r['rf_verdict_browser']} "
                   f"({r['rf_conf_browser']:.1f}%) | {xgb_mark} {r['xgb_verdict_browser']} "
-                  f"({r['xgb_conf_browser']:.1f}%) |")
+                  f"({r['xgb_conf_browser']:.1f}%) | {cb_mark} {r['cb_verdict_browser']} "
+                  f"({r['cb_conf_browser']:.1f}%) |")
     md.append("")
     md.append("## Errors (browser variant)")
     md.append("")
-    for model, label in [('rf', 'Random Forest'), ('xgb', 'XGBoost')]:
+    for model, label in [('rf', 'Random Forest'), ('xgb', 'XGBoost'), ('cb', 'CatBoost')]:
         fps = [r['url_browser'] for r in results if r['label'] == 0 and r[f'{model}_label_browser'] == 1]
         fns = [r['url_browser'] for r in results if r['label'] == 1 and r[f'{model}_label_browser'] == 0]
         md.append(f"**{label}** — false positives: {len(fps)}, false negatives: {len(fns)}")
@@ -377,7 +397,7 @@ def main():
 
     print(f"\nSaved: {csv_path}")
     print(f"Saved: {md_path}")
-    for m, label in [('rf', 'RF '), ('xgb', 'XGB')]:
+    for m, label in [('rf', 'RF '), ('xgb', 'XGB'), ('cb', 'CB ')]:
         b, l = browser_sum[m], listed_sum[m]
         print(f"{label} browser: acc {b['acc']*100:.2f}% | recall {b['rec']*100:.2f}% | "
               f"FPR {b['fpr']*100:.2f}% | FP {b['fp']} FN {b['fn']}   "

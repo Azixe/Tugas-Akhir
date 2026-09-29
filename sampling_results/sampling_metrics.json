@@ -1,6 +1,6 @@
 {
   "meta": {
-    "timestamp": "2026-09-29T08:16:20+00:00",
+    "timestamp": "2026-09-29T08:31:32+00:00",
     "dataset": "URL dataset.csv",
     "dataset_rows": 450176,
     "seed": 42,
@@ -44,9 +44,9 @@
         "fp": 61,
         "fn": 623,
         "tp": 20265,
-        "predict_seconds": 12.5,
-        "latency_avg_ms": 24.9718,
-        "latency_p95_ms": 33.9567,
+        "predict_seconds": 11.6,
+        "latency_avg_ms": 25.2896,
+        "latency_p95_ms": 26.5286,
         "prob_phishing_avg": 0.3079
       }
     },
@@ -66,9 +66,9 @@
         "fp": 1,
         "fn": 863,
         "tp": 20025,
-        "predict_seconds": 11.5,
-        "latency_avg_ms": 24.2386,
-        "latency_p95_ms": 30.2428,
+        "predict_seconds": 11.8,
+        "latency_avg_ms": 27.7285,
+        "latency_p95_ms": 34.0783,
         "prob_phishing_avg": 0.232
       }
     },
@@ -88,9 +88,9 @@
         "fp": 245,
         "fn": 237,
         "tp": 20651,
-        "predict_seconds": 16.6,
-        "latency_avg_ms": 3.8014,
-        "latency_p95_ms": 4.3897,
+        "predict_seconds": 21.0,
+        "latency_avg_ms": 4.1354,
+        "latency_p95_ms": 4.9131,
         "prob_phishing_avg": 0.2364
       }
     },
@@ -110,9 +110,9 @@
         "fp": 88,
         "fn": 317,
         "tp": 20571,
-        "predict_seconds": 18.0,
-        "latency_avg_ms": 3.7095,
-        "latency_p95_ms": 4.13,
+        "predict_seconds": 17.3,
+        "latency_avg_ms": 4.1839,
+        "latency_p95_ms": 4.9659,
         "prob_phishing_avg": 0.2309
       }
     },
@@ -123,19 +123,19 @@
         "n_train": 167100
       },
       "metrics": {
-        "accuracy": 0.9959,
-        "precision_phishing": 0.9948,
-        "recall_phishing": 0.9874,
-        "f1_phishing": 0.9911,
-        "fpr": 0.00155,
-        "tn": 69041,
-        "fp": 107,
-        "fn": 264,
-        "tp": 20624,
-        "predict_seconds": 13.2,
-        "latency_avg_ms": 7.1119,
-        "latency_p95_ms": 7.6552,
-        "prob_phishing_avg": 0.2382
+        "accuracy": 0.9957,
+        "precision_phishing": 0.9955,
+        "recall_phishing": 0.986,
+        "f1_phishing": 0.9907,
+        "fpr": 0.00136,
+        "tn": 69054,
+        "fp": 94,
+        "fn": 293,
+        "tp": 20595,
+        "predict_seconds": 14.6,
+        "latency_avg_ms": 7.7031,
+        "latency_p95_ms": 8.65,
+        "prob_phishing_avg": 0.2395
       }
     },
     "cb_full": {
@@ -145,19 +145,19 @@
         "n_train": 360140
       },
       "metrics": {
-        "accuracy": 0.9963,
-        "precision_phishing": 0.9988,
-        "recall_phishing": 0.985,
-        "f1_phishing": 0.9919,
-        "fpr": 0.00035,
-        "tn": 69124,
-        "fp": 24,
-        "fn": 313,
-        "tp": 20575,
-        "predict_seconds": 13.3,
-        "latency_avg_ms": 7.2691,
-        "latency_p95_ms": 7.6538,
-        "prob_phishing_avg": 0.2316
+        "accuracy": 0.9959,
+        "precision_phishing": 0.999,
+        "recall_phishing": 0.9835,
+        "f1_phishing": 0.9912,
+        "fpr": 0.0003,
+        "tn": 69127,
+        "fp": 21,
+        "fn": 345,
+        "tp": 20543,
+        "predict_seconds": 13.9,
+        "latency_avg_ms": 7.5249,
+        "latency_p95_ms": 8.0036,
+        "prob_phishing_avg": 0.2317
       }
     }
   }

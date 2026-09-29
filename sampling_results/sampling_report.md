@@ -1,6 +1,6 @@
 # Undersampling vs Non-Undersampling — Benchmark Report
 
-Generated: 2026-09-29T08:16:20+00:00
+Generated: 2026-09-29T08:31:32+00:00
 Dataset: `URL dataset.csv` — 450176 rows after cleaning
 Protocol: `sampling.py` (stratified 80/20, seed 42); all models evaluated on the same 90036-URL test set
 
@@ -9,12 +9,12 @@ Protocol: `sampling.py` (stratified 80/20, seed 42); all models evaluated on the
 
 | Model | Train size | Accuracy | Precision (phish) | Recall (phish) | F1 (phish) | FPR | FP | FN | Avg latency (ms) | Size (KB) |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| RF (undersampled) | 167100 | 0.9924 | 0.9970 | 0.9702 | 0.9834 | 0.088% | 61 | 623 | 24.9718 | 4320 |
-| RF (full dataset) | 360140 | 0.9904 | 1.0000 | 0.9587 | 0.9789 | 0.001% | 1 | 863 | 24.2386 | 7529 |
-| XGBoost (undersampled) | 167100 | 0.9946 | 0.9883 | 0.9887 | 0.9885 | 0.354% | 245 | 237 | 3.8014 | 4672 |
-| XGBoost (full dataset) | 360140 | 0.9955 | 0.9957 | 0.9848 | 0.9903 | 0.127% | 88 | 317 | 3.7095 | 7830 |
-| CatBoost (undersampled) | 167100 | 0.9959 | 0.9948 | 0.9874 | 0.9911 | 0.155% | 107 | 264 | 7.1119 | 4112 |
-| CatBoost (full dataset) | 360140 | 0.9963 | 0.9988 | 0.9850 | 0.9919 | 0.035% | 24 | 313 | 7.2691 | 7282 |
+| RF (undersampled) | 167100 | 0.9924 | 0.9970 | 0.9702 | 0.9834 | 0.088% | 61 | 623 | 25.2896 | 4320 |
+| RF (full dataset) | 360140 | 0.9904 | 1.0000 | 0.9587 | 0.9789 | 0.001% | 1 | 863 | 27.7285 | 7529 |
+| XGBoost (undersampled) | 167100 | 0.9946 | 0.9883 | 0.9887 | 0.9885 | 0.354% | 245 | 237 | 4.1354 | 4672 |
+| XGBoost (full dataset) | 360140 | 0.9955 | 0.9957 | 0.9848 | 0.9903 | 0.127% | 88 | 317 | 4.1839 | 7830 |
+| CatBoost (undersampled) | 167100 | 0.9957 | 0.9955 | 0.9860 | 0.9907 | 0.136% | 94 | 293 | 7.7031 | 4030 |
+| CatBoost (full dataset) | 360140 | 0.9959 | 0.9990 | 0.9835 | 0.9912 | 0.030% | 21 | 345 | 7.5249 | 7191 |
 
 ## Notes for Bab 4
 

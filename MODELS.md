@@ -14,21 +14,24 @@ Both deployed models now use the **full dataset** (no undersampling). 2026-09-27
 
 Extension version bumped to **3.3** in `manifest.json` (3.2 = UI/navigation fixes; 3.1 = model refresh). Previous deployed files (for reference): RF `0a8f995b…` (901 KB, Gen-3 non-undersampled, pkl lost); XGB `daa8c8d4…` (1,253 KB, undersampled, deployed 20–27 Sep 2026); XGB `1c1965eb…` (1,277 KB, Colab-tuned undersampled).
 
-## Third model — CatBoost (branch `feat/catboost-third-model`, 2026-09-29)
+## Third model — CatBoost (deployed in extension v3.4, 2026-09-29)
 
-Trained by `Catboost/train_catboost.py` under the shared protocol in `sampling.py` (common stratified 80/20 split, seed 42, same 90,036-URL test set) on the **same raw 1509 features as the deployed RF**: 1500 word-level TF-IDF + 9 structural. Hyperparameters: 700 iterations, depth 6, lr 0.1, Logloss.
+Trained by `Catboost/train_catboost.py` under the shared protocol in `sampling.py` (common stratified 80/20 split, seed 42, same 90,036-URL test set) on the **same raw 1509 features as the deployed RF** (1500 word-level TF-IDF + 9 structural). Deployed configuration: **300 iterations**, depth 6, lr 0.1, Logloss — chosen by the size/accuracy trade-off in `sampling_results/catboost_tradeoff.md` (metrics plateau after ~300 iterations while the ONNX export grows 2.4× by 700).
 
 | Artifact | Variant | Train size | Size | SHA-256 |
 |---|---|---|---:|---|
-| `cb_full.pkl` | CatBoost full dataset | 360,140 | 7,282 KB | `b80ec4a6d3d2f567862f1e0bbf21385c5bdcce17063f656748befce7bd5ef378` |
-| `cb_under.pkl` | CatBoost undersampled (1:1) | 167,100 | 4,112 KB | `3343e97f9aa17a45b5ebda392859deab0fc138bd5e0005d519e109d3fc14184b` |
-| `cb_full.onnx` | ONNX of the full variant | — | 3,815 KB | `b6fd2a63a0b7ba364dc7322256d2b9c6a9edbd7db355a396a5d91ae28bc4cf0c` |
-| `cb_under.onnx` | ONNX of the undersampled variant | — | 3,821 KB | `13c94b7d95a12ca4526361ce322213ab3507c44699ebd227cd6d6acb26993511` |
+| `phishingdetectorExt/phishing_catboost.onnx` | CatBoost full (deployed, 300 iters) | 360,140 | 1,618 KB | `791a503e724264264e2bfa1f2da84c66ff1f06a3d6f8bcce6def9a2c68d977b5` |
+| `cb_full.pkl` | CatBoost full (joblib artifacts dict) | 360,140 | 7,190 KB | `8b6a6684f2c765e19f9eabc7d3dd05871d81f2164b98692f79092c380fab9d9f` |
+| `cb_under.pkl` | CatBoost undersampled (1:1) | 167,100 | 4,030 KB | `c75eb60315c8c5aaeb8ffd8954569f49ebefff7d745caa2e4c40f0638507bb51` |
+| `cb_under.onnx` | ONNX of the undersampled variant | — | 1,623 KB | `66bce3637d977420b075819c4ad320df7ff9449f136394a2ab111cd67077ceff` |
+
+Test-set metrics (`catboost_metrics.json`): full acc 99.59% / prec 99.90% / recall 98.35% / F1 99.12% / FPR 0.030% (21 FP); undersampled acc 99.57% / prec 99.55% / recall 98.60% / F1 99.07% / FPR 0.136% (94 FP).
+
+Higher-capacity variants kept for the trade-off analysis (700 iterations): `cb_full_700iter.onnx` (3,815 KB, `b6fd2a63a0b7ba364dc7322256d2b9c6a9edbd7db355a396a5d91ae28bc4cf0c`) and `cb_under_700iter.onnx` (3,821 KB, `13c94b7d95a12ca4526361ce322213ab3507c44699ebd227cd6d6acb26993511`).
 
 Portability notes:
 - CatBoost's native ONNX export emits probabilities as `seq(map(int64, float))`; `Catboost/fix_onnx_output.py` strips the `ZipMap` node and exposes the flat `[N, 2]` float tensor (input `features`) so plain-tensor consumers and `onnxruntime-web` work unchanged. Verified native ↔ ONNX: **100% label agreement, max |Δp| ≈ 1e-7** on 300 test URLs.
 - The pkl is an artifacts dict `{model, feature_extractor, params, variant, n_train}`; `benchmark_sampling.py` knows how to load/predict with it (six-variant report).
-- Test-set metrics: `sampling_results/catboost_metrics.json` (full: acc 99.63%, recall 98.50%, FPR 0.0347%, 24 FP; under: acc 99.59%, recall 98.74%, FPR 0.155%, 107 FP).
 
 ## RF variants & history (`rf_models/`)
 

@@ -108,7 +108,8 @@
         <label>URLs per model: <input id="url-count" type="number" min="1" step="1" value="1000"></label>
         <button id="run-rf">Run RF</button>
         <button id="run-xgb">Run XGBoost</button>
-        <button id="run-both">Run both</button>
+        <button id="run-catboost">Run CatBoost</button>
+        <button id="run-both">Run all three</button>
         <button id="stop" disabled>Stop</button>
         <button id="download" disabled>Download JSON</button>
     </div>
@@ -140,10 +141,15 @@
                 <td>XGBoost</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
                 <td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
             </tr>
+            <tr id="row-catboost">
+                <td>CatBoost</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
+                <td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
+            </tr>
         </tbody>
     </table>
     <div class="verdicts">RF: <span id="verdicts-rf">-</span></div>
     <div class="verdicts">XGB: <span id="verdicts-xgb">-</span></div>
+    <div class="verdicts">CatBoost: <span id="verdicts-catboost">-</span></div>
 
     <pre id="log"></pre>
 

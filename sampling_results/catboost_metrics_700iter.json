@@ -1,0 +1,60 @@
+[
+  {
+    "variant": "full",
+    "n_train": 360140,
+    "train_seconds": 136.2,
+    "pkl_kb": 7282,
+    "onnx_kb": 3815,
+    "onnx_sha256": "92490bee5156f941c374ec5e9d49d2d0879c7ff84babb3a48a96c788c65969e0",
+    "params": {
+      "iterations": 700,
+      "depth": 6,
+      "learning_rate": 0.1,
+      "loss_function": "Logloss",
+      "random_seed": 42,
+      "thread_count": -1,
+      "verbose": 100,
+      "allow_writing_files": false
+    },
+    "n_test": 90036,
+    "accuracy": 0.9963,
+    "precision_phish": 0.9988,
+    "recall_phish": 0.985,
+    "f1_phish": 0.9919,
+    "fpr": 0.000347,
+    "tn": 69124,
+    "fp": 24,
+    "fn": 313,
+    "tp": 20575,
+    "prob_mean_phish": 0.9837
+  },
+  {
+    "variant": "under",
+    "n_train": 167100,
+    "train_seconds": 80.4,
+    "pkl_kb": 4112,
+    "onnx_kb": 3821,
+    "onnx_sha256": "c04e6040bc6da2433f864c0ceccfd3dd2c7310c5a38423d8383e190d2901b51a",
+    "params": {
+      "iterations": 700,
+      "depth": 6,
+      "learning_rate": 0.1,
+      "loss_function": "Logloss",
+      "random_seed": 42,
+      "thread_count": -1,
+      "verbose": 100,
+      "allow_writing_files": false
+    },
+    "n_test": 90036,
+    "accuracy": 0.9959,
+    "precision_phish": 0.9948,
+    "recall_phish": 0.9874,
+    "f1_phish": 0.9911,
+    "fpr": 0.001547,
+    "tn": 69041,
+    "fp": 107,
+    "fn": 264,
+    "tp": 20624,
+    "prob_mean_phish": 0.9859
+  }
+]

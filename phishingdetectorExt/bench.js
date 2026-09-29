@@ -3,7 +3,7 @@
 // worker (the same "scan" message path the popup uses) over the shared
 // 1000-URL test set, for each model. Results are downloadable as JSON.
 
-const MODELS = ['rf', 'xgb'];
+const MODELS = ['rf', 'xgb', 'catboost'];
 const WARMUP_COUNT = 5;
 const MAX_CONSECUTIVE_ERRORS = 10;
 
@@ -55,7 +55,7 @@ function log(message) {
 }
 
 function setControls(enabled) {
-    for (const id of ['run-rf', 'run-xgb', 'run-both', 'url-count']) $(id).disabled = !enabled;
+    for (const id of ['run-rf', 'run-xgb', 'run-catboost', 'run-both', 'url-count']) $(id).disabled = !enabled;
     $('stop').disabled = enabled;
 }
 
@@ -266,7 +266,8 @@ async function init() {
 
     $('run-rf').addEventListener('click', () => runModels(['rf']));
     $('run-xgb').addEventListener('click', () => runModels(['xgb']));
-    $('run-both').addEventListener('click', () => runModels(['rf', 'xgb']));
+    $('run-catboost').addEventListener('click', () => runModels(['catboost']));
+    $('run-both').addEventListener('click', () => runModels(['rf', 'xgb', 'catboost']));
     $('stop').addEventListener('click', () => { state.cancel = true; log('Stop requested...'); });
     $('download').addEventListener('click', downloadResults);
 }

@@ -2,15 +2,16 @@
 importScripts('utils.js', 'libs/ort.min.js');
 
 // Model state
-let currentModel = 'rf';  // 'rf' or 'xgb'
+let currentModel = 'rf';  // 'rf', 'xgb' or 'catboost'
 let models = {
     rf:  { session: null, tfidfData: null, ready: false, initPromise: null },
-    xgb: { session: null, tfidfData: null, prepData: null, ready: false, initPromise: null }
+    xgb: { session: null, tfidfData: null, prepData: null, ready: false, initPromise: null },
+    catboost: { session: null, tfidfData: null, ready: false, initPromise: null }
 };
 
 // Load saved model preference
 chrome.storage.local.get('selectedModel', ({ selectedModel }) => {
-    if (selectedModel === 'rf' || selectedModel === 'xgb') currentModel = selectedModel;
+    if (['rf', 'xgb', 'catboost'].includes(selectedModel)) currentModel = selectedModel;
     console.log('[BG] Selected model:', currentModel);
 });
 
@@ -34,7 +35,7 @@ async function initModel(modelType) {
                 m.session = await ort.InferenceSession.create(await mRes.arrayBuffer(), {
                     executionProviders: ['wasm']
                 });
-            } else {
+            } else if (modelType === 'xgb') {
                 const [tRes, mRes, pRes] = await Promise.all([
                     fetch(chrome.runtime.getURL('tfidf_data_xgb.json')),
                     fetch(chrome.runtime.getURL('phishing_xgb.onnx')),
@@ -45,6 +46,16 @@ async function initModel(modelType) {
                     executionProviders: ['wasm']
                 });
                 m.prepData = await pRes.json();
+            } else {
+                // CatBoost uses the same raw features as RF (word TF-IDF + structural)
+                const [tRes, mRes] = await Promise.all([
+                    fetch(chrome.runtime.getURL('tfidf_data.json')),
+                    fetch(chrome.runtime.getURL('phishing_catboost.onnx'))
+                ]);
+                m.tfidfData = await tRes.json();
+                m.session = await ort.InferenceSession.create(await mRes.arrayBuffer(), {
+                    executionProviders: ['wasm']
+                });
             }
 
             m.ready = true;
@@ -263,7 +274,7 @@ chrome.runtime.onMessage.addListener((req, sender, res) => {
         return true;
     }
     if (req.action === 'switchModel') {
-        if (req.model !== 'rf' && req.model !== 'xgb') {
+        if (!['rf', 'xgb', 'catboost'].includes(req.model)) {
             res({ success: false, error: 'Invalid model' });
             return;
         }
