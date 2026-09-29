@@ -1,6 +1,7 @@
 # Panduan Pengujian Ekstensi — P-01 / P-02 / P-03 / Uji Fungsional
 
-> Sesi: 2026-09-21 · Ekstensi: **v3.2** (model tetap v3.1: RF `625c9333…`, XGB `daa8c8d4…`)
+> Sesi: 2026-09-21 (P-02/P-03/uji fungsional v3.2) · Ekstensi saat ini: **v3.4** —
+> tiga model: RF `625c9333…`, XGB `4efd7ead…`, **CatBoost `791a503e…`**
 > Prasyarat: ekstensi sudah di-*reload* di `chrome://extensions` (tombol ⟳) setelah commit terakhir.
 > ID ekstensi: `jabeplfgcjflfbdbiflpcclngefpkbhm` — cek di `chrome://extensions` kalau berbeda.
 
@@ -18,7 +19,7 @@ Halaman bench memanggil jalur `scan` yang sama dengan popup, untuk 1.000 URL
    (Tombol terpisah **Run RF / Run XGBoost / Run CatBoost** juga tersedia.)
    Perkiraan: beberapa menit untuk 2 × 1.000 scan.
 5. Setelah status **Finished**, klik **Download JSON**.
-   File `bench_browser_v3.2_<timestamp>.json` tersimpan di folder **Downloads**.
+   File `bench_browser_v3.4_<timestamp>.json` tersimpan di folder **Downloads**.
 6. Beri tahu asisten — file akan diambil langsung dari `/mnt/c/Users/Enzo/Downloads`.
 
 Catatan penting:
@@ -60,6 +61,38 @@ Cara scan: buka popup → **Scan Current Tab**.
 | Saat scan halaman | 4.5% | ![alt text](screenshots/p03_cpu_scan.png)|
 
 Target: spike **< 30%**.
+
+---
+
+## P-02 v3.4 — memori dengan TIGA model dimuat (re-check 2026-09-29)
+
+Latar: angka P-02 sebelumnya (127,3 MB setelah ganti RF ⇄ XGB) diukur di v3.2
+dengan dua model. Service worker menyimpan sesi tiap model yang sudah diinisialisasi,
+jadi setelah melewati tiga model, ketiganya bisa berada di memori sekaligus.
+
+Persiapan: satu jendela Chrome, tutup tab yang tidak perlu, **DevTools service worker ditutup**.
+
+1. `chrome://extensions` → **reload** ekstensi (v3.4) supaya service worker mulai bersih.
+2. Buka popup sekali (biar baris Task Manager muncul), lalu tutup popup.
+3. Tekan `Shift+Esc` (Task Manager) → cari baris **"Extension: Phishing Detector"**.
+4. Di popup, ganti model berurutan: **XGBoost** (tunggu "XGBoost ready") →
+   **CatBoost** (tunggu "CatBoost ready") → **Random Forest** (tunggu ready).
+   Ini memuat ketiga sesi ke service worker.
+5. Catat memori → screenshot: `screenshots/p02_memory_three_models.png`.
+6. Scan `https://www.youtube.com/` dengan model **CatBoost** → catat lagi →
+   screenshot: `screenshots/p02_memory_catboost_scan.png`.
+7. (P-03) Saat scan CatBoost berjalan, lihat kolom *CPU* → screenshot:
+   `screenshots/p03_cpu_catboost_scan.png`.
+
+| Kondisi | Memori (MB) | Screenshot |
+|---|---|---|
+| Tiga model dimuat (RF + XGB + CatBoost, popup ditutup) | … | ![alt text](screenshots/p02_memory_three_models.png) |
+| Setelah scan legitimate dengan CatBoost | … | ![alt text](screenshots/p02_memory_catboost_scan.png) |
+| CPU saat scan CatBoost | … % | ![alt text](screenshots/p03_cpu_catboost_scan.png) |
+
+Target Bab 3 tetap: idle **< 50 MB**, peak **< 150 MB**, spike CPU **< 30%**.
+Kalau peak > 150 MB, bilang ke asisten — sesi model lama bisa dilepas saat
+ganti model (eviction) supaya hanya satu sesi aktif.
 
 ---
 
