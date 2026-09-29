@@ -1,6 +1,6 @@
-# Manual checks — P-02 / P-03 / functional (2026-09-21)
+# Manual checks — P-02 / P-03 / functional (v3.2 session 2026-09-21; P-02/P-03 re-check v3.4 2026-09-29)
 
-> Machine: Chrome 153 (Windows, 12 logical cores, 32 GB). P-02/P-03 and the functional clicks were measured on **v3.2** (2026-09-21); the P-01 numbers in this report were re-measured on **v3.4** (three models incl. CatBoost, 2026-09-29; previous P-01 re-measure was v3.3).
+> Machine: Chrome 153 (Windows, 12 logical cores, 32 GB). The functional clicks and the original P-02/P-03 table were measured on **v3.2** (2026-09-21); P-01 was re-measured on **v3.4** (three models incl. CatBoost, 2026-09-29; previous P-01 re-measure was v3.3) and P-02/P-03 were re-checked on **v3.4** with all three sessions loaded.
 > Screenshots live in this folder.
 
 ## P-02 — Extension memory (Chrome Task Manager)
@@ -16,6 +16,18 @@
 - The process entry only appears once the MV3 service worker has started; opening the popup briefly showed ~110 MB before settling at 52.9 MB.
 - Against the Bab 3 targets (idle < 50 MB, peak < 150 MB): idle is marginally above (51.7 MiB), peak is below (135.0 MiB).
 
+### Re-check v3.4 — three models loaded (2026-09-29)
+
+| Condition | Task Manager | ≈ MiB | Screenshot |
+|---|---:|---:|---|
+| All three sessions loaded (RF + XGB + CatBoost, after switching in the popup) | 117,476K | 114.7 | `screenshots/p02_memory_three_models.png` |
+| After a legitimate scan with CatBoost (YouTube) | 115,384K | 112.7 | `screenshots/p02_p03_catboost_scan.png` (memory + CPU in one capture) |
+
+- With three sessions loaded the peak (114.7 MiB) is **below** the v3.2 two-model reading
+  (124.3 MiB): readings settle between events, and MV3 evicts the idle worker (~30 s), which
+  resets memory to baseline. Both remain under the 150 MB peak target.
+- Process name confirms the deployed trio: *"Extension: Phishing Detector (RF + XGBoost + CatBoost)"*.
+
 ## P-03 — CPU (Chrome Task Manager)
 
 | Condition | CPU | Screenshot |
@@ -23,10 +35,13 @@
 | Idle | 0.0% | `screenshots/p03_cpu_idle.png` |
 | Scan with the model loaded | 4.5% | `screenshots/p03_cpu_scan.png` |
 | Model switch / session init transient | 49.3% | `screenshots/p02_p03_model_switch.png` |
+| Scan with CatBoost (v3.4 re-check, merged capture) | 9.0% | `screenshots/p02_p03_catboost_scan.png` |
 
 - Steady-state scans stay at ~4.5% (target < 30%). The 49.3% reading is the one-time
   ONNX/WASM session load (~240 ms); because MV3 evicts the idle service worker, this
   transient can recur on the first scan after an eviction.
+- The v3.4 CatBoost scan registered 9.0% (captured while the scan ran); still far below
+  the 30% target.
 
 ## Functional tests
 
