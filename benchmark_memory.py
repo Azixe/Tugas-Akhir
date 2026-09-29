@@ -1,12 +1,14 @@
-"""Memory benchmark for the four Tabel 4.3 entries (Python environment side).
+"""Memory benchmark for the Tabel 4.3 entries (Python environment side).
 
 Measures resident memory (RSS) per model in a *fresh process* so the models
 cannot pollute each other:
 
   1. RF  (.pkl)  sampling_results/rf_full.pkl
   2. RF  (.onnx) phishingdetectorExt/phishing_rf.onnx + tfidf_data.json
-  3. XGB (.pkl)  sampling_results/xgb_under.pkl
+  3. XGB (.pkl)  sampling_results/xgb_full.pkl
   4. XGB (.onnx) phishingdetectorExt/phishing_xgb.onnx + preprocessing + tfidf
+  5. CB  (.pkl)  sampling_results/cb_full.pkl            (CatBoost, 300 iters)
+  6. CB  (.onnx) phishingdetectorExt/phishing_catboost.onnx + tfidf_data.json
 
 For each entry: baseline RSS, RSS after loading the model, then RSS sampled
 every 5 ms while running single-URL scans (1000 random URLs from the shared
@@ -45,6 +47,9 @@ MODELS = {
     'xgb_onnx': {'label': 'XGBoost (.onnx)', 'onnx': os.path.join(EXT, 'phishing_xgb.onnx'),
                  'tfidf': os.path.join(EXT, 'tfidf_data_xgb.json'),
                  'prep': os.path.join(EXT, 'xgb_preprocessing.json')},
+    'cb_pkl':   {'label': 'CatBoost (.pkl)', 'pkl': os.path.join(OUTDIR, 'cb_full.pkl')},
+    'cb_onnx':  {'label': 'CatBoost (.onnx)', 'onnx': os.path.join(EXT, 'phishing_catboost.onnx'),
+                 'tfidf': os.path.join(EXT, 'tfidf_data.json')},
 }
 
 
@@ -105,13 +110,24 @@ def worker(args):
         model = joblib.load(spec['pkl'])
         def predict(u):
             ml_pipelines.predict_with_xgb(model, [u])
-    else:  # xgb_onnx
+    elif args.worker == 'xgb_onnx':
         tfidf = json.load(open(spec['tfidf']))
         prep = json.load(open(spec['prep']))
         sess = ort.InferenceSession(spec['onnx'], providers=['CPUExecutionProvider'])
         def predict(u):
             X = features.preprocess_xgb(features.extract_features_onnx([u], tfidf), prep)
             sess.run(None, {sess.get_inputs()[0].name: X})
+    elif args.worker == 'cb_pkl':
+        art = joblib.load(spec['pkl'])
+        def predict(u):
+            X = ml_pipelines._to_dense(art['feature_extractor'].transform([u]))
+            art['model'].predict(X)
+    else:  # cb_onnx — shares the RF word TF-IDF block
+        tfidf = json.load(open(spec['tfidf']))
+        sess = ort.InferenceSession(spec['onnx'], providers=['CPUExecutionProvider'])
+        def predict(u):
+            sess.run(None, {sess.get_inputs()[0].name:
+                            features.extract_features_onnx([u], tfidf)})
     load_seconds = time.time() - t0
     after_load = rss()
 

@@ -1,9 +1,10 @@
-"""Latency of the four deployed-configuration artifacts on the shared 1000-URL sample.
+"""Latency of the deployed-configuration artifacts (RF / XGBoost / CatBoost, pkl + onnx).
 
 Full pipeline per URL (feature extraction + preprocessing + model), the same
 definition used by `benchmark_all_models.py`, measured with `time.perf_counter`.
-This gives the Min / Max / Avg numbers used in Tabel 4.3 of the thesis for the
-deployed pair (RF full dataset, XGBoost full dataset).
+Model-only latency (ONNX session on pre-computed features) is reported for the
+`.onnx` entries. This gives the Min / Max / Avg numbers used in Tabel 4.3 of the
+thesis for the deployed models (RF and XGBoost full dataset, CatBoost 300 iterations).
 
 Usage (from the repo root):
     python benchmark_deployed_latency.py [--samples 1000] [--warmup 20]
@@ -34,6 +35,9 @@ MODELS = {
     'xgb_onnx': {'label': 'XGBoost (.onnx)', 'onnx': os.path.join(EXT, 'phishing_xgb.onnx'),
                  'tfidf': os.path.join(EXT, 'tfidf_data_xgb.json'),
                  'prep': os.path.join(EXT, 'xgb_preprocessing.json')},
+    'cb_pkl':   {'label': 'CatBoost (.pkl)', 'pkl': os.path.join(OUTDIR, 'cb_full.pkl')},
+    'cb_onnx':  {'label': 'CatBoost (.onnx)', 'onnx': os.path.join(EXT, 'phishing_catboost.onnx'),
+                 'tfidf': os.path.join(EXT, 'tfidf_data.json')},
 }
 
 
@@ -69,7 +73,7 @@ def measure(key, urls, warmup):
 
         def predict(u):
             ml_pipelines.predict_with_xgb(model, [u])
-    else:  # xgb_onnx
+    elif key == 'xgb_onnx':
         tfidf = json.load(open(spec['tfidf']))
         prep = json.load(open(spec['prep']))
         sess = ort.InferenceSession(spec['onnx'], providers=['CPUExecutionProvider'])
@@ -78,6 +82,19 @@ def measure(key, urls, warmup):
         def predict(u):
             feats = features.extract_features_onnx([u], tfidf)
             sess.run(None, {name: features.preprocess_xgb(feats, prep)})
+    elif key == 'cb_pkl':
+        art = joblib.load(spec['pkl'])
+
+        def predict(u):
+            X = ml_pipelines._to_dense(art['feature_extractor'].transform([u]))
+            art['model'].predict(X)
+    else:  # cb_onnx — shares the RF word TF-IDF block
+        tfidf = json.load(open(spec['tfidf']))
+        sess = ort.InferenceSession(spec['onnx'], providers=['CPUExecutionProvider'])
+        name = sess.get_inputs()[0].name
+
+        def predict(u):
+            sess.run(None, {name: features.extract_features_onnx([u], tfidf)})
 
     for u in urls[:warmup]:
         predict(u)
@@ -87,6 +104,28 @@ def measure(key, urls, warmup):
         t0 = time.perf_counter()
         predict(u)
         lat.append((time.perf_counter() - t0) * 1000.0)
+
+    # ---- model-only: ONNX session time on precomputed features (no extraction) ----
+    model_only = None
+    if key.endswith('_onnx'):
+        inputs = []
+        for u in urls:
+            x = features.extract_features_onnx([u], tfidf)
+            if key == 'xgb_onnx':
+                x = features.preprocess_xgb(x, prep)
+            inputs.append(x)
+        mo = []
+        for x in inputs:
+            t0 = time.perf_counter()
+            sess.run(None, {name: x})
+            mo.append((time.perf_counter() - t0) * 1000.0)
+        model_only = {
+            'min_ms': round(min(mo), 4),
+            'max_ms': round(max(mo), 4),
+            'avg_ms': round(statistics.mean(mo), 4),
+            'p95_ms': round(p95(mo), 4),
+        }
+
     return {
         'label': spec['label'],
         'n': len(lat),
@@ -94,6 +133,7 @@ def measure(key, urls, warmup):
         'max_ms': round(max(lat), 3),
         'avg_ms': round(statistics.mean(lat), 3),
         'p95_ms': round(p95(lat), 3),
+        'model_only': model_only,
     }
 
 
@@ -127,10 +167,12 @@ def main():
     lines = ["# Latency Benchmark (Python environment, deployed artifacts)", "",
              f"Full pipeline per URL (feature extraction + preprocessing + model) on the shared "
              f"{len(urls)}-URL sample (`{'memory_test_urls.json'}`), {args.warmup} warm-up scans each.", "",
-             "| Model | Min (ms) | Max (ms) | Avg (ms) | P95 (ms) |", "|---|---:|---:|---:|---:|"]
+             "| Model | Min (ms) | Max (ms) | Avg (ms) | P95 (ms) | Model-only avg (ms) |", "|---|---:|---:|---:|---:|---:|"]
     for r in results:
-        lines.append(f"| {r['label']} | {r['min_ms']} | {r['max_ms']} | {r['avg_ms']} | {r['p95_ms']} |")
-    lines += ["", "> System-scheduling outliers show up in Max; Avg/P95 are the stable measures."]
+        mo = r['model_only']['avg_ms'] if r.get('model_only') else '-'
+        lines.append(f"| {r['label']} | {r['min_ms']} | {r['max_ms']} | {r['avg_ms']} | {r['p95_ms']} | {mo} |")
+    lines += ["", "> System-scheduling outliers show up in Max; Avg/P95 are the stable measures.",
+              "> Model-only = ONNX session time on pre-computed features (feature extraction excluded); measured for the .onnx entries."]
     md_path = os.path.join(OUTDIR, 'latency_report.md')
     with open(md_path, 'w', encoding='utf-8') as f:
         f.write("\n".join(lines) + "\n")
