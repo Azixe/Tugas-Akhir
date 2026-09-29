@@ -13,3 +13,4 @@ sampling_results/*_tfidf.json
 proposal/*
 tools/convert_pdfs.py
 tools/convert-pdfs.cmd
+referrence/*
