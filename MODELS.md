@@ -14,6 +14,22 @@ Both deployed models now use the **full dataset** (no undersampling). 2026-09-27
 
 Extension version bumped to **3.3** in `manifest.json` (3.2 = UI/navigation fixes; 3.1 = model refresh). Previous deployed files (for reference): RF `0a8f995b…` (901 KB, Gen-3 non-undersampled, pkl lost); XGB `daa8c8d4…` (1,253 KB, undersampled, deployed 20–27 Sep 2026); XGB `1c1965eb…` (1,277 KB, Colab-tuned undersampled).
 
+## Third model — CatBoost (branch `feat/catboost-third-model`, 2026-09-29)
+
+Trained by `Catboost/train_catboost.py` under the shared protocol in `sampling.py` (common stratified 80/20 split, seed 42, same 90,036-URL test set) on the **same raw 1509 features as the deployed RF**: 1500 word-level TF-IDF + 9 structural. Hyperparameters: 700 iterations, depth 6, lr 0.1, Logloss.
+
+| Artifact | Variant | Train size | Size | SHA-256 |
+|---|---|---|---:|---|
+| `cb_full.pkl` | CatBoost full dataset | 360,140 | 7,282 KB | `b80ec4a6d3d2f567862f1e0bbf21385c5bdcce17063f656748befce7bd5ef378` |
+| `cb_under.pkl` | CatBoost undersampled (1:1) | 167,100 | 4,112 KB | `3343e97f9aa17a45b5ebda392859deab0fc138bd5e0005d519e109d3fc14184b` |
+| `cb_full.onnx` | ONNX of the full variant | — | 3,815 KB | `b6fd2a63a0b7ba364dc7322256d2b9c6a9edbd7db355a396a5d91ae28bc4cf0c` |
+| `cb_under.onnx` | ONNX of the undersampled variant | — | 3,821 KB | `13c94b7d95a12ca4526361ce322213ab3507c44699ebd227cd6d6acb26993511` |
+
+Portability notes:
+- CatBoost's native ONNX export emits probabilities as `seq(map(int64, float))`; `Catboost/fix_onnx_output.py` strips the `ZipMap` node and exposes the flat `[N, 2]` float tensor (input `features`) so plain-tensor consumers and `onnxruntime-web` work unchanged. Verified native ↔ ONNX: **100% label agreement, max |Δp| ≈ 1e-7** on 300 test URLs.
+- The pkl is an artifacts dict `{model, feature_extractor, params, variant, n_train}`; `benchmark_sampling.py` knows how to load/predict with it (six-variant report).
+- Test-set metrics: `sampling_results/catboost_metrics.json` (full: acc 99.63%, recall 98.50%, FPR 0.0347%, 24 FP; under: acc 99.59%, recall 98.74%, FPR 0.155%, 107 FP).
+
 ## RF variants & history (`rf_models/`)
 
 | Artifact | Variant | Notes | Size | SHA-256 |

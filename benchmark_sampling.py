@@ -1,10 +1,14 @@
-"""Benchmark: undersampling vs non-undersampling for RF and XGBoost.
+"""Benchmark: undersampling vs non-undersampling for RF, XGBoost and CatBoost.
 
-Trains (or reuses) four models under the shared protocol in ``sampling.py``
-and evaluates all of them on the *same* common test set:
+Loads (or trains, for RF/XGB) six models under the shared protocol in
+``sampling.py`` and evaluates all of them on the *same* common test set:
 
     RF  undersampled   |  RF  full dataset
     XGB undersampled   |  XGB full dataset
+    CB  undersampled   |  CB  full dataset
+
+CatBoost variants must be trained first with
+``python Catboost/train_catboost.py --variant both`` (same protocol/features).
 
 Writes machine-readable results and a Markdown report for the thesis
 (Bab 4 evidence — log every process, Pak Rahmad no. 1).
@@ -40,12 +44,14 @@ from sklearn.metrics import (
 import ml_pipelines
 import sampling
 
-MODEL_KEYS = ['rf_under', 'rf_full', 'xgb_under', 'xgb_full']
+MODEL_KEYS = ['rf_under', 'rf_full', 'xgb_under', 'xgb_full', 'cb_under', 'cb_full']
 DISPLAY = {
     'rf_under': 'RF (undersampled)',
     'rf_full': 'RF (full dataset)',
     'xgb_under': 'XGBoost (undersampled)',
     'xgb_full': 'XGBoost (full dataset)',
+    'cb_under': 'CatBoost (undersampled)',
+    'cb_full': 'CatBoost (full dataset)',
 }
 
 
@@ -73,11 +79,25 @@ def subsample_stratified(df, n, seed=sampling.SEED):
 
 
 def train_or_load(key, train_df, outdir, force_retrain):
-    """Returns (model_object, meta). RF -> sklearn Pipeline; XGB -> artifacts dict."""
+    """Returns (model_object, meta).
+
+    RF -> sklearn Pipeline; XGB -> artifacts dict; CatBoost -> artifacts dict
+    produced by ``Catboost/train_catboost.py`` (must be trained first).
+    """
     path = os.path.join(outdir, f"{key}.pkl")
     if os.path.exists(path) and not force_retrain:
         print(f"  [{DISPLAY[key]}] loading cached {path}")
-        return joblib.load(path), {'reused': True, 'path': path}
+        obj = joblib.load(path)
+        meta = {'reused': True, 'path': path}
+        if isinstance(obj, dict) and 'n_train' in obj:
+            meta['n_train'] = int(obj['n_train'])
+        return obj, meta
+
+    if key.startswith('cb'):
+        raise SystemExit(
+            f"Missing {path}. Train CatBoost first:\n"
+            f"    python Catboost/train_catboost.py --variant "
+            f"{key.split('_')[1]} --outdir {outdir}")
 
     t0 = time.time()
     if key.startswith('rf'):
@@ -102,6 +122,11 @@ def make_predictors(model, key):
     if key.startswith('rf'):
         return (lambda urls: model.predict(urls),
                 lambda urls: model.predict_proba(urls))
+    if key.startswith('cb'):
+        def _matrix(urls):
+            return ml_pipelines._to_dense(model['feature_extractor'].transform(urls))
+        return (lambda urls: model['model'].predict(_matrix(urls)),
+                lambda urls: model['model'].predict_proba(_matrix(urls)))
     return (lambda urls: ml_pipelines.predict_with_xgb(model, urls),
             lambda urls: ml_pipelines.predict_proba_with_xgb(model, urls))
 
@@ -186,7 +211,7 @@ def main():
     os.makedirs(args.outdir, exist_ok=True)
 
     print("=" * 70)
-    print("SAMPLING BENCHMARK — undersampled vs full dataset (RF & XGBoost)")
+    print("SAMPLING BENCHMARK — undersampled vs full dataset (RF, XGBoost & CatBoost)")
     print("=" * 70)
 
     df = sampling.load_clean_dataset(args.data)
@@ -209,6 +234,7 @@ def main():
     for key in MODEL_KEYS:
         data = train_under if key.endswith('under') else train_pool
         model, meta = train_or_load(key, data, args.outdir, args.force_retrain)
+        meta.setdefault('n_train', int(len(data)))
         model_meta[key] = meta
         results[key] = {'meta': meta}
         print(f"  [{DISPLAY[key]}] evaluating on {len(test)} URLs...")
