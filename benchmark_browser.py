@@ -72,10 +72,11 @@ def verdict(is_phishing, phishing_pct):
 
 def run_python(model, urls, bundle):
     """Full-pipeline per-URL latency + predictions with the deployed files."""
-    sess = bundle[f'{model}_sess']
+    key = 'cb' if model == 'catboost' else model  # bundle keys
+    sess = bundle[f'{key}_sess']
     # CatBoost shares the RF feature block (word TF-IDF + structural)
-    tfidf = bundle['rf_tfidf'] if model in ('rf', 'cb') else bundle['xgb_tfidf']
-    prep = bundle.get('xgb_prep') if model == 'xgb' else None
+    tfidf = bundle['rf_tfidf'] if key in ('rf', 'cb') else bundle['xgb_tfidf']
+    prep = bundle.get('xgb_prep') if key == 'xgb' else None
     input_name = sess.get_inputs()[0].name
 
     latencies, labels, probs = [], [], []
@@ -217,12 +218,12 @@ def main():
     a('## Scope notes')
     a('')
     a('- Init times: each model pays its own first load (ONNX fetch + session creation); the first model initialized')
-    a('  also includes ONNX Runtime Web/WASM startup (RF 410 ms first vs XGB 240 ms second in this run).')
+    a(f"  also includes the shared ONNX Runtime Web/WASM startup cost (in this run: {next(iter(metrics['models'])).upper()}).")
     a('- Browser numbers are **warm** and cover the extension scan path (message → feature extraction → ONNX → response).')
     a('  A real navigation adds the cold model init (first column) and page-load effects; model init is measured separately per model.')
     a('- Python numbers are the same computation on `onnxruntime` CPU, not a runtime-equivalent comparison (WASM vs native);')
     a('  they are reported as a sanity baseline, not as a browser expectation.')
-    a('- Parity was 100% (labels and verdicts) for both models on all 1000 URLs, max |Δp| 0.0001pp, which validates the')
+    a('- Parity was 100% (labels and verdicts) on all 1000 URLs in this run (max |Δp| ≤ 0.0001pp), which validates the')
     a('  JS feature pipeline end-to-end against `features.py` (including the `is_common_tld` trailing-slash fix).')
     a('- P-02/P-03 (Task Manager memory/CPU) and the functional click tests are in the "Manual checks" section below.')
     a('')

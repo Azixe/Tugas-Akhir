@@ -1,6 +1,6 @@
 # Manual checks — P-02 / P-03 / functional (2026-09-21)
 
-> Machine: Chrome 153 (Windows, 12 logical cores, 32 GB). P-02/P-03 and the functional clicks were measured on **v3.2** (2026-09-21); the P-01 numbers in this report were re-measured on **v3.3** (full-dataset XGBoost, 2026-09-27).
+> Machine: Chrome 153 (Windows, 12 logical cores, 32 GB). P-02/P-03 and the functional clicks were measured on **v3.2** (2026-09-21); the P-01 numbers in this report were re-measured on **v3.4** (three models incl. CatBoost, 2026-09-29; previous P-01 re-measure was v3.3).
 > Screenshots live in this folder.
 
 ## P-02 — Extension memory (Chrome Task Manager)

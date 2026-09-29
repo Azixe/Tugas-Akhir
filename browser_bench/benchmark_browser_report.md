@@ -1,6 +1,6 @@
 # Browser Benchmark — P-01 Latency vs Python (deployed models)
 
-- Date: 2026-09-27T15:58:18.191Z · Extension v3.3 (deployed models, hashes below)
+- Date: 2026-09-29T08:39:51.436Z · Extension v3.4 (deployed models, hashes below)
 - Browser: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 · 12 logical cores · 32 GB RAM
 - URL set: `bench_urls.json`, 1000 URLs (common test split, seed 42) — identical to the Python benchmark
 - Method: 5 warm-up scans per model, then per-URL timing through the extension's scan path (popup-like message path); Python side re-measured here with `features.py` + the deployed ONNX files on the same URLs
@@ -11,6 +11,7 @@
 |---|---|---|
 | `phishing_rf.onnx` | `625c9333151667c4…` | MATCH |
 | `phishing_xgb.onnx` | `4efd7ead699770a0…` | MATCH |
+| `phishing_catboost.onnx` | `791a503e72426426…` | MATCH |
 | `tfidf_data.json` | `594309360bc559b6…` | MATCH |
 | `tfidf_data_xgb.json` | `7885a6b1c2bc516b…` | MATCH |
 | `xgb_preprocessing.json` | `54e37c7fdac56ed7…` | MATCH |
@@ -19,8 +20,9 @@
 
 | Model | Init (cold) | Browser round-trip | Browser pipeline | Python pipeline (same files, same URLs) |
 |---|---|---|---|---|
-| RF | 122.7 | 0.7 / 1.2 / 1.337 / 2.205 / 11.2 | 0.1 / 0.4 / 0.372 / 0.6 / 1.1 | 4.384 / 5.791 / 6.164 / 8.32 / 30.206 |
-| XGB | 254.6 | 0.7 / 1.3 / 1.343 / 2.0 / 3.8 | 0.2 / 0.5 / 0.471 / 0.7 / 1.0 | 6.316 / 7.869 / 8.473 / 11.986 / 33.914 |
+| RF | 123.7 | 0.6 / 1.1 / 1.233 / 2.3 / 3.8 | 0.1 / 0.3 / 0.323 / 0.5 / 0.9 | 4.248 / 5.213 / 5.2 / 5.857 / 40.134 |
+| XGB | 251.6 | 0.7 / 1.0 / 1.12 / 1.6 / 2.5 | 0.2 / 0.4 / 0.393 / 0.6 / 0.9 | 5.758 / 6.825 / 6.808 / 7.5 / 10.543 |
+| CATBOOST | 137.3 | 0.6 / 0.9 / 0.982 / 1.5 / 2.1 | 0.1 / 0.3 / 0.27 / 0.4 / 0.6 | 4.255 / 5.16 / 5.096 / 5.644 / 7.743 |
 
 ## Verdict distribution
 
@@ -28,6 +30,7 @@
 |---|---|---|
 | RF | PHISHING 74 · SUSPICIOUS 146 · SAFE 780 | PHISHING 74 · SUSPICIOUS 146 · SAFE 780 |
 | XGB | PHISHING 237 · SUSPICIOUS 1 · SAFE 762 | PHISHING 237 · SUSPICIOUS 1 · SAFE 762 |
+| CATBOOST | PHISHING 237 · SUSPICIOUS 0 · SAFE 763 | PHISHING 237 · SUSPICIOUS 0 · SAFE 763 |
 
 ## Browser vs Python parity (identical URLs)
 
@@ -35,16 +38,17 @@
 |---|---|---|---|---|---|---|
 | RF | 100.0% | 100.0% | 0.0pp | 0.0001pp | 0 | 0 |
 | XGB | 100.0% | 100.0% | 0.0pp | 0.0pp | 0 | 0 |
+| CATBOOST | 100.0% | 100.0% | 0.0pp | 0.0pp | 0 | 0 |
 
 ## Scope notes
 
 - Init times: each model pays its own first load (ONNX fetch + session creation); the first model initialized
-  also includes ONNX Runtime Web/WASM startup (RF 410 ms first vs XGB 240 ms second in this run).
+  also includes the shared ONNX Runtime Web/WASM startup cost (in this run: RF).
 - Browser numbers are **warm** and cover the extension scan path (message → feature extraction → ONNX → response).
   A real navigation adds the cold model init (first column) and page-load effects; model init is measured separately per model.
 - Python numbers are the same computation on `onnxruntime` CPU, not a runtime-equivalent comparison (WASM vs native);
   they are reported as a sanity baseline, not as a browser expectation.
-- Parity was 100% (labels and verdicts) for both models on all 1000 URLs, max |Δp| 0.0001pp, which validates the
+- Parity was 100% (labels and verdicts) on all 1000 URLs in this run (max |Δp| ≤ 0.0001pp), which validates the
   JS feature pipeline end-to-end against `features.py` (including the `is_common_tld` trailing-slash fix).
 - P-02/P-03 (Task Manager memory/CPU) and the functional click tests are in the "Manual checks" section below.
 
@@ -53,7 +57,7 @@
 
 # Manual checks — P-02 / P-03 / functional (2026-09-21)
 
-> Machine: Chrome 153 (Windows, 12 logical cores, 32 GB). P-02/P-03 and the functional clicks were measured on **v3.2** (2026-09-21); the P-01 numbers in this report were re-measured on **v3.3** (full-dataset XGBoost, 2026-09-27).
+> Machine: Chrome 153 (Windows, 12 logical cores, 32 GB). P-02/P-03 and the functional clicks were measured on **v3.2** (2026-09-21); the P-01 numbers in this report were re-measured on **v3.4** (three models incl. CatBoost, 2026-09-29; previous P-01 re-measure was v3.3).
 > Screenshots live in this folder.
 
 ## P-02 — Extension memory (Chrome Task Manager)
