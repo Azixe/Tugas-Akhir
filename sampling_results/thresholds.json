@@ -1,0 +1,211 @@
+{
+  "n_test": 90036,
+  "block_threshold": 0.8,
+  "warn_threshold": 0.6,
+  "models": {
+    "rf": {
+      "label": "Random Forest",
+      "by_threshold": [
+        {
+          "threshold": 0.5,
+          "tp": 20025,
+          "fp": 1,
+          "fn": 863,
+          "tn": 69147,
+          "precision": 1.0,
+          "recall": 0.9587,
+          "fpr": 1.4e-05,
+          "f1": 0.9789
+        },
+        {
+          "threshold": 0.6,
+          "tp": 18416,
+          "fp": 0,
+          "fn": 2472,
+          "tn": 69148,
+          "precision": 1.0,
+          "recall": 0.8817,
+          "fpr": 0.0,
+          "f1": 0.9371
+        },
+        {
+          "threshold": 0.7,
+          "tp": 13980,
+          "fp": 0,
+          "fn": 6908,
+          "tn": 69148,
+          "precision": 1.0,
+          "recall": 0.6693,
+          "fpr": 0.0,
+          "f1": 0.8019
+        },
+        {
+          "threshold": 0.8,
+          "tp": 5943,
+          "fp": 0,
+          "fn": 14945,
+          "tn": 69148,
+          "precision": 1.0,
+          "recall": 0.2845,
+          "fpr": 0.0,
+          "f1": 0.443
+        },
+        {
+          "threshold": 0.9,
+          "tp": 992,
+          "fp": 0,
+          "fn": 19896,
+          "tn": 69148,
+          "precision": 1.0,
+          "recall": 0.0475,
+          "fpr": 0.0,
+          "f1": 0.0907
+        }
+      ],
+      "extension_rule": {
+        "blocked_tp": 5943,
+        "blocked_fp": 0,
+        "warned_tp": 12473,
+        "warned_fp": 0,
+        "detected_tp": 18416,
+        "flagged_fp": 0
+      }
+    },
+    "xgb": {
+      "label": "XGBoost",
+      "by_threshold": [
+        {
+          "threshold": 0.5,
+          "tp": 20571,
+          "fp": 88,
+          "fn": 317,
+          "tn": 69060,
+          "precision": 0.9957,
+          "recall": 0.9848,
+          "fpr": 0.001273,
+          "f1": 0.9903
+        },
+        {
+          "threshold": 0.6,
+          "tp": 20534,
+          "fp": 66,
+          "fn": 354,
+          "tn": 69082,
+          "precision": 0.9968,
+          "recall": 0.9831,
+          "fpr": 0.000954,
+          "f1": 0.9899
+        },
+        {
+          "threshold": 0.7,
+          "tp": 20490,
+          "fp": 53,
+          "fn": 398,
+          "tn": 69095,
+          "precision": 0.9974,
+          "recall": 0.9809,
+          "fpr": 0.000766,
+          "f1": 0.9891
+        },
+        {
+          "threshold": 0.8,
+          "tp": 20430,
+          "fp": 40,
+          "fn": 458,
+          "tn": 69108,
+          "precision": 0.998,
+          "recall": 0.9781,
+          "fpr": 0.000578,
+          "f1": 0.988
+        },
+        {
+          "threshold": 0.9,
+          "tp": 20314,
+          "fp": 26,
+          "fn": 574,
+          "tn": 69122,
+          "precision": 0.9987,
+          "recall": 0.9725,
+          "fpr": 0.000376,
+          "f1": 0.9854
+        }
+      ],
+      "extension_rule": {
+        "blocked_tp": 20430,
+        "blocked_fp": 40,
+        "warned_tp": 104,
+        "warned_fp": 26,
+        "detected_tp": 20534,
+        "flagged_fp": 66
+      }
+    },
+    "cb": {
+      "label": "CatBoost",
+      "by_threshold": [
+        {
+          "threshold": 0.5,
+          "tp": 20543,
+          "fp": 21,
+          "fn": 345,
+          "tn": 69127,
+          "precision": 0.999,
+          "recall": 0.9835,
+          "fpr": 0.000304,
+          "f1": 0.9912
+        },
+        {
+          "threshold": 0.6,
+          "tp": 20518,
+          "fp": 16,
+          "fn": 370,
+          "tn": 69132,
+          "precision": 0.9992,
+          "recall": 0.9823,
+          "fpr": 0.000231,
+          "f1": 0.9907
+        },
+        {
+          "threshold": 0.7,
+          "tp": 20489,
+          "fp": 12,
+          "fn": 399,
+          "tn": 69136,
+          "precision": 0.9994,
+          "recall": 0.9809,
+          "fpr": 0.000174,
+          "f1": 0.9901
+        },
+        {
+          "threshold": 0.8,
+          "tp": 20449,
+          "fp": 8,
+          "fn": 439,
+          "tn": 69140,
+          "precision": 0.9996,
+          "recall": 0.979,
+          "fpr": 0.000116,
+          "f1": 0.9892
+        },
+        {
+          "threshold": 0.9,
+          "tp": 20384,
+          "fp": 3,
+          "fn": 504,
+          "tn": 69145,
+          "precision": 0.9999,
+          "recall": 0.9759,
+          "fpr": 4.3e-05,
+          "f1": 0.9877
+        }
+      ],
+      "extension_rule": {
+        "blocked_tp": 20449,
+        "blocked_fp": 8,
+        "warned_tp": 69,
+        "warned_fp": 8,
+        "detected_tp": 20518,
+        "flagged_fp": 16
+      }
+    }
+  }
+}

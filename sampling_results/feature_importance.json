@@ -1,0 +1,342 @@
+{
+  "rf": {
+    "n_features": 1509,
+    "n_text": 1500,
+    "top20": [
+      {
+        "rank": 1,
+        "feature": "https:",
+        "importance": 0.234057,
+        "type": "tfidf"
+      },
+      {
+        "rank": 2,
+        "feature": "http:",
+        "importance": 0.204493,
+        "type": "tfidf"
+      },
+      {
+        "rank": 3,
+        "feature": "subdomain_level",
+        "importance": 0.103111,
+        "type": "structural"
+      },
+      {
+        "rank": 4,
+        "feature": "dot_count",
+        "importance": 0.068895,
+        "type": "structural"
+      },
+      {
+        "rank": 5,
+        "feature": "wp",
+        "importance": 0.031099,
+        "type": "tfidf"
+      },
+      {
+        "rank": 6,
+        "feature": "digit_ratio",
+        "importance": 0.024937,
+        "type": "structural"
+      },
+      {
+        "rank": 7,
+        "feature": "url_length",
+        "importance": 0.019809,
+        "type": "structural"
+      },
+      {
+        "rank": 8,
+        "feature": "php",
+        "importance": 0.019537,
+        "type": "tfidf"
+      },
+      {
+        "rank": 9,
+        "feature": "login",
+        "importance": 0.016961,
+        "type": "tfidf"
+      },
+      {
+        "rank": 10,
+        "feature": "entropy",
+        "importance": 0.015072,
+        "type": "structural"
+      },
+      {
+        "rank": 11,
+        "feature": "",
+        "importance": 0.014717,
+        "type": "tfidf"
+      },
+      {
+        "rank": 12,
+        "feature": "br",
+        "importance": 0.01444,
+        "type": "tfidf"
+      },
+      {
+        "rank": 13,
+        "feature": "includes",
+        "importance": 0.013253,
+        "type": "tfidf"
+      },
+      {
+        "rank": 14,
+        "feature": "admin",
+        "importance": 0.012694,
+        "type": "tfidf"
+      },
+      {
+        "rank": 15,
+        "feature": "dash_count",
+        "importance": 0.012122,
+        "type": "structural"
+      },
+      {
+        "rank": 16,
+        "feature": "js",
+        "importance": 0.011117,
+        "type": "tfidf"
+      },
+      {
+        "rank": 17,
+        "feature": "images",
+        "importance": 0.011096,
+        "type": "tfidf"
+      },
+      {
+        "rank": 18,
+        "feature": "ru",
+        "importance": 0.01058,
+        "type": "tfidf"
+      },
+      {
+        "rank": 19,
+        "feature": "content",
+        "importance": 0.007199,
+        "type": "tfidf"
+      },
+      {
+        "rank": 20,
+        "feature": "index",
+        "importance": 0.007197,
+        "type": "tfidf"
+      }
+    ],
+    "structural": {
+      "url_length": {
+        "importance": 0.019809,
+        "rank": 7
+      },
+      "dot_count": {
+        "importance": 0.068895,
+        "rank": 4
+      },
+      "slash_count": {
+        "importance": 0.006871,
+        "rank": 21
+      },
+      "dash_count": {
+        "importance": 0.012122,
+        "rank": 15
+      },
+      "at_count": {
+        "importance": 0.005897,
+        "rank": 23
+      },
+      "digit_ratio": {
+        "importance": 0.024937,
+        "rank": 6
+      },
+      "entropy": {
+        "importance": 0.015072,
+        "rank": 10
+      },
+      "is_common_tld": {
+        "importance": 0.004267,
+        "rank": 27
+      },
+      "subdomain_level": {
+        "importance": 0.103111,
+        "rank": 3
+      }
+    }
+  },
+  "xgb": {
+    "n_features": 1509,
+    "n_text": 1500,
+    "mask_threshold": 0.0,
+    "n_survived": 177,
+    "n_structural_survived": 9,
+    "top20": [
+      {
+        "rank": 1,
+        "feature": "http:",
+        "importance": 0.795185,
+        "type": "tfidf"
+      },
+      {
+        "rank": 2,
+        "feature": "sites.google.com",
+        "importance": 0.029437,
+        "type": "tfidf"
+      },
+      {
+        "rank": 3,
+        "feature": "google",
+        "importance": 0.017106,
+        "type": "tfidf"
+      },
+      {
+        "rank": 4,
+        "feature": "subdomain_level",
+        "importance": 0.011442,
+        "type": "structural"
+      },
+      {
+        "rank": 5,
+        "feature": "000webhostapp",
+        "importance": 0.007163,
+        "type": "tfidf"
+      },
+      {
+        "rank": 6,
+        "feature": "wixsite",
+        "importance": 0.00687,
+        "type": "tfidf"
+      },
+      {
+        "rank": 7,
+        "feature": "sharepoint",
+        "importance": 0.004674,
+        "type": "tfidf"
+      },
+      {
+        "rank": 8,
+        "feature": "runescape",
+        "importance": 0.004629,
+        "type": "tfidf"
+      },
+      {
+        "rank": 9,
+        "feature": "login",
+        "importance": 0.004008,
+        "type": "tfidf"
+      },
+      {
+        "rank": 10,
+        "feature": "m=weblogin",
+        "importance": 0.003861,
+        "type": "tfidf"
+      },
+      {
+        "rank": 11,
+        "feature": "wp",
+        "importance": 0.002891,
+        "type": "tfidf"
+      },
+      {
+        "rank": 12,
+        "feature": "br",
+        "importance": 0.002773,
+        "type": "tfidf"
+      },
+      {
+        "rank": 13,
+        "feature": "preview",
+        "importance": 0.002674,
+        "type": "tfidf"
+      },
+      {
+        "rank": 14,
+        "feature": "webapps",
+        "importance": 0.0025,
+        "type": "tfidf"
+      },
+      {
+        "rank": 15,
+        "feature": "paypal",
+        "importance": 0.002389,
+        "type": "tfidf"
+      },
+      {
+        "rank": 16,
+        "feature": "redirect",
+        "importance": 0.002099,
+        "type": "tfidf"
+      },
+      {
+        "rank": 17,
+        "feature": "blogspot",
+        "importance": 0.00206,
+        "type": "tfidf"
+      },
+      {
+        "rank": 18,
+        "feature": "tumblr",
+        "importance": 0.00204,
+        "type": "tfidf"
+      },
+      {
+        "rank": 19,
+        "feature": "secure",
+        "importance": 0.002015,
+        "type": "tfidf"
+      },
+      {
+        "rank": 20,
+        "feature": "is_common_tld",
+        "importance": 0.001947,
+        "type": "structural"
+      }
+    ],
+    "structural": {
+      "url_length": {
+        "importance": 0.000687,
+        "rank": 64,
+        "survived_mask": true
+      },
+      "dot_count": {
+        "importance": 0.000674,
+        "rank": 67,
+        "survived_mask": true
+      },
+      "slash_count": {
+        "importance": 0.000418,
+        "rank": 107,
+        "survived_mask": true
+      },
+      "dash_count": {
+        "importance": 0.000471,
+        "rank": 99,
+        "survived_mask": true
+      },
+      "at_count": {
+        "importance": 0.000698,
+        "rank": 61,
+        "survived_mask": true
+      },
+      "digit_ratio": {
+        "importance": 0.0005,
+        "rank": 88,
+        "survived_mask": true
+      },
+      "entropy": {
+        "importance": 0.00089,
+        "rank": 48,
+        "survived_mask": true
+      },
+      "is_common_tld": {
+        "importance": 0.001947,
+        "rank": 20,
+        "survived_mask": true
+      },
+      "subdomain_level": {
+        "importance": 0.011442,
+        "rank": 4,
+        "survived_mask": true
+      }
+    }
+  }
+}

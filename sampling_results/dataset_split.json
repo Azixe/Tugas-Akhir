@@ -1,0 +1,52 @@
+{
+  "train_rows": 360140,
+  "test_rows": 90036,
+  "train_unique_hosts": 141040,
+  "test_unique_hosts": 46048,
+  "test_rows_host_in_train": 63066,
+  "test_rows_host_in_train_pct": 70.05,
+  "test_rows_registrable_in_train": 70838,
+  "test_rows_registrable_in_train_pct": 78.68,
+  "top_overlapping_hosts": [
+    [
+      "www.en.wikipedia.org",
+      2533
+    ],
+    [
+      "www.youtube.com",
+      1667
+    ],
+    [
+      "www.facebook.com",
+      1525
+    ],
+    [
+      "www.amazon.com",
+      914
+    ],
+    [
+      "www.imdb.com",
+      719
+    ],
+    [
+      "www.linkedin.com",
+      680
+    ],
+    [
+      "www.myspace.com",
+      586
+    ],
+    [
+      "www.mylife.com",
+      583
+    ],
+    [
+      "www.absoluteastronomy.com",
+      395
+    ],
+    [
+      "www.manta.com",
+      381
+    ]
+  ]
+}
