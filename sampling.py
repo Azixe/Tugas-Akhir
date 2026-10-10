@@ -10,7 +10,12 @@ full) is trained and evaluated under identical conditions:
 4. Variant "under": undersample legitimate URLs in the train pool down to the
    phishing count (1:1), seed 42.
 
-Used by ``benchmark_sampling.py``; available to any future training script.
+Model selection (feature variant, hyperparameters) must not look at the common
+test set. ``validation_split`` carves a stratified validation set out of the
+train pool for that purpose; the test set is then scored once, at the end.
+
+Used by ``benchmark_sampling.py`` and ``benchmark_ablation.py``; available to
+any future training script.
 """
 
 from __future__ import annotations
@@ -20,6 +25,7 @@ from sklearn.model_selection import train_test_split
 
 SEED = 42
 TEST_SIZE = 0.2
+VAL_SIZE = 0.1  # share of the train pool held out for model selection
 DEFAULT_DATASET = 'URL dataset.csv'
 
 
@@ -40,6 +46,14 @@ def common_split(df: pd.DataFrame, test_size: float = TEST_SIZE, seed: int = SEE
         df, test_size=test_size, random_state=seed, stratify=df['label']
     )
     return train_pool.reset_index(drop=True), test.reset_index(drop=True)
+
+
+def validation_split(train_pool: pd.DataFrame, val_size: float = VAL_SIZE, seed: int = SEED):
+    """Stratified split of the train pool into a fitting set and a validation set."""
+    fit, val = train_test_split(
+        train_pool, test_size=val_size, random_state=seed, stratify=train_pool['label']
+    )
+    return fit.reset_index(drop=True), val.reset_index(drop=True)
 
 
 def undersample(train_pool: pd.DataFrame, seed: int = SEED) -> pd.DataFrame:

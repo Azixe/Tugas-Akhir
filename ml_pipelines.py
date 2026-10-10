@@ -23,7 +23,7 @@ from sklearn.pipeline import FeatureUnion, Pipeline
 from sklearn.preprocessing import StandardScaler
 from xgboost import XGBClassifier
 
-from features import StructuralFeatureExtractor, make_tokens
+from features import StructuralFeatureExtractor, UrlTokenizer, make_tokens
 
 SEED = 42
 
@@ -59,17 +59,34 @@ IMPORTANCE_PARAMS = dict(
 K_BEST = 'all'
 
 
-def build_feature_union(max_features: int = 1500) -> FeatureUnion:
-    return FeatureUnion([
-        ('text_features', TfidfVectorizer(
-            tokenizer=make_tokens, token_pattern=None, max_features=max_features)),
-        ('structural_features', StructuralFeatureExtractor()),
-    ])
+FEATURE_GROUPS = ('text', 'structural')
 
 
-def build_rf_pipeline() -> Pipeline:
+def build_feature_union(max_features: int = 1500, strip_scheme: bool = False,
+                        strip_www: bool = False, drop_empty: bool = False,
+                        groups=FEATURE_GROUPS) -> FeatureUnion:
+    """TF-IDF + structural feature union.
+
+    The defaults build the historical 1,509-dim extractor. The keyword
+    switches are the ablation arms (see ``features.normalize_url``);
+    ``groups`` keeps only the TF-IDF block or only the structural block.
+    """
+    if strip_scheme or strip_www or drop_empty:
+        tokenizer = UrlTokenizer(strip_scheme, strip_www, drop_empty)
+    else:
+        tokenizer = make_tokens  # same object the v3.4 pickles reference
+    blocks = {
+        'text': ('text_features', TfidfVectorizer(
+            tokenizer=tokenizer, token_pattern=None, max_features=max_features)),
+        'structural': ('structural_features',
+                       StructuralFeatureExtractor(strip_scheme, strip_www)),
+    }
+    return FeatureUnion([blocks[g] for g in FEATURE_GROUPS if g in groups])
+
+
+def build_rf_pipeline(**feature_kwargs) -> Pipeline:
     return Pipeline([
-        ('features', build_feature_union()),
+        ('features', build_feature_union(**feature_kwargs)),
         ('clf', RandomForestClassifier(**RF_HPARAMS)),
     ])
 
@@ -80,15 +97,15 @@ def _to_dense(X) -> np.ndarray:
     return np.asarray(X, dtype=np.float32)
 
 
-def train_xgb_pipeline(urls, labels, verbose: bool = True) -> dict:
+def train_xgb_pipeline(urls, labels, verbose: bool = True, **feature_kwargs) -> dict:
     """Train the staged XGB pipeline and return an artifacts dict.
 
     Schema matches ``Xgboost/train_xgb_colab.py`` so the existing export
-    scripts can consume it.
+    scripts can consume it. ``feature_kwargs`` go to ``build_feature_union``.
     """
     t0 = time.time()
 
-    feature_extractor = build_feature_union()
+    feature_extractor = build_feature_union(**feature_kwargs)
     X_raw = _to_dense(feature_extractor.fit_transform(urls, labels))
     if verbose:
         print(f"    features: {X_raw.shape} ({time.time()-t0:.0f}s)", flush=True)

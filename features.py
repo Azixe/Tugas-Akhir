@@ -23,6 +23,7 @@ next to the script (e.g. to /content/) so the import resolves.
 """
 
 import math
+import re
 from collections import Counter
 
 import numpy as np
@@ -30,6 +31,29 @@ from sklearn.base import BaseEstimator, TransformerMixin
 
 # Trusted TLDs (must match COMMON_TLDS in utils.js)
 COMMON_TLDS = ['.com', '.org', '.net', '.edu', '.gov', '.id', '.co.id']
+
+SCHEME_RE = re.compile(r'^[a-z][a-z0-9+.\-]*://')
+
+
+def normalize_url(url, strip_scheme=False, strip_www=False):
+    """Lowercase a URL and optionally drop its scheme and a leading ``www.``.
+
+    Both switches default to off, which is the historical behaviour of every
+    deployed model up to v3.4. They exist for the shortcut ablation: in the
+    training data the scheme and the ``www.`` label separate the classes
+    almost on their own (see ``sampling_results/dataset_split_report.md``).
+    The scheme is removed from the string itself, so length, slash count and
+    entropy stop seeing it too, not only the ``http:`` / ``https:`` tokens.
+
+    Not mirrored in utils.js yet: a model trained with either switch on must
+    not be deployed before the same normalisation exists there.
+    """
+    s = str(url).lower()
+    m = SCHEME_RE.match(s)
+    scheme, rest = (m.group(0), s[m.end():]) if m else ('', s)
+    if strip_www and rest.startswith('www.'):
+        rest = rest[4:]
+    return rest if strip_scheme else scheme + rest
 
 
 # ============================================================
@@ -53,15 +77,25 @@ class StructuralFeatureExtractor(BaseEstimator, TransformerMixin):
     Feature order (must match utils.js `structural()`):
     [length, dot_count, slash_count, dash_count, at_count,
      digit_ratio, entropy, is_common_tld, subdomain_level]
+
+    ``strip_scheme`` / ``strip_www`` are the ablation switches of
+    ``normalize_url``; the defaults keep the historical features.
     """
+
+    def __init__(self, strip_scheme=False, strip_www=False):
+        self.strip_scheme = strip_scheme
+        self.strip_www = strip_www
 
     def fit(self, X, y=None):
         return self
 
     def transform(self, X):
+        # getattr: extractors pickled before the switches existed lack them.
+        strip_scheme = getattr(self, 'strip_scheme', False)
+        strip_www = getattr(self, 'strip_www', False)
         features = []
         for url in X:
-            s_url = str(url).lower()
+            s_url = normalize_url(url, strip_scheme, strip_www)
 
             length = len(s_url)
             dot_count = s_url.count('.')
@@ -112,6 +146,25 @@ def make_tokens(f):
     return total_tokens
 
 
+class UrlTokenizer:
+    """``make_tokens`` with the ablation switches; picklable for TfidfVectorizer.
+
+    With all switches off it returns exactly what ``make_tokens`` returns for
+    a lowercased URL. ``drop_empty`` removes the empty-string token at
+    training time, which is what the inference side (utils.js and
+    ``build_tfidf_vector``) has always done.
+    """
+
+    def __init__(self, strip_scheme=False, strip_www=False, drop_empty=False):
+        self.strip_scheme = strip_scheme
+        self.strip_www = strip_www
+        self.drop_empty = drop_empty
+
+    def __call__(self, f):
+        tokens = make_tokens(normalize_url(f, self.strip_scheme, self.strip_www))
+        return [t for t in tokens if t] if self.drop_empty else tokens
+
+
 def alias_legacy_main():
     """Expose the shared helpers in ``__main__`` for legacy pickles."""
     import __main__
@@ -129,9 +182,12 @@ def build_tfidf_vector(url, tfidf_data):
     """Build a TF-IDF vector from an exported vocabulary (matches JS).
 
     ``tfidf_data`` is the JSON exported by the training/export scripts:
-    {'vocabulary': {...}, 'idf': [...], ...}
+    {'vocabulary': {...}, 'idf': [...], ...}. Optional ``strip_scheme`` /
+    ``strip_www`` keys select the normalisation the model was trained with.
     """
-    tokens = [t for t in make_tokens(url.lower()) if t]
+    s = normalize_url(url, tfidf_data.get('strip_scheme', False),
+                      tfidf_data.get('strip_www', False))
+    tokens = [t for t in make_tokens(s) if t]
     vocab = tfidf_data['vocabulary']
     idf = tfidf_data['idf']
     n_features = len(vocab)
@@ -150,9 +206,9 @@ def build_tfidf_vector(url, tfidf_data):
     return vec
 
 
-def structural_features(url):
+def structural_features(url, strip_scheme=False, strip_www=False):
     """9 structural features as a float32 array (matches JS)."""
-    s = url.lower()
+    s = normalize_url(url, strip_scheme, strip_www)
     length = len(s)
     clean = s.replace("https://", "").replace("http://", "").split('/')[0]
 
@@ -180,7 +236,8 @@ def extract_features_onnx(urls, tfidf_data):
     features = []
     for url in urls:
         tfidf_vec = build_tfidf_vector(url, tfidf_data)
-        struct = structural_features(url)
+        struct = structural_features(url, tfidf_data.get('strip_scheme', False),
+                                     tfidf_data.get('strip_www', False))
         features.append(np.concatenate([tfidf_vec, struct]))
     return np.array(features, dtype=np.float32)
 

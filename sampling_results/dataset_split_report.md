@@ -24,3 +24,18 @@ Common protocol (stratified 80/20, seed 42); rows deduplicated by URL.
 | `www.manta.com` | 381 |
 
 > Reading: a row-level random split measures in-distribution generalization; the overlap above quantifies how much of it comes from the same hosts being seen during training.
+
+## Prefix shortcuts by class (whole cleaned dataset)
+
+| Metric | Legitimate | Phishing |
+|---|---:|---:|
+| Rows | 345,738 | 104,438 |
+| Scheme `https` | 345,702 (99.99%) | 6,483 (6.21%) |
+| Scheme `http` | 0 (0.00%) | 97,948 (93.79%) |
+| Scheme `httpss` | 35 (0.01%) | 0 (0.00%) |
+| Scheme `ftp` | 1 (0.00%) | 7 (0.01%) |
+| URL starts with scheme + `www.` | 345,042 (99.80%) | 13,615 (13.04%) |
+| Host starts with `www.` | 345,042 (99.80%) | 13,615 (13.04%) |
+| Host only (no path after the host) | 47,715 (13.80%) | 7,952 (7.61%) |
+
+> Reading: the scheme and a leading `www.` label each separate the two classes almost on their own; the share of host-only URLs does not. The two prefixes reach the models through tokens (`http:`, `https:`, whole hostnames) and through the structural features that measure length and count dots and host labels.

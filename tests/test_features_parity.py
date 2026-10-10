@@ -167,10 +167,77 @@ def test_legacy_pickle_loads():
     print("legacy pickle load: OK")
 
 
+# ============================================================
+# Ablation switches (scheme / www. / empty token) - off by default
+# ============================================================
+
+def test_normalize_url():
+    n = features.normalize_url
+    assert n("HTTPS://WWW.Example.com/A") == "https://www.example.com/a"
+    assert n("https://www.example.com/a", strip_scheme=True) == "www.example.com/a"
+    assert n("https://www.example.com/a", strip_www=True) == "https://example.com/a"
+    assert n("http://www.example.com/", True, True) == "example.com/"
+    assert n("ftp://www.example.com", True, True) == "example.com"
+    # only a leading host label is removed, and only the exact label "www"
+    assert n("https://www2.example.com/www.x", True, True) == "www2.example.com/www.x"
+    assert n("https://a.www.example.com", True, True) == "a.www.example.com"
+    assert n("example.com/http://x", True, True) == "example.com/http://x"
+    print("normalize_url: OK")
+
+
+def test_url_tokenizer_defaults_match_make_tokens():
+    tok = features.UrlTokenizer()
+    for url in URLS:
+        assert sorted(tok(url)) == sorted(features.make_tokens(url.lower())), url
+    print("UrlTokenizer defaults: OK")
+
+
+def test_url_tokenizer_switches():
+    url = "https://www.paypal.com.secure-login.xyz/verify/"
+    plain = features.UrlTokenizer()(url)
+    assert "https:" in plain and "" in plain and "www.paypal.com.secure" in plain
+    stripped = features.UrlTokenizer(strip_scheme=True, strip_www=True, drop_empty=True)(url)
+    assert "https:" not in stripped and "" not in stripped
+    assert "paypal.com.secure" in stripped and "www.paypal.com.secure" not in stripped
+    assert set(stripped) < set(plain) | {"paypal.com.secure"}
+    print("UrlTokenizer switches: OK")
+
+
+def test_structural_switches():
+    for flags in ((True, False), (False, True), (True, True)):
+        class_out = features.StructuralFeatureExtractor(*flags).transform(URLS)
+        for i, url in enumerate(URLS):
+            single = features.structural_features(url, *flags)
+            assert np.allclose(single, class_out[i].astype(np.float32), atol=1e-6), (flags, url)
+    base = features.structural_features("https://www.example.com/a")
+    no_scheme = features.structural_features("https://www.example.com/a", strip_scheme=True)
+    both = features.structural_features("https://www.example.com/a", True, True)
+    assert base[0] - no_scheme[0] == 8 and base[2] - no_scheme[2] == 2   # length, slashes
+    assert no_scheme[0] - both[0] == 4 and no_scheme[1] - both[1] == 1   # length, dots
+    assert base[8] == no_scheme[8] == both[8] + 1                        # subdomain_level
+    print("structural switches: OK")
+
+
+def test_inference_tfidf_follows_export_flags():
+    data = {'vocabulary': {'https:': 0, 'example.com': 1, 'www.example.com': 2, 'a': 3},
+            'idf': [1.0, 1.0, 1.0, 1.0]}
+    url = "https://www.example.com/a"
+    assert features.build_tfidf_vector(url, data).nonzero()[0].tolist() == [0, 2, 3]
+    flagged = dict(data, strip_scheme=True, strip_www=True)
+    assert features.build_tfidf_vector(url, flagged).nonzero()[0].tolist() == [1, 3]
+    assert features.extract_features_onnx([url], flagged).shape == (1, 4 + 9)
+    print("inference TF-IDF flags: OK")
+
+
 if __name__ == "__main__":
     test_tokenizer_parity()
     test_structural_parity()
     test_entropy_parity()
     test_onnx_structural_matches_class()
     test_legacy_pickle_loads()
+    test_normalize_url()
+    test_url_tokenizer_defaults_match_make_tokens()
+    test_url_tokenizer_switches()
+    test_structural_switches()
+    test_inference_tfidf_follows_export_flags()
     print("\nAll parity checks passed.")

@@ -48,5 +48,45 @@
       "www.manta.com",
       381
     ]
-  ]
+  ],
+  "prefix_shortcuts": {
+    "legitimate": {
+      "rows": 345738,
+      "schemes": {
+        "https": 345702,
+        "httpss": 35,
+        "ftp": 1
+      },
+      "schemes_pct": {
+        "https": 99.99,
+        "httpss": 0.01,
+        "ftp": 0.0
+      },
+      "scheme_www_prefix": 345042,
+      "scheme_www_prefix_pct": 99.8,
+      "host_starts_with_www": 345042,
+      "host_starts_with_www_pct": 99.8,
+      "host_only_no_path": 47715,
+      "host_only_no_path_pct": 13.8
+    },
+    "phishing": {
+      "rows": 104438,
+      "schemes": {
+        "http": 97948,
+        "https": 6483,
+        "ftp": 7
+      },
+      "schemes_pct": {
+        "http": 93.79,
+        "https": 6.21,
+        "ftp": 0.01
+      },
+      "scheme_www_prefix": 13615,
+      "scheme_www_prefix_pct": 13.04,
+      "host_starts_with_www": 13615,
+      "host_starts_with_www_pct": 13.04,
+      "host_only_no_path": 7952,
+      "host_only_no_path_pct": 7.61
+    }
+  }
 }
