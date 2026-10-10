@@ -1,6 +1,6 @@
 {
-  "generated": "2026-10-10T15:20:38+00:00",
-  "harness_commit": "ed59afd",
+  "generated": "2026-10-10T15:25:55+00:00",
+  "harness_commit": "6c37215",
   "extension_version": "3.4",
   "model_hashes": {
     "rf": "625c9333151667c4\u2026",
@@ -3839,6 +3839,8 @@
     "slash_cb_no_scheme_www": {
       "as_listed_detected": 41,
       "with_slash_detected": 14
-    }
+    },
+    "legit_host_overlap_training": 69,
+    "legit_exact_training_rows": 14
   }
 }

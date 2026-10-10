@@ -387,15 +387,22 @@ def main():
         harness_commit = 'unknown'
 
     train_hosts = set()
+    train_urls = set()
     with open(os.path.join(ROOT, 'URL dataset.csv'), newline='', encoding='utf-8') as f:
         for row in csv.DictReader(f):
             u = (row.get('url') or '').strip().lower()
             if u:
-                h = u.split('//')[-1].split('/')[0].split('?')[0]
+                train_urls.add(u)
+                h = host_of(u if '://' in u else 'http://' + u)
                 if h:
                     train_hosts.add(h)
     phishing_hosts = {r['host'] for r in phish}
     overlap_hosts = sorted(h for h in phishing_hosts if h in train_hosts)
+    legit_landing_hosts = {host_of(r['browser_url'] or r['url'])
+                           for r in legit if r['kind'] == 'landing'}
+    construction['legit_host_overlap_training'] = len(legit_landing_hosts & train_hosts)
+    construction['legit_exact_training_rows'] = sum(
+        1 for r in legit if (r['browser_url'] or r['url']).lower() in train_urls)
 
     summary = {
         'generated': datetime.now(timezone.utc).isoformat(timespec='seconds'),
@@ -646,6 +653,10 @@ def write_report(s):
         f"returned non-200 and {c['deep_offsite']} redirected off the landing site "
         f"({c['landing_redirected_registrable']} landings themselves redirected to another "
         f"registrable domain); all are scored as stored (`browser_url`).",
+        f"- Legit/training overlap (from the committed audit): {c['legit_host_overlap_training']} "
+        f"of 500 legit landing hosts also appear in the training data and "
+        f"{c['legit_exact_training_rows']} scored legit URLs are exact training rows — the legit "
+        f"FPR is therefore a slight underestimate for entirely unseen hosts.",
         f"- As-listed caveat: {c['bare_host_listings']} phishing entries are bare hosts without "
         f"the trailing slash a browser adds; on the {c['slash_only_rows']} slash-only rows, "
         f"CatBoost `no_scheme_www` detects "
