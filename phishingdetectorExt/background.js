@@ -84,7 +84,7 @@ async function predict(url) {
 
     let inputFeatures;
     if (modelType === 'xgb') {
-        // XGBoost: scale → select (179) → PCA → 151 features
+        // XGBoost: scale → select (177) → PCA → 149 features
         inputFeatures = preprocessXgb(rawFeatures, m.prepData);
     } else {
         // RF: use raw 1509 features directly

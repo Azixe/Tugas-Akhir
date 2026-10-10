@@ -15,7 +15,7 @@ Penelitian ini merancang dan mengimplementasikan **ekstensi Google Chrome mandir
 1. **Random Forest (RF):** Model *bagging* acuan yang dioptimalkan (*bonsai trees*) untuk ukuran berkas ringan dan *False Positive Rate* (FPR) mendekati 0%.
 2. **XGBoost (XGB):** Model *gradient boosting* yang dipadukan dengan *pipeline* reduksi dimensi berganda (*StandardScaler* → *SelectKBest* ANOVA F → *RFECV* → *PCA 95%*) terinspirasi dari arsitektur *PhishGuard*.
 
-Kedua model dikonversi ke format ONNX dan dapat diuji secara langsung serta bergantian melalui antarmuka ekstensi peramban.
+Ketiga model dikonversi ke format ONNX dan dapat diuji secara langsung serta bergantian melalui antarmuka ekstensi peramban.
 
 ---
 
@@ -68,9 +68,9 @@ Tugas Akhir/
 │   ├── utils.js                   # Ekstraksi fitur leksikal 100% konsisten dengan Python
 │   ├── phishing_rf.onnx           # Model Random Forest terkompresi (~730 KB)
 │   ├── tfidf_data.json            # Kosakata TF-IDF (1.500 token) untuk RF
-│   ├── phishing_xgb.onnx          # Model XGBoost ONNX (~1,25 MB)
+│   ├── phishing_xgb.onnx          # Model XGBoost ONNX (~1,29 MB)
 │   ├── tfidf_data_xgb.json        # Kosakata TF-IDF untuk XGBoost
-│   ├── xgb_preprocessing.json     # Bobot StandardScaler, indeks seleksi (179), & matriks PCA (151)
+│   ├── xgb_preprocessing.json     # Bobot StandardScaler, indeks seleksi (177), & matriks PCA (149)
 │   └── libs/                      # Pustaka ONNX Runtime Web (WASM & WASM-SIMD)
 │
 ├── hybrid/                        # Pelatihan model Random Forest
@@ -129,11 +129,13 @@ Tidak seperti metode berbasis konten yang mengunduh seluruh halaman HTML, sistem
 
 | Parameter / Aspek | Random Forest (Acuan) | XGBoost (Komparasi) |
 |---|---|---|
-| **Varian Data Latih** | Full Dataset (360.140 URL) | Undersampled 1:1 (167.100 URL) |
-| **Dimensi Fitur Masukan** | 1.509 fitur langsung | 1.509 → 179 (*SelectKBest+RFECV*) → 151 (*PCA*) |
+| **Varian Data Latih** | Full Dataset (360.140 URL) | Full Dataset (360.140 URL) |
+| **Dimensi Fitur Masukan** | 1.509 fitur langsung | 1.509 → 177 (*importance pruning*) → 149 (*PCA*) |
 | **Konfigurasi Utama** | 100 pohon, `max_depth=15`, `min_samples_split=10`, `min_samples_leaf=4` | 700 pohon, `max_depth=5`, `learning_rate=0.1`, `reg_alpha=0.1`, `reg_lambda=2` |
-| **Ukuran Berkas Model** | `phishing_rf.onnx` (**730 KB**) | `phishing_xgb.onnx` (**1.253 KB**) + Preprocessing (**654 KB**) |
+| **Ukuran Berkas Model** | `phishing_rf.onnx` (**730 KB**) | `phishing_xgb.onnx` (**1.291 KB**) + Preprocessing (**655 KB**) |
 | **Karakteristik Deteksi** | Sangat konservatif, nyaris tanpa *false positive* (FPR = 0,001%). | Sangat sensitif/agresif, menangkap lebih banyak variasi phishing. |
+
+> Catatan: ekstensi **v3.4** menambahkan model **CatBoost** (fitur mentah yang sama dengan RF); tabel di atas membandingkan pasangan RF–XGBoost. Status artefak terkini ada di `MODELS.md`.
 
 ---
 

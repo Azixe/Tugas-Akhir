@@ -1,18 +1,18 @@
 # Model Artifacts — Provenance & Checksums
 
-> Single source of truth for *which model file is which*. Updated 2026-09-27.
+> Single source of truth for *which model file is which*. Updated 2026-10-10.
 > Verify any file with: `sha256sum <path>` (WSL) or `Get-FileHash <path>` (PowerShell).
 
 ## Deployed in the extension
 
-Both deployed models now use the **full dataset** (no undersampling). 2026-09-27: XGBoost switched from the undersampled to the full-dataset variant so both models follow the same selection rationale — the full variants cut false positives sharply (RF 61→1 FP, XGB 245→88 FP), which matters most for user trust.
+All three deployed models use the **full dataset** (no undersampling). 2026-09-27: XGBoost switched from the undersampled to the full-dataset variant; 2026-09-29: CatBoost was added as the third model (v3.4), trained on RF's raw features. All models follow the same selection rationale — the full variants cut false positives sharply (RF 61→1 FP, XGB 245→88 FP), which matters most for user trust.
 
 | Artifact | Variant | Features | Origin | Size | SHA-256 | Paired files |
 |---|---|---|---|---|---|---|
 | `phishingdetectorExt/phishing_rf.onnx` | RF — **no undersampling** | 1509 (1500 TF-IDF + 9 struct) | Local retrain, 2026-09-20 (`sampling_results/rf_full.pkl`) | 730 KB | `625c9333151667c478a59dccf66095e69338996033627d85bb493b596ac95135` | `phishingdetectorExt/tfidf_data.json` (`594309360bc559b63d7ec78585f4ac111898be9f991f2bf334a200b630a32c7d`) |
-| `phishingdetectorExt/phishing_xgb.onnx` | XGB — **full dataset** (no undersampling) | 151 (PCA of 179) | Local retrain, 2026-09-20 (`sampling_results/xgb_full.pkl`) | 1,291 KB | `4efd7ead699770a04423bd436464b070365980b83f2a36a9608dd7c781b2c702` | `tfidf_data_xgb.json` (`7885a6b1c2bc516b2f77c29a12054da13d5daceb92efb87bce75d13d61949094`), `xgb_preprocessing.json` (`54e37c7fdac56ed7cf462c2b2363c2e9b4820992dbf67b4e919eba85db95c289`) |
+| `phishingdetectorExt/phishing_xgb.onnx` | XGB — **full dataset** (no undersampling) | 149 (PCA of 177) | Local retrain, 2026-09-20 (`sampling_results/xgb_full.pkl`) | 1,291 KB | `4efd7ead699770a04423bd436464b070365980b83f2a36a9608dd7c781b2c702` | `tfidf_data_xgb.json` (`7885a6b1c2bc516b2f77c29a12054da13d5daceb92efb87bce75d13d61949094`), `xgb_preprocessing.json` (`54e37c7fdac56ed7cf462c2b2363c2e9b4820992dbf67b4e919eba85db95c289`) |
 
-Extension version bumped to **3.3** in `manifest.json` (3.2 = UI/navigation fixes; 3.1 = model refresh). Previous deployed files (for reference): RF `0a8f995b…` (901 KB, Gen-3 non-undersampled, pkl lost); XGB `daa8c8d4…` (1,253 KB, undersampled, deployed 20–27 Sep 2026); XGB `1c1965eb…` (1,277 KB, Colab-tuned undersampled).
+Extension version **3.4** (`manifest.json`; 3.3 = full-dataset XGBoost; 3.2 = UI/navigation fixes; 3.1 = model refresh; 3.4 = CatBoost added). Previous deployed files (for reference): RF `0a8f995b…` (901 KB, Gen-3 non-undersampled, pkl lost); XGB `daa8c8d4…` (1,253 KB, undersampled, deployed 20–27 Sep 2026); XGB `1c1965eb…` (1,277 KB, Colab-tuned undersampled).
 
 ## Third model — CatBoost (deployed in extension v3.4, 2026-09-29)
 
@@ -52,7 +52,7 @@ Root `tfidf_data.json` (`4f9cf4bd4c48e0d013171bc9959ad46cd3cf7afb8f09c6505138f61
 |---|---|---|---|---|
 | `phishing_xgb_pipeline.pkl` | XGB — undersampled | Full artifact dict (model + scaler + selector + PCA + feature extractor). Colab, Apr 18 2026 | 767 KB | `8e751bb79bdbf5b9d50ccb02edceaf5016482ba1b6b45fe3d46f719c071bb601` |
 | `phishing_xgb_model.pkl` | XGB — undersampled | Classifier only | 577 KB | `120ee8bfb06080b5d8a8c59017ba1349c7779c4932c13e063c0b1ce8d4bb5523` |
-| `phishing_xgb.onnx` | ONNX of the above | Byte-identical to `phishingdetectorExt/phishing_xgb.onnx` | 1,277 KB | `1c1965eb9da03ee459d3657b9a349764a7dcda1ac8658d88d9e31d7f8dc863d7` |
+| `phishing_xgb.onnx` | ONNX of the above (undersampled) | **NOT the deployed file** — deployed is the full-dataset export (`4efd7ead…`, 1,291 KB) | 1,277 KB | `1c1965eb9da03ee459d3657b9a349764a7dcda1ac8658d88d9e31d7f8dc863d7` |
 
 ## Sampling study (`sampling_results/`)
 

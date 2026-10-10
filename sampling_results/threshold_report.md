@@ -12,7 +12,7 @@
 | > 0.8 | 1.0000 | 0.2845 | 0.4430 | 0.0000% | 0 | 14945 |
 | > 0.9 | 1.0000 | 0.0475 | 0.0907 | 0.0000% | 0 | 19896 |
 
-Extension rule simulation (block >0.8; warn 0.6<p≤0.8): blocked 5943 TP / 0 FP · warned 12473 TP / 0 FP · detected (≥0.6) 18416 TP / 0 FP
+Extension rule simulation (block >0.8; warn 0.6<p≤0.8): blocked 5943 TP / 0 FP · warned 12473 TP / 0 FP · detected (>0.6) 18416 TP / 0 FP
 
 ## XGBoost
 
@@ -24,7 +24,7 @@ Extension rule simulation (block >0.8; warn 0.6<p≤0.8): blocked 5943 TP / 0 FP
 | > 0.8 | 0.9980 | 0.9781 | 0.9880 | 0.0578% | 40 | 458 |
 | > 0.9 | 0.9987 | 0.9725 | 0.9854 | 0.0376% | 26 | 574 |
 
-Extension rule simulation (block >0.8; warn 0.6<p≤0.8): blocked 20430 TP / 40 FP · warned 104 TP / 26 FP · detected (≥0.6) 20534 TP / 66 FP
+Extension rule simulation (block >0.8; warn 0.6<p≤0.8): blocked 20430 TP / 40 FP · warned 104 TP / 26 FP · detected (>0.6) 20534 TP / 66 FP
 
 ## CatBoost
 
@@ -36,4 +36,4 @@ Extension rule simulation (block >0.8; warn 0.6<p≤0.8): blocked 20430 TP / 40 
 | > 0.8 | 0.9996 | 0.9790 | 0.9892 | 0.0116% | 8 | 439 |
 | > 0.9 | 0.9999 | 0.9759 | 0.9877 | 0.0043% | 3 | 504 |
 
-Extension rule simulation (block >0.8; warn 0.6<p≤0.8): blocked 20449 TP / 8 FP · warned 69 TP / 8 FP · detected (≥0.6) 20518 TP / 16 FP
+Extension rule simulation (block >0.8; warn 0.6<p≤0.8): blocked 20449 TP / 8 FP · warned 69 TP / 8 FP · detected (>0.6) 20518 TP / 16 FP

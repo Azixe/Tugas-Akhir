@@ -119,7 +119,7 @@ def main():
         lines += ["",
                   f"Extension rule simulation (block >0.8; warn 0.6<p≤0.8): blocked {rule['blocked_tp']} TP / "
                   f"{rule['blocked_fp']} FP · warned {rule['warned_tp']} TP / {rule['warned_fp']} FP · "
-                  f"detected (≥0.6) {rule['detected_tp']} TP / {rule['flagged_fp']} FP", ""]
+                  f"detected (>0.6) {rule['detected_tp']} TP / {rule['flagged_fp']} FP", ""]
 
     with open(os.path.join(OUTDIR, 'thresholds.json'), 'w', encoding='utf-8') as f:
         json.dump(result, f, indent=2)
