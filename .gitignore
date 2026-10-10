@@ -14,3 +14,4 @@ tools/convert_pdfs.py
 tools/convert-pdfs.cmd
 referrence/*
 CLAUDE.md
+.mcp.json
