@@ -36,7 +36,9 @@ Measure how the deployed v3.4 models and the scheme/`www.` ablation candidates b
   3. registrable domain not in the PhishTank feed.
 - **Two real URLs per domain, no synthetic ones:**
   - *Landing*: the final URL after redirects from `https://<domain>/` (the site decides `www.` or not);
-  - *Deep*: one seeded same-site link from the landing page with a non-empty path.
+  - *Deep*: one seeded same-site link from the landing page with a non-empty path and **not a
+    static asset** (links ending in css/js/images/fonts/media/archives are skipped — the intent
+    is a navigable page).
 - **Headline legit set:** 500 URLs, one per domain, seeded 50/50 landing/deep within each band.
 - **FPR** is also reported on **all ~1.000** legit URLs, split by landing/deep and by band.
 - **Prefix sensitivity** (separate table, not part of FPR): for every domain score
@@ -100,3 +102,9 @@ Headline phishing set: 500 URLs, seed 42, sampled across the qualifying hosts.
   (raw-input hashes), plus the scoring report.
 - Raw downloads (full Tranco CSV, full PhishTank feed) are **not** committed — only their
   provenance hashes.
+
+## Amendment log
+
+- **2026-10-10 — deep-link definition:** added the static-asset exclusion to §(a) after smoke
+  tests showed `…/assets/index-*.css` being picked as a deep link. Made **before any real list
+  was fetched** (only smoke-test fetches of a handful of candidates); no scores were seen.

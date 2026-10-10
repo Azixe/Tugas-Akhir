@@ -16,3 +16,4 @@ referrence/*
 CLAUDE.md
 .mcp.json
 ablation_results/*.pkl
+external_500/raw/
