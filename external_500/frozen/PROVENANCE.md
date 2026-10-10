@@ -6,7 +6,7 @@
 - sha256: `c3d4c18b0ff6c98baf02dfa3be1ae8ecc0aae29976c814b6538447b1a21d13d0`
 - filters: online+verified, recency 60d, exact-URL minus training, 1 per host, cap 50 per suffix
 - sampled: 500 hosts, seed 42, min-hosts trigger 1500
-- resolved: 15 live of 33 attempted
+- resolution: 33 of 500 attempted answered (non-zero HTTP code); 15 live (2xx/3xx)
 
 ## Tranco list (fetched 2026-10-10T13:26:10+00:00)
 

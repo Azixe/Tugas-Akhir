@@ -224,8 +224,9 @@ def main():
                 f"- filters: online+verified, recency {used_days}d, exact-URL minus training, "
                 f"1 per host, cap {HOSTING_CAP} per suffix\n"
                 f"- sampled: {len(out_rows)} hosts, seed {SEED}, min-hosts trigger {MIN_HOSTS}\n"
-                f"- resolved: {sum(1 for r in out_rows if r['live'])} live "
-                f"of {sum(1 for r in out_rows if r['http_code'])} attempted\n")
+                f"- resolution: {sum(1 for r in out_rows if r['http_code'])} of {len(out_rows)} "
+                f"attempted answered (non-zero HTTP code); "
+                f"{sum(1 for r in out_rows if r['live'])} live (2xx/3xx)\n")
     print(f"provenance appended: {prov}")
 
 

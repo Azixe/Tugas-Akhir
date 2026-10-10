@@ -1,6 +1,6 @@
 {
-  "generated": "2026-10-10T14:36:01+00:00",
-  "harness_commit": "8a63af0",
+  "generated": "2026-10-10T15:20:38+00:00",
+  "harness_commit": "ed59afd",
   "extension_version": "3.4",
   "model_hashes": {
     "rf": "625c9333151667c4\u2026",
@@ -76,6 +76,20 @@
           "n": 500,
           "detect_fp": 4,
           "detect_fpr": 0.8,
+          "block_fp": 0,
+          "block_fpr": 0.0
+        },
+        "legit_www": {
+          "n": 469,
+          "detect_fp": 0,
+          "detect_fpr": 0.0,
+          "block_fp": 0,
+          "block_fpr": 0.0
+        },
+        "legit_non_www": {
+          "n": 531,
+          "detect_fp": 5,
+          "detect_fpr": 0.942,
           "block_fp": 0,
           "block_fpr": 0.0
         },
@@ -197,6 +211,20 @@
           "block_fp": 134,
           "block_fpr": 26.8
         },
+        "legit_www": {
+          "n": 469,
+          "detect_fp": 16,
+          "detect_fpr": 3.412,
+          "block_fp": 10,
+          "block_fpr": 2.132
+        },
+        "legit_non_www": {
+          "n": 531,
+          "detect_fp": 235,
+          "detect_fpr": 44.256,
+          "block_fp": 189,
+          "block_fpr": 35.593
+        },
         "legit_by_band": {
           "1-1k": {
             "n": 200,
@@ -314,6 +342,20 @@
           "detect_fpr": 46.6,
           "block_fp": 229,
           "block_fpr": 45.8
+        },
+        "legit_www": {
+          "n": 469,
+          "detect_fp": 0,
+          "detect_fpr": 0.0,
+          "block_fp": 0,
+          "block_fpr": 0.0
+        },
+        "legit_non_www": {
+          "n": 531,
+          "detect_fp": 343,
+          "detect_fpr": 64.595,
+          "block_fp": 335,
+          "block_fpr": 63.089
         },
         "legit_by_band": {
           "1-1k": {
@@ -435,6 +477,20 @@
           "block_fp": 0,
           "block_fpr": 0.0
         },
+        "legit_www": {
+          "n": 469,
+          "detect_fp": 0,
+          "detect_fpr": 0.0,
+          "block_fp": 0,
+          "block_fpr": 0.0
+        },
+        "legit_non_www": {
+          "n": 531,
+          "detect_fp": 20,
+          "detect_fpr": 3.766,
+          "block_fp": 0,
+          "block_fpr": 0.0
+        },
         "legit_by_band": {
           "1-1k": {
             "n": 200,
@@ -553,6 +609,20 @@
           "block_fp": 178,
           "block_fpr": 35.6
         },
+        "legit_www": {
+          "n": 469,
+          "detect_fp": 10,
+          "detect_fpr": 2.132,
+          "block_fp": 7,
+          "block_fpr": 1.493
+        },
+        "legit_non_www": {
+          "n": 531,
+          "detect_fp": 294,
+          "detect_fpr": 55.367,
+          "block_fp": 270,
+          "block_fpr": 50.847
+        },
         "legit_by_band": {
           "1-1k": {
             "n": 200,
@@ -670,6 +740,20 @@
           "detect_fpr": 47.0,
           "block_fp": 229,
           "block_fpr": 45.8
+        },
+        "legit_www": {
+          "n": 469,
+          "detect_fp": 0,
+          "detect_fpr": 0.0,
+          "block_fp": 0,
+          "block_fpr": 0.0
+        },
+        "legit_non_www": {
+          "n": 531,
+          "detect_fp": 342,
+          "detect_fpr": 64.407,
+          "block_fp": 335,
+          "block_fpr": 63.089
         },
         "legit_by_band": {
           "1-1k": {
@@ -791,6 +875,20 @@
           "block_fp": 0,
           "block_fpr": 0.0
         },
+        "legit_www": {
+          "n": 469,
+          "detect_fp": 0,
+          "detect_fpr": 0.0,
+          "block_fp": 0,
+          "block_fpr": 0.0
+        },
+        "legit_non_www": {
+          "n": 531,
+          "detect_fp": 246,
+          "detect_fpr": 46.328,
+          "block_fp": 0,
+          "block_fpr": 0.0
+        },
         "legit_by_band": {
           "1-1k": {
             "n": 200,
@@ -909,6 +1007,20 @@
           "block_fp": 214,
           "block_fpr": 42.8
         },
+        "legit_www": {
+          "n": 469,
+          "detect_fp": 49,
+          "detect_fpr": 10.448,
+          "block_fp": 28,
+          "block_fpr": 5.97
+        },
+        "legit_non_www": {
+          "n": 531,
+          "detect_fp": 440,
+          "detect_fpr": 82.863,
+          "block_fp": 378,
+          "block_fpr": 71.186
+        },
         "legit_by_band": {
           "1-1k": {
             "n": 200,
@@ -1026,6 +1138,20 @@
           "detect_fpr": 49.2,
           "block_fp": 242,
           "block_fpr": 48.4
+        },
+        "legit_www": {
+          "n": 469,
+          "detect_fp": 13,
+          "detect_fpr": 2.772,
+          "block_fp": 7,
+          "block_fpr": 1.493
+        },
+        "legit_non_www": {
+          "n": 531,
+          "detect_fp": 482,
+          "detect_fpr": 90.772,
+          "block_fp": 476,
+          "block_fpr": 89.642
         },
         "legit_by_band": {
           "1-1k": {
@@ -1147,6 +1273,20 @@
           "block_fp": 0,
           "block_fpr": 0.0
         },
+        "legit_www": {
+          "n": 469,
+          "detect_fp": 0,
+          "detect_fpr": 0.0,
+          "block_fp": 0,
+          "block_fpr": 0.0
+        },
+        "legit_non_www": {
+          "n": 531,
+          "detect_fp": 5,
+          "detect_fpr": 0.942,
+          "block_fp": 0,
+          "block_fpr": 0.0
+        },
         "legit_by_band": {
           "1-1k": {
             "n": 200,
@@ -1264,6 +1404,20 @@
           "detect_fpr": 23.0,
           "block_fp": 74,
           "block_fpr": 14.8
+        },
+        "legit_www": {
+          "n": 469,
+          "detect_fp": 66,
+          "detect_fpr": 14.072,
+          "block_fp": 40,
+          "block_fpr": 8.529
+        },
+        "legit_non_www": {
+          "n": 531,
+          "detect_fp": 114,
+          "detect_fpr": 21.469,
+          "block_fp": 71,
+          "block_fpr": 13.371
         },
         "legit_by_band": {
           "1-1k": {
@@ -1383,6 +1537,20 @@
           "block_fp": 35,
           "block_fpr": 7.0
         },
+        "legit_www": {
+          "n": 469,
+          "detect_fp": 37,
+          "detect_fpr": 7.889,
+          "block_fp": 14,
+          "block_fpr": 2.985
+        },
+        "legit_non_www": {
+          "n": 531,
+          "detect_fp": 78,
+          "detect_fpr": 14.689,
+          "block_fp": 41,
+          "block_fpr": 7.721
+        },
         "legit_by_band": {
           "1-1k": {
             "n": 200,
@@ -1498,6 +1666,20 @@
         },
         "legit_deep": {
           "n": 500,
+          "detect_fp": 0,
+          "detect_fpr": 0.0,
+          "block_fp": 0,
+          "block_fpr": 0.0
+        },
+        "legit_www": {
+          "n": 469,
+          "detect_fp": 0,
+          "detect_fpr": 0.0,
+          "block_fp": 0,
+          "block_fpr": 0.0
+        },
+        "legit_non_www": {
+          "n": 531,
           "detect_fp": 0,
           "detect_fpr": 0.0,
           "block_fp": 0,
@@ -1621,6 +1803,20 @@
           "block_fp": 23,
           "block_fpr": 4.6
         },
+        "legit_www": {
+          "n": 469,
+          "detect_fp": 12,
+          "detect_fpr": 2.559,
+          "block_fp": 9,
+          "block_fpr": 1.919
+        },
+        "legit_non_www": {
+          "n": 531,
+          "detect_fp": 23,
+          "detect_fpr": 4.331,
+          "block_fp": 19,
+          "block_fpr": 3.578
+        },
         "legit_by_band": {
           "1-1k": {
             "n": 200,
@@ -1738,6 +1934,20 @@
           "detect_fpr": 2.0,
           "block_fp": 4,
           "block_fpr": 0.8
+        },
+        "legit_www": {
+          "n": 469,
+          "detect_fp": 2,
+          "detect_fpr": 0.426,
+          "block_fp": 1,
+          "block_fpr": 0.213
+        },
+        "legit_non_www": {
+          "n": 531,
+          "detect_fp": 11,
+          "detect_fpr": 2.072,
+          "block_fp": 5,
+          "block_fpr": 0.942
         },
         "legit_by_band": {
           "1-1k": {
@@ -1859,6 +2069,20 @@
           "block_fp": 231,
           "block_fpr": 46.2
         },
+        "legit_www": {
+          "n": 469,
+          "detect_fp": 1,
+          "detect_fpr": 0.213,
+          "block_fp": 0,
+          "block_fpr": 0.0
+        },
+        "legit_non_www": {
+          "n": 531,
+          "detect_fp": 474,
+          "detect_fpr": 89.266,
+          "block_fp": 416,
+          "block_fpr": 78.343
+        },
         "legit_by_band": {
           "1-1k": {
             "n": 200,
@@ -1977,6 +2201,20 @@
           "block_fp": 232,
           "block_fpr": 46.4
         },
+        "legit_www": {
+          "n": 469,
+          "detect_fp": 6,
+          "detect_fpr": 1.279,
+          "block_fp": 1,
+          "block_fpr": 0.213
+        },
+        "legit_non_www": {
+          "n": 531,
+          "detect_fp": 475,
+          "detect_fpr": 89.454,
+          "block_fp": 407,
+          "block_fpr": 76.648
+        },
         "legit_by_band": {
           "1-1k": {
             "n": 200,
@@ -2094,6 +2332,20 @@
           "detect_fpr": 47.0,
           "block_fp": 231,
           "block_fpr": 46.2
+        },
+        "legit_www": {
+          "n": 469,
+          "detect_fp": 6,
+          "detect_fpr": 1.279,
+          "block_fp": 0,
+          "block_fpr": 0.0
+        },
+        "legit_non_www": {
+          "n": 531,
+          "detect_fp": 474,
+          "detect_fpr": 89.266,
+          "block_fp": 437,
+          "block_fpr": 82.298
         },
         "legit_by_band": {
           "1-1k": {
@@ -2215,6 +2467,20 @@
           "block_fp": 0,
           "block_fpr": 0.0
         },
+        "legit_www": {
+          "n": 469,
+          "detect_fp": 0,
+          "detect_fpr": 0.0,
+          "block_fp": 0,
+          "block_fpr": 0.0
+        },
+        "legit_non_www": {
+          "n": 531,
+          "detect_fp": 4,
+          "detect_fpr": 0.753,
+          "block_fp": 0,
+          "block_fpr": 0.0
+        },
         "legit_by_band": {
           "1-1k": {
             "n": 200,
@@ -2333,6 +2599,20 @@
           "block_fp": 82,
           "block_fpr": 16.4
         },
+        "legit_www": {
+          "n": 469,
+          "detect_fp": 97,
+          "detect_fpr": 20.682,
+          "block_fp": 43,
+          "block_fpr": 9.168
+        },
+        "legit_non_www": {
+          "n": 531,
+          "detect_fp": 126,
+          "detect_fpr": 23.729,
+          "block_fp": 80,
+          "block_fpr": 15.066
+        },
         "legit_by_band": {
           "1-1k": {
             "n": 200,
@@ -2450,6 +2730,20 @@
           "detect_fpr": 15.0,
           "block_fp": 34,
           "block_fpr": 6.8
+        },
+        "legit_www": {
+          "n": 469,
+          "detect_fp": 32,
+          "detect_fpr": 6.823,
+          "block_fp": 13,
+          "block_fpr": 2.772
+        },
+        "legit_non_www": {
+          "n": 531,
+          "detect_fp": 79,
+          "detect_fpr": 14.878,
+          "block_fp": 42,
+          "block_fpr": 7.91
         },
         "legit_by_band": {
           "1-1k": {
@@ -2571,6 +2865,20 @@
           "block_fp": 1,
           "block_fpr": 0.2
         },
+        "legit_www": {
+          "n": 469,
+          "detect_fp": 7,
+          "detect_fpr": 1.493,
+          "block_fp": 1,
+          "block_fpr": 0.213
+        },
+        "legit_non_www": {
+          "n": 531,
+          "detect_fp": 24,
+          "detect_fpr": 4.52,
+          "block_fp": 8,
+          "block_fpr": 1.507
+        },
         "legit_by_band": {
           "1-1k": {
             "n": 200,
@@ -2688,6 +2996,20 @@
           "detect_fpr": 7.2,
           "block_fp": 9,
           "block_fpr": 1.8
+        },
+        "legit_www": {
+          "n": 469,
+          "detect_fp": 15,
+          "detect_fpr": 3.198,
+          "block_fp": 3,
+          "block_fpr": 0.64
+        },
+        "legit_non_www": {
+          "n": 531,
+          "detect_fp": 35,
+          "detect_fpr": 6.591,
+          "block_fp": 15,
+          "block_fpr": 2.825
         },
         "legit_by_band": {
           "1-1k": {
@@ -2807,6 +3129,20 @@
           "block_fp": 7,
           "block_fpr": 1.4
         },
+        "legit_www": {
+          "n": 469,
+          "detect_fp": 15,
+          "detect_fpr": 3.198,
+          "block_fp": 2,
+          "block_fpr": 0.426
+        },
+        "legit_non_www": {
+          "n": 531,
+          "detect_fp": 33,
+          "detect_fpr": 6.215,
+          "block_fp": 13,
+          "block_fpr": 2.448
+        },
         "legit_by_band": {
           "1-1k": {
             "n": 200,
@@ -2904,7 +3240,7 @@
         "detected": {
           "b": 12,
           "c": 0,
-          "p": 0.000488
+          "p": 0.00048828125
         },
         "blocked": {
           "b": 1,
@@ -2917,12 +3253,12 @@
         "detected": {
           "b": 68,
           "c": 9,
-          "p": 0.0
+          "p": 2.4488215083103315e-12
         },
         "blocked": {
           "b": 61,
           "c": 11,
-          "p": 0.0
+          "p": 1.5488945360571046e-09
         },
         "recall_gain_pp": 11.8
       },
@@ -2930,7 +3266,7 @@
         "detected": {
           "b": 2,
           "c": 6,
-          "p": 0.289062
+          "p": 0.2890625
         },
         "blocked": {
           "b": 3,
@@ -2945,7 +3281,7 @@
         "detected": {
           "b": 128,
           "c": 0,
-          "p": 0.0
+          "p": 5.877471754111438e-39
         },
         "blocked": {
           "b": 1,
@@ -2958,12 +3294,12 @@
         "detected": {
           "b": 161,
           "c": 2,
-          "p": 0.0
+          "p": 2.2865181363073523e-45
         },
         "blocked": {
           "b": 160,
           "c": 2,
-          "p": 0.0
+          "p": 4.517271709703341e-45
         },
         "recall_gain_pp": 31.8
       },
@@ -2971,12 +3307,12 @@
         "detected": {
           "b": 88,
           "c": 6,
-          "p": 0.0
+          "p": 8.807936656038951e-20
         },
         "blocked": {
           "b": 61,
           "c": 0,
-          "p": 0.0
+          "p": 8.673617379884035e-19
         },
         "recall_gain_pp": 16.4
       }
@@ -2999,12 +3335,12 @@
         "detected": {
           "b": 163,
           "c": 32,
-          "p": 0.0
+          "p": 2.426547091301909e-22
         },
         "blocked": {
           "b": 124,
           "c": 37,
-          "p": 0.0
+          "p": 3.538055305122546e-12
         },
         "recall_gain_pp": 26.2
       },
@@ -3012,12 +3348,12 @@
         "detected": {
           "b": 99,
           "c": 89,
-          "p": 0.51168
+          "p": 0.5116796181723341
         },
         "blocked": {
           "b": 51,
           "c": 106,
-          "p": 1.4e-05
+          "p": 1.3508800264671437e-05
         },
         "recall_gain_pp": 2.0
       }
@@ -3040,12 +3376,12 @@
         "detected": {
           "b": 23,
           "c": 85,
-          "p": 0.0
+          "p": 1.5197882162299865e-09
         },
         "blocked": {
           "b": 23,
           "c": 92,
-          "p": 0.0
+          "p": 5.7870792629827734e-11
         },
         "recall_gain_pp": -12.4
       },
@@ -3053,12 +3389,12 @@
         "detected": {
           "b": 6,
           "c": 135,
-          "p": 0.0
+          "p": 7.352026653297796e-33
         },
         "blocked": {
           "b": 3,
           "c": 130,
-          "p": 0.0
+          "p": 7.203906926418999e-35
         },
         "recall_gain_pp": -25.8
       }
@@ -3068,12 +3404,12 @@
         "detected": {
           "b": 179,
           "c": 0,
-          "p": 0.0
+          "p": 2.61012178719941e-54
         },
         "blocked": {
           "b": 169,
           "c": 0,
-          "p": 0.0
+          "p": 2.6727647100921956e-51
         },
         "recall_gain_pp": 35.8
       },
@@ -3081,12 +3417,12 @@
         "detected": {
           "b": 103,
           "c": 61,
-          "p": 0.001296
+          "p": 0.0012955826170011158
         },
         "blocked": {
           "b": 101,
           "c": 46,
-          "p": 7e-06
+          "p": 6.671865694009476e-06
         },
         "recall_gain_pp": 8.4
       },
@@ -3094,12 +3430,12 @@
         "detected": {
           "b": 47,
           "c": 12,
-          "p": 5e-06
+          "p": 5.1256292496887346e-06
         },
         "blocked": {
           "b": 34,
           "c": 6,
-          "p": 8e-06
+          "p": 8.364584573428147e-06
         },
         "recall_gain_pp": 7.0
       }
@@ -3122,12 +3458,12 @@
         "detected": {
           "b": 112,
           "c": 39,
-          "p": 0.0
+          "p": 2.27145028360026e-09
         },
         "blocked": {
           "b": 107,
           "c": 49,
-          "p": 4e-06
+          "p": 3.940596212087979e-06
         },
         "recall_gain_pp": 14.6
       },
@@ -3135,12 +3471,12 @@
         "detected": {
           "b": 115,
           "c": 110,
-          "p": 0.789797
+          "p": 0.7897969502669107
         },
         "blocked": {
           "b": 28,
           "c": 122,
-          "p": 0.0
+          "p": 3.4304080655717806e-15
         },
         "recall_gain_pp": 1.0
       }
@@ -3150,12 +3486,12 @@
         "detected": {
           "b": 110,
           "c": 4,
-          "p": 0.0
+          "p": 6.663617459222729e-28
         },
         "blocked": {
           "b": 29,
           "c": 0,
-          "p": 0.0
+          "p": 3.725290298461914e-09
         },
         "recall_gain_pp": 21.2
       },
@@ -3163,12 +3499,12 @@
         "detected": {
           "b": 97,
           "c": 111,
-          "p": 0.367419
+          "p": 0.36741942071131056
         },
         "blocked": {
           "b": 50,
           "c": 106,
-          "p": 9e-06
+          "p": 8.632696276335626e-06
         },
         "recall_gain_pp": -2.8
       },
@@ -3176,12 +3512,12 @@
         "detected": {
           "b": 83,
           "c": 113,
-          "p": 0.038047
+          "p": 0.038047215175372025
         },
         "blocked": {
           "b": 28,
           "c": 125,
-          "p": 0.0
+          "p": 7.845002583916598e-16
         },
         "recall_gain_pp": -6.0
       }
@@ -3201,7 +3537,7 @@
           "block_fpr": 0.0,
           "recall": 26.6,
           "recall_gain_pp": 25.6,
-          "mcnemar_p": 0.0,
+          "mcnemar_p": 5.877471754111438e-39,
           "c1_fpr": false,
           "c2_block": true,
           "c3_recall": true,
@@ -3238,7 +3574,7 @@
           "block_fpr": 40.6,
           "recall": 62.4,
           "recall_gain_pp": 31.8,
-          "mcnemar_p": 0.0,
+          "mcnemar_p": 2.2865181363073523e-45,
           "c1_fpr": false,
           "c2_block": false,
           "c3_recall": true,
@@ -3250,7 +3586,7 @@
           "block_fpr": 11.1,
           "recall": 56.8,
           "recall_gain_pp": 26.2,
-          "mcnemar_p": 0.0,
+          "mcnemar_p": 2.426547091301909e-22,
           "c1_fpr": false,
           "c2_block": false,
           "c3_recall": true,
@@ -3275,7 +3611,7 @@
           "block_fpr": 48.3,
           "recall": 46.6,
           "recall_gain_pp": 16.4,
-          "mcnemar_p": 0.0,
+          "mcnemar_p": 8.807936656038951e-20,
           "c1_fpr": false,
           "c2_block": false,
           "c3_recall": true,
@@ -3287,7 +3623,7 @@
           "block_fpr": 5.5,
           "recall": 32.2,
           "recall_gain_pp": 2.0,
-          "mcnemar_p": 0.51168,
+          "mcnemar_p": 0.5116796181723341,
           "c1_fpr": false,
           "c2_block": false,
           "c3_recall": false,
@@ -3482,6 +3818,27 @@
         "external_recall": 0.242,
         "external_fpr": 0.048
       }
+    }
+  },
+  "construction": {
+    "whitelisted_legit_rows": 2,
+    "whitelisted_fp_v34": {
+      "rf": 0,
+      "xgb": 1,
+      "cb": 1
+    },
+    "deep_non200": 24,
+    "deep_offsite": 6,
+    "landing_redirected_registrable": 54,
+    "phish_answered": 33,
+    "phish_listed_http": 98,
+    "phish_listed_http_answered": 1,
+    "phish_listed_http_live": 0,
+    "bare_host_listings": 117,
+    "slash_only_rows": 49,
+    "slash_cb_no_scheme_www": {
+      "as_listed_detected": 41,
+      "with_slash_detected": 14
     }
   }
 }

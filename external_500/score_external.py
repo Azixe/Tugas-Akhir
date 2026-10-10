@@ -30,9 +30,11 @@ import csv
 import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 from datetime import datetime, timezone
+from urllib.parse import urlparse
 
 import joblib
 import numpy as np
@@ -162,7 +164,7 @@ def mcnemar(base_vec, cand_vec):
     c = int(np.sum(~cand_vec & base_vec))
     if b + c == 0:
         return {'b': b, 'c': c, 'p': 1.0}
-    return {'b': b, 'c': c, 'p': round(float(binomtest(b, b + c, 0.5).pvalue), 6)}
+    return {'b': b, 'c': c, 'p': float(binomtest(b, b + c, 0.5).pvalue)}
 
 
 # ------------------------------------------------------------------ main ----
@@ -187,8 +189,15 @@ def main():
     print(f"Scoring {len(all_urls)} URL variants per model")
 
     # masks
+    def host_of(u):
+        try:
+            return (urlparse(u).hostname or '').lower()
+        except ValueError:
+            return ''
+
     legit_headline = np.array([r['in_headline'] == '1' for r in legit])
     legit_kind_landing = np.array([r['kind'] == 'landing' for r in legit])
+    legit_www = np.array([host_of(u).startswith('www.') for u in legit_urls])
     bands = sorted({r['band'] for r in legit})
     phish_live = np.array([r['live'] == '1' for r in phish])
     phish_seen = np.array([r['seen_in_training_host'] == '1' for r in phish])
@@ -229,6 +238,8 @@ def main():
             'legit_all': legit_metrics(p['legit']),
             'legit_landing': legit_metrics(p['legit'][legit_kind_landing]),
             'legit_deep': legit_metrics(p['legit'][~legit_kind_landing]),
+            'legit_www': legit_metrics(p['legit'][legit_www]),
+            'legit_non_www': legit_metrics(p['legit'][~legit_www]),
             'legit_by_band': {b: legit_metrics(p['legit'][np.array(
                 [r['band'] == b for r in legit])]) for b in bands},
             'phish_browser': phish_metrics(p['pb']),
@@ -306,6 +317,44 @@ def main():
             fam_rule['decision'] = {'winner': None, 'keep_v34': True}
         rule[fam] = fam_rule
 
+    # --- construction details (limitations; verified counts only) ---
+    def registrable(host):
+        parts = host.split('.')
+        return '.'.join(parts[-2:]) if len(parts) >= 2 else host
+
+    WL = ['google.com', 'youtube.com', 'facebook.com', 'twitter.com', 'github.com',
+          'stackoverflow.com', 'microsoft.com', 'apple.com', 'amazon.com',
+          'wikipedia.org', 'linkedin.com', 'instagram.com']
+    wl_rows = [i for i, r in enumerate(legit) if any(
+        (h := host_of(r['browser_url'] or r['url'])) == d or h.endswith('.' + d) for d in WL)]
+    listed_http = [r for r in phish if r['url'].lower().startswith('http://')]
+    bare_hosts = [r for r in phish if re.match(r'^https?://[^/]+$', r['url'])]
+    slash_idx = [i for i, r in enumerate(phish) if r['browser_url'] == r['url'] + '/']
+    cb_nw = P[('no_scheme_www', 'cb')]
+    landing_reg = {r['domain']: registrable(host_of(r['browser_url'] or r['url']))
+                   for r in legit if r['kind'] == 'landing'}
+    landing_changed = [d for d in landing_reg if landing_reg[d] != registrable(d)]
+    construction = {
+        'whitelisted_legit_rows': len(wl_rows),
+        'whitelisted_fp_v34': {fam: int(sum(
+            1 for i in wl_rows if P[('v3.4', fam)]['legit'][i] > DETECT)) for fam in FAMILIES},
+        'deep_non200': int(sum(1 for r in legit if r['kind'] == 'deep' and r['http_code'] != '200')),
+        'deep_offsite': int(sum(1 for r in legit if r['kind'] == 'deep' and
+                               registrable(host_of(r['browser_url'] or r['url']))
+                               != landing_reg.get(r['domain'], ''))),
+        'landing_redirected_registrable': len(landing_changed),
+        'phish_answered': int(sum(1 for r in phish if r['http_code'] not in ('0', ''))),
+        'phish_listed_http': len(listed_http),
+        'phish_listed_http_answered': int(sum(1 for r in listed_http
+                                              if r['http_code'] not in ('0', ''))),
+        'phish_listed_http_live': int(sum(1 for r in listed_http if r['live'] == '1')),
+        'bare_host_listings': len(bare_hosts),
+        'slash_only_rows': len(slash_idx),
+        'slash_cb_no_scheme_www': {
+            'as_listed_detected': int(sum(1 for i in slash_idx if cb_nw['pl'][i] > DETECT)),
+            'with_slash_detected': int(sum(1 for i in slash_idx if cb_nw['pb'][i] > DETECT))},
+    }
+
     # --- context: in-distribution (ablation_metrics.json) vs external ---
     ablation = json.load(open(os.path.join(ROOT, 'ablation_results', 'ablation_metrics.json')))
     context = {}
@@ -367,7 +416,7 @@ def main():
                             'cb_iterations': meta.get('cb_iterations'),
                             'warnings': problems},
         'results': results, 'mcnemar': mcnemar_out, 'deployment_rule': rule,
-        'context_in_distribution': context,
+        'context_in_distribution': context, 'construction': construction,
     }
     with open(os.path.join(OUTDIR, 'external_metrics.json'), 'w', encoding='utf-8') as f:
         json.dump(summary, f, indent=2)
@@ -383,7 +432,13 @@ def main():
         for arm in CANDIDATES:
             c = rule[fam]['candidates'][arm]
             print(f"  {arm}: FPR {c['detect_fpr']}% block {c['block_fpr']}% recall {c['recall']}% "
-                  f"(+{c['recall_gain_pp']}pp, p={c['mcnemar_p']}) pass={c['pass']}")
+                  f"(+{c['recall_gain_pp']}pp, p={fmt_p(c['mcnemar_p'])}) pass={c['pass']}")
+
+
+def fmt_p(p):
+    if p is None:
+        return '—'
+    return '< 0.000001' if p < 1e-6 else f'{p:.6f}'
 
 
 def write_report(s):
@@ -402,7 +457,8 @@ def write_report(s):
         "",
         f"- Legit: {s['counts']['legit_rows']} URLs ({s['counts']['legit_headline']} headline), "
         f"phishing: {s['counts']['phishing_rows']} URLs "
-        f"({s['counts']['phishing_live']} live at resolution, "
+        f"({s['construction']['phish_answered']} of 500 answered at resolution, "
+        f"{s['counts']['phishing_live']} live, "
         f"{s['counts']['phishing_seen_host']} hosts seen in training, "
         f"{s['counts']['phishing_free_hosting']} free-hosting).",
         "",
@@ -440,6 +496,19 @@ def write_report(s):
         lines.append(f"| {label} | {m['detect_tp']}/500 | {m['detect_recall']}% "
                      f"| {m['block_tp']}/500 | {m['block_recall']}% |")
 
+    c = s['construction']
+    lines += ["", "### Recall range under the https-upgrade assumption (v3.4 baseline)", "",
+              f"{c['phish_listed_http']} of the 500 feed URLs are listed as `http://` and only "
+              f"{c['phish_listed_http_answered']} of them answered when resolved, so the "
+              "browser variant assumes the https upgrade for the rest. As-listed recall scores the "
+              "observed string (reference; see the bare-host caveat below). Report the pair, not "
+              "one number.", "",
+              "| Model | browser recall (https assumed) | as-listed recall |", "|---|---:|---:|"]
+    for fam in FAMILIES:
+        rb = r['v3.4'][fam]['phish_browser']['detect_recall']
+        rl = r['v3.4'][fam]['phish_listed']['detect_recall']
+        lines.append(f"| v3.4 {FAMILIES[fam]} | {rb}% | {rl}% |")
+
     lines += ["", "## Phishing — variants and subsets (baseline + candidates)", "",
               "| Model | as-listed recall | live-only recall | seen-host recall | unseen-host recall "
               "| free-hosting recall | recall gain vs v3.4 |", "|---|---:|---:|---:|---:|---:|---:|"]
@@ -456,6 +525,34 @@ def write_report(s):
                      f"| {e['phish_free_hosting']['detect_recall']}% (n={e['phish_free_hosting']['n']}) "
                      f"| {'—' if key == 'v3.4' else f'{gain:+.2f} pp'} |")
 
+    n_www = r['v3.4']['rf']['legit_www']['n']
+    n_non = r['v3.4']['rf']['legit_non_www']['n']
+    lines += ["", "## Legit FPR — `www.` split (why the false positives happen; baseline + candidates)", "",
+              f"Of the 1.000 legit URLs, {n_www} carry a `www.` host and {n_non} do not; the "
+              "feature set learned `www.` as a legit signal, and the non-www rows absorb the "
+              "false positives.", "",
+              "| Model | flagged, with www. | flagged, without www. |", "|---|---:|---:|"]
+    for key, fam in order:
+        if key != 'v3.4' and key not in CANDIDATES:
+            continue
+        e = r[key][fam]
+        w, nw = e['legit_www'], e['legit_non_www']
+        label = f"v3.4 {FAMILIES[fam]}" if key == 'v3.4' else f"`{key}` {FAMILIES[fam]}"
+        lines.append(f"| {label} | {w['detect_fp']}/{w['n']} ({w['detect_fpr']}%) "
+                     f"| {nw['detect_fp']}/{nw['n']} ({nw['detect_fpr']}%) |")
+
+    lines += ["", "## Legit detected FPR by Tranco band (baseline + candidates)", "",
+              "| Model | 1-1k | 1k-10k | 10k-100k | 100k-500k | 500k-1M |",
+              "|---|---:|---:|---:|---:|---:|"]
+    for key, fam in order:
+        if key != 'v3.4' and key not in CANDIDATES:
+            continue
+        e = r[key][fam]
+        label = f"v3.4 {FAMILIES[fam]}" if key == 'v3.4' else f"`{key}` {FAMILIES[fam]}"
+        cells = " | ".join(f"{e['legit_by_band'][b]['detect_fpr']}%"
+                           for b in ('1-1k', '1k-10k', '10k-100k', '100k-500k', '500k-1M'))
+        lines.append(f"| {label} | {cells} |")
+
     lines += ["", "## McNemar — candidates vs v3.4 of the same family (browser variant, detected >60)", "",
               "| Family | Candidate | v3.4-only correct (c) | candidate-only correct (b) | p (detected) "
               "| p (blocked) | recall gain |", "|---|---|---:|---:|---:|---:|---:|"]
@@ -463,7 +560,8 @@ def write_report(s):
         for arm in CANDIDATES:
             mc = s['mcnemar'][arm][fam]
             lines.append(f"| {FAMILIES[fam]} | `{arm}` | {mc['detected']['c']} | {mc['detected']['b']} "
-                         f"| {mc['detected']['p']} | {mc['blocked']['p']} | {mc['recall_gain_pp']:+.2f} pp |")
+                         f"| {fmt_p(mc['detected']['p'])} | {fmt_p(mc['blocked']['p'])} "
+                         f"| {mc['recall_gain_pp']:+.2f} pp |")
 
     lines += ["", "## Prefix sensitivity — synthetic `https://d/` vs `https://www.d/` vs `http://d/` "
               "(headline domains)", "",
@@ -492,7 +590,7 @@ def write_report(s):
             lines.append(f"| `{arm}` | {'yes' if v['c1_fpr'] else 'no'} ({v['detect_fpr']}%) "
                          f"| {'yes' if v['c2_block'] else 'no'} ({v['block_fpr']}%) "
                          f"| {'yes' if v['c3_recall'] else 'no'} ({v['recall_gain_pp']:+.2f} pp, "
-                         f"p={v['mcnemar_p']}) | {'PASS' if v['pass'] else 'fail'} |")
+                         f"p={fmt_p(v['mcnemar_p'])}) | {'PASS' if v['pass'] else 'fail'} |")
         dec = c['decision']
         lines.append("")
         lines.append(f"**Decision: {'keep v3.4' if dec['keep_v34'] else 'replace with ' + dec['winner']}**")
@@ -533,6 +631,28 @@ def write_report(s):
               "- The `all` arm is trained on the fit set (90% of the train pool), so it is close "
               "to but not identical with v3.4 (full train pool).",
               ]
+    c = s['construction']
+    lines += [
+        "- Pre-registration trail: the frozen lists were committed before scoring (`8a63af0`); "
+        "the scorer changed once afterwards (a KeyError hotfix in the rule-evaluation code plus "
+        "report notes) — thresholds, metrics and rule logic are unchanged, and the scoring pass "
+        "reproduced identical counts.",
+        f"- Legit construction (documented, no re-sampling): the PhishTank exclusion matched "
+        f"registrable (last-two-label) domains, so whole suffixes such as co.uk / com.au / co.id "
+        f"were removed (no legit domains under those suffixes remain); "
+        f"{c['whitelisted_legit_rows']} scored rows sit on hosts the extension whitelists "
+        f"(v3.4 flags: RF {c['whitelisted_fp_v34']['rf']}, XGB {c['whitelisted_fp_v34']['xgb']}, "
+        f"CB {c['whitelisted_fp_v34']['cb']} — 0.1 pp for XGB/CB); {c['deep_non200']} deep URLs "
+        f"returned non-200 and {c['deep_offsite']} redirected off the landing site "
+        f"({c['landing_redirected_registrable']} landings themselves redirected to another "
+        f"registrable domain); all are scored as stored (`browser_url`).",
+        f"- As-listed caveat: {c['bare_host_listings']} phishing entries are bare hosts without "
+        f"the trailing slash a browser adds; on the {c['slash_only_rows']} slash-only rows, "
+        f"CatBoost `no_scheme_www` detects "
+        f"{c['slash_cb_no_scheme_www']['as_listed_detected']} as listed vs "
+        f"{c['slash_cb_no_scheme_www']['with_slash_detected']} with the slash — as-listed recall "
+        "for de-shortcut arms must not be quoted as browser-realistic.",
+    ]
     if s['ablation_config']['warnings']:
         lines.append(f"- **WARNING:** ablation config problems: {s['ablation_config']['warnings']}")
     if s['training_overlap']['phishing_hosts_seen_in_training']:

@@ -1,12 +1,12 @@
 # External 500/500 evaluation — live Tranco legit + PhishTank phishing
 
-Generated: 2026-10-10T14:36:01+00:00 — harness commit `8a63af0`, extension v3.4
+Generated: 2026-10-10T15:20:38+00:00 — harness commit `ed59afd`, extension v3.4
 Protocol: `external_500/PROTOCOL.md` (frozen before collection; amendment log inside).
 Lists (frozen, hashed): `legit_urls.csv` 1000 rows sha256 `8a0829d0b08c8f29…`; `phishing_urls.csv` 500 rows sha256 `af5f9f8b3721c9b3…`; `prefix_sensitivity.csv` 500 rows sha256 `ea0c5636a1584ef0…`
 ONNX models: RF `625c9333151667c4…`, XGB `4efd7ead699770a0…`, CatBoost `791a503e72426426…`
 Thresholds (extension, strict): detected >60, blocked >80 (percent).
 
-- Legit: 1000 URLs (500 headline), phishing: 500 URLs (15 live at resolution, 2 hosts seen in training, 64 free-hosting).
+- Legit: 1000 URLs (500 headline), phishing: 500 URLs (33 of 500 answered at resolution, 15 live, 2 hosts seen in training, 64 free-hosting).
 
 ## Legit — headline 500 (browser URLs; detected >60, blocked >80)
 
@@ -80,6 +80,16 @@ Thresholds (extension, strict): detected >60, blocked >80 (percent).
 | `struct_only_no_scheme_www` XGBoost | 139/500 | 27.8% | 68/500 | 13.6% |
 | `struct_only_no_scheme_www` CatBoost | 121/500 | 24.2% | 42/500 | 8.4% |
 
+### Recall range under the https-upgrade assumption (v3.4 baseline)
+
+98 of the 500 feed URLs are listed as `http://` and only 1 of them answered when resolved, so the browser variant assumes the https upgrade for the rest. As-listed recall scores the observed string (reference; see the bare-host caveat below). Report the pair, not one number.
+
+| Model | browser recall (https assumed) | as-listed recall |
+|---|---:|---:|
+| v3.4 Random Forest | 1.0% | 14.0% |
+| v3.4 XGBoost | 30.6% | 46.0% |
+| v3.4 CatBoost | 30.2% | 49.2% |
+
 ## Phishing — variants and subsets (baseline + candidates)
 
 | Model | as-listed recall | live-only recall | seen-host recall | unseen-host recall | free-hosting recall | recall gain vs v3.4 |
@@ -94,16 +104,46 @@ Thresholds (extension, strict): detected >60, blocked >80 (percent).
 | `no_scheme_www` XGBoost | 58.6% | 60.0% (n=15) | 50.0% (n=2) | 56.827% (n=498) | 60.938% (n=64) | +26.20 pp |
 | `no_scheme_www` CatBoost | 45.4% | 33.333% (n=15) | 50.0% (n=2) | 32.129% (n=498) | 25.0% (n=64) | +2.00 pp |
 
+## Legit FPR — `www.` split (why the false positives happen; baseline + candidates)
+
+Of the 1.000 legit URLs, 469 carry a `www.` host and 531 do not; the feature set learned `www.` as a legit signal, and the non-www rows absorb the false positives.
+
+| Model | flagged, with www. | flagged, without www. |
+|---|---:|---:|
+| v3.4 Random Forest | 0/469 (0.0%) | 5/531 (0.942%) |
+| v3.4 XGBoost | 16/469 (3.412%) | 235/531 (44.256%) |
+| v3.4 CatBoost | 0/469 (0.0%) | 343/531 (64.595%) |
+| `no_scheme` Random Forest | 0/469 (0.0%) | 246/531 (46.328%) |
+| `no_scheme` XGBoost | 49/469 (10.448%) | 440/531 (82.863%) |
+| `no_scheme` CatBoost | 13/469 (2.772%) | 482/531 (90.772%) |
+| `no_scheme_www` Random Forest | 0/469 (0.0%) | 5/531 (0.942%) |
+| `no_scheme_www` XGBoost | 66/469 (14.072%) | 114/531 (21.469%) |
+| `no_scheme_www` CatBoost | 37/469 (7.889%) | 78/531 (14.689%) |
+
+## Legit detected FPR by Tranco band (baseline + candidates)
+
+| Model | 1-1k | 1k-10k | 10k-100k | 100k-500k | 500k-1M |
+|---|---:|---:|---:|---:|---:|
+| v3.4 Random Forest | 0.0% | 0.0% | 0.0% | 0.5% | 2.0% |
+| v3.4 XGBoost | 13.0% | 25.0% | 23.0% | 30.0% | 34.5% |
+| v3.4 CatBoost | 17.5% | 30.0% | 33.0% | 40.5% | 50.5% |
+| `no_scheme` Random Forest | 12.0% | 20.5% | 21.0% | 29.0% | 40.5% |
+| `no_scheme` XGBoost | 27.0% | 42.5% | 48.5% | 59.0% | 67.5% |
+| `no_scheme` CatBoost | 27.0% | 43.5% | 48.0% | 59.5% | 69.5% |
+| `no_scheme_www` Random Forest | 0.5% | 0.0% | 0.5% | 0.5% | 1.0% |
+| `no_scheme_www` XGBoost | 14.5% | 10.5% | 21.0% | 17.0% | 27.0% |
+| `no_scheme_www` CatBoost | 8.0% | 6.5% | 11.5% | 15.5% | 16.0% |
+
 ## McNemar — candidates vs v3.4 of the same family (browser variant, detected >60)
 
 | Family | Candidate | v3.4-only correct (c) | candidate-only correct (b) | p (detected) | p (blocked) | recall gain |
 |---|---|---:|---:|---:|---:|---:|
-| Random Forest | `no_scheme` | 0 | 128 | 0.0 | 1.0 | +25.60 pp |
-| Random Forest | `no_scheme_www` | 2 | 4 | 0.6875 | 1.0 | +0.40 pp |
-| XGBoost | `no_scheme` | 2 | 161 | 0.0 | 0.0 | +31.80 pp |
-| XGBoost | `no_scheme_www` | 32 | 163 | 0.0 | 0.0 | +26.20 pp |
-| CatBoost | `no_scheme` | 6 | 88 | 0.0 | 0.0 | +16.40 pp |
-| CatBoost | `no_scheme_www` | 89 | 99 | 0.51168 | 1.4e-05 | +2.00 pp |
+| Random Forest | `no_scheme` | 0 | 128 | < 0.000001 | 1.000000 | +25.60 pp |
+| Random Forest | `no_scheme_www` | 2 | 4 | 0.687500 | 1.000000 | +0.40 pp |
+| XGBoost | `no_scheme` | 2 | 161 | < 0.000001 | < 0.000001 | +31.80 pp |
+| XGBoost | `no_scheme_www` | 32 | 163 | < 0.000001 | < 0.000001 | +26.20 pp |
+| CatBoost | `no_scheme` | 6 | 88 | < 0.000001 | < 0.000001 | +16.40 pp |
+| CatBoost | `no_scheme_www` | 89 | 99 | 0.511680 | 0.000014 | +2.00 pp |
 
 ## Prefix sensitivity — synthetic `https://d/` vs `https://www.d/` vs `http://d/` (headline domains)
 
@@ -127,8 +167,8 @@ Baseline v3.4: detected FPR 0.5% | blocked FPR 0.0% | detected recall 1.0%.
 
 | Candidate | c1 FPR ≤2% & ≤v3.4 | c2 blocked ≤1% | c3 +≥10pp & p<0.05 | pass |
 |---|---|---|---|---|
-| `no_scheme` | no (24.6%) | yes (0.0%) | yes (+25.60 pp, p=0.0) | fail |
-| `no_scheme_www` | yes (0.5%) | yes (0.0%) | no (+0.40 pp, p=0.6875) | fail |
+| `no_scheme` | no (24.6%) | yes (0.0%) | yes (+25.60 pp, p=< 0.000001) | fail |
+| `no_scheme_www` | yes (0.5%) | yes (0.0%) | no (+0.40 pp, p=0.687500) | fail |
 
 **Decision: keep v3.4**
 
@@ -138,8 +178,8 @@ Baseline v3.4: detected FPR 25.1% | blocked FPR 19.9% | detected recall 30.6%.
 
 | Candidate | c1 FPR ≤2% & ≤v3.4 | c2 blocked ≤1% | c3 +≥10pp & p<0.05 | pass |
 |---|---|---|---|---|
-| `no_scheme` | no (48.9%) | no (40.6%) | yes (+31.80 pp, p=0.0) | fail |
-| `no_scheme_www` | no (18.0%) | no (11.1%) | yes (+26.20 pp, p=0.0) | fail |
+| `no_scheme` | no (48.9%) | no (40.6%) | yes (+31.80 pp, p=< 0.000001) | fail |
+| `no_scheme_www` | no (18.0%) | no (11.1%) | yes (+26.20 pp, p=< 0.000001) | fail |
 
 **Decision: keep v3.4**
 
@@ -149,8 +189,8 @@ Baseline v3.4: detected FPR 34.3% | blocked FPR 33.5% | detected recall 30.2%.
 
 | Candidate | c1 FPR ≤2% & ≤v3.4 | c2 blocked ≤1% | c3 +≥10pp & p<0.05 | pass |
 |---|---|---|---|---|
-| `no_scheme` | no (49.5%) | no (48.3%) | yes (+16.40 pp, p=0.0) | fail |
-| `no_scheme_www` | no (11.5%) | no (5.5%) | no (+2.00 pp, p=0.51168) | fail |
+| `no_scheme` | no (49.5%) | no (48.3%) | yes (+16.40 pp, p=< 0.000001) | fail |
+| `no_scheme_www` | no (11.5%) | no (5.5%) | no (+2.00 pp, p=0.511680) | fail |
 
 **Decision: keep v3.4**
 
@@ -188,5 +228,8 @@ Baseline v3.4: detected FPR 34.3% | blocked FPR 33.5% | detected recall 30.2%.
 - Collection environment: Bitdefender real-time protection was active during collection; individual fetches may have been blocked by its web filtering (recorded as drops or non-answering entries, never silently dropped). Phishing liveness (33/500 answered, 15 live) is therefore a lower bound; scoring is URL-only, so headline metrics do not depend on liveness.
 - Phishing entries that no longer resolve are still scored (URL-only analysis); the live-only row reports the subset that answered when resolved.
 - The `all` arm is trained on the fit set (90% of the train pool), so it is close to but not identical with v3.4 (full train pool).
+- Pre-registration trail: the frozen lists were committed before scoring (`8a63af0`); the scorer changed once afterwards (a KeyError hotfix in the rule-evaluation code plus report notes) — thresholds, metrics and rule logic are unchanged, and the scoring pass reproduced identical counts.
+- Legit construction (documented, no re-sampling): the PhishTank exclusion matched registrable (last-two-label) domains, so whole suffixes such as co.uk / com.au / co.id were removed (no legit domains under those suffixes remain); 2 scored rows sit on hosts the extension whitelists (v3.4 flags: RF 0, XGB 1, CB 1 — 0.1 pp for XGB/CB); 24 deep URLs returned non-200 and 6 redirected off the landing site (54 landings themselves redirected to another registrable domain); all are scored as stored (`browser_url`).
+- As-listed caveat: 117 phishing entries are bare hosts without the trailing slash a browser adds; on the 49 slash-only rows, CatBoost `no_scheme_www` detects 41 as listed vs 14 with the slash — as-listed recall for de-shortcut arms must not be quoted as browser-realistic.
 - Training host overlap: 2 of 500 phishing hosts also appear in the training dataset.
 
