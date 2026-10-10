@@ -29,6 +29,7 @@ import json
 import os
 import random
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -223,6 +224,8 @@ def main():
                                      'url_https': f"https://{p['domain']}/",
                                      'url_https_www': f"https://www.{p['domain']}/",
                                      'url_http': f"http://{p['domain']}/"})
+
+    shutil.rmtree(tmpdir, ignore_errors=True)   # landing-page bodies (may contain hostile HTML)
 
     suffix = args.tag
     legit_path = os.path.join(FROZEN, f'legit_urls{suffix}.csv')

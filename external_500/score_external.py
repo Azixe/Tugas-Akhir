@@ -282,18 +282,18 @@ def main():
         passing = []
         for arm in CANDIDATES:
             r = results[arm][fam]
-            mc = mcnemar_out[arm][fam]['detected']
+            mc = mcnemar_out[arm][fam]
             c1 = (r['legit_all']['detect_fpr'] <= 2.0
                   and r['legit_all']['detect_fp'] <= base['legit_all']['detect_fp'])
             c2 = r['legit_all']['block_fpr'] <= 1.0
-            c3 = (mc['recall_gain_pp'] >= 10.0 and mc['p'] < 0.05)
+            c3 = (mc['recall_gain_pp'] >= 10.0 and mc['detected']['p'] < 0.05)
             ok = bool(c1 and c2 and c3)
             fam_rule['candidates'][arm] = {
                 'detect_fpr': r['legit_all']['detect_fpr'],
                 'detect_fp': r['legit_all']['detect_fp'],
                 'block_fpr': r['legit_all']['block_fpr'],
                 'recall': r['phish_browser']['detect_recall'],
-                'recall_gain_pp': mc['recall_gain_pp'], 'mcnemar_p': mc['p'],
+                'recall_gain_pp': mc['recall_gain_pp'], 'mcnemar_p': mc['detected']['p'],
                 'c1_fpr': bool(c1), 'c2_block': bool(c2), 'c3_recall': bool(c3),
                 'pass': ok}
             if ok:
@@ -518,6 +518,16 @@ def write_report(s):
               "(`features.extract_features_onnx` / `preprocess_xgb`); arm rows score each cached "
               "`.pkl` through `benchmark_sampling.make_predictors`. Baseline and candidates are "
               "therefore both scored the way they would run in production/analysis.",
+              "- Cross-check: the v3.4 browser numbers reproduce the 25/25 real-world test pattern "
+              "(there: RF 0/25 recall, 0 FP; XGB 28.0% recall / 16.0% FPR; CatBoost 24.0% / 20.0%) "
+              "at 20x the sample size, and the batched scorer was re-verified against per-URL "
+              "`run_realworld_test.evaluate` scoring with an exact count match on the same "
+              "1.000 URL variants.",
+              "- Collection environment: Bitdefender real-time protection was active during "
+              "collection; individual fetches may have been blocked by its web filtering "
+              "(recorded as drops or non-answering entries, never silently dropped). Phishing "
+              "liveness (33/500 answered, 15 live) is therefore a lower bound; scoring is "
+              "URL-only, so headline metrics do not depend on liveness.",
               "- Phishing entries that no longer resolve are still scored (URL-only analysis); the "
               "live-only row reports the subset that answered when resolved.",
               "- The `all` arm is trained on the fit set (90% of the train pool), so it is close "

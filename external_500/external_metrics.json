@@ -1,0 +1,3487 @@
+{
+  "generated": "2026-10-10T14:36:01+00:00",
+  "harness_commit": "8a63af0",
+  "extension_version": "3.4",
+  "model_hashes": {
+    "rf": "625c9333151667c4\u2026",
+    "xgb": "4efd7ead699770a0\u2026",
+    "cb": "791a503e72426426\u2026"
+  },
+  "provenance": {
+    "legit_urls.csv": {
+      "sha256": "8a0829d0b08c8f29ec07a2d527e7631b2709c99b7174ed5ec833b26fdcc38dc6",
+      "rows": 1000
+    },
+    "phishing_urls.csv": {
+      "sha256": "af5f9f8b3721c9b32297405f2b99a3869bc7044da9b34ad5f051d1f2699545ea",
+      "rows": 500
+    },
+    "prefix_sensitivity.csv": {
+      "sha256": "ea0c5636a1584ef0b86a5a01d7290e6d25f9f11b808d08b830ed97904acdd58d",
+      "rows": 500
+    }
+  },
+  "thresholds": {
+    "detected": ">60",
+    "blocked": ">80",
+    "scale": "percent"
+  },
+  "counts": {
+    "legit_rows": 1000,
+    "legit_headline": 500,
+    "phishing_rows": 500,
+    "phishing_live": 15,
+    "phishing_seen_host": 2,
+    "phishing_free_hosting": 64,
+    "prefix_domains": 500
+  },
+  "training_overlap": {
+    "phishing_hosts_total": 500,
+    "phishing_hosts_seen_in_training": 2,
+    "hosts": [
+      "storage.googleapis.com",
+      "t.co"
+    ]
+  },
+  "ablation_config": {
+    "drop_empty_tokens": true,
+    "cb_iterations": 300,
+    "warnings": []
+  },
+  "results": {
+    "v3.4": {
+      "rf": {
+        "legit_headline": {
+          "n": 500,
+          "detect_fp": 2,
+          "detect_fpr": 0.4,
+          "block_fp": 0,
+          "block_fpr": 0.0
+        },
+        "legit_all": {
+          "n": 1000,
+          "detect_fp": 5,
+          "detect_fpr": 0.5,
+          "block_fp": 0,
+          "block_fpr": 0.0
+        },
+        "legit_landing": {
+          "n": 500,
+          "detect_fp": 1,
+          "detect_fpr": 0.2,
+          "block_fp": 0,
+          "block_fpr": 0.0
+        },
+        "legit_deep": {
+          "n": 500,
+          "detect_fp": 4,
+          "detect_fpr": 0.8,
+          "block_fp": 0,
+          "block_fpr": 0.0
+        },
+        "legit_by_band": {
+          "1-1k": {
+            "n": 200,
+            "detect_fp": 0,
+            "detect_fpr": 0.0,
+            "block_fp": 0,
+            "block_fpr": 0.0
+          },
+          "100k-500k": {
+            "n": 200,
+            "detect_fp": 1,
+            "detect_fpr": 0.5,
+            "block_fp": 0,
+            "block_fpr": 0.0
+          },
+          "10k-100k": {
+            "n": 200,
+            "detect_fp": 0,
+            "detect_fpr": 0.0,
+            "block_fp": 0,
+            "block_fpr": 0.0
+          },
+          "1k-10k": {
+            "n": 200,
+            "detect_fp": 0,
+            "detect_fpr": 0.0,
+            "block_fp": 0,
+            "block_fpr": 0.0
+          },
+          "500k-1M": {
+            "n": 200,
+            "detect_fp": 4,
+            "detect_fpr": 2.0,
+            "block_fp": 0,
+            "block_fpr": 0.0
+          }
+        },
+        "phish_browser": {
+          "n": 500,
+          "detect_tp": 5,
+          "detect_recall": 1.0,
+          "block_tp": 0,
+          "block_recall": 0.0
+        },
+        "phish_listed": {
+          "n": 500,
+          "detect_tp": 70,
+          "detect_recall": 14.0,
+          "block_tp": 3,
+          "block_recall": 0.6
+        },
+        "phish_live": {
+          "n": 15,
+          "detect_tp": 0,
+          "detect_recall": 0.0,
+          "block_tp": 0,
+          "block_recall": 0.0
+        },
+        "phish_seen_host": {
+          "n": 2,
+          "detect_tp": 0,
+          "detect_recall": 0.0,
+          "block_tp": 0,
+          "block_recall": 0.0
+        },
+        "phish_unseen_host": {
+          "n": 498,
+          "detect_tp": 5,
+          "detect_recall": 1.004,
+          "block_tp": 0,
+          "block_recall": 0.0
+        },
+        "phish_free_hosting": {
+          "n": 64,
+          "detect_tp": 0,
+          "detect_recall": 0.0,
+          "block_tp": 0,
+          "block_recall": 0.0
+        },
+        "prefix": {
+          "https": 1,
+          "www": 0,
+          "http": 499,
+          "n": 500,
+          "detect_flips_any": 499,
+          "detect_flips_https_http": 498,
+          "block_flips_any": 62
+        }
+      },
+      "xgb": {
+        "legit_headline": {
+          "n": 500,
+          "detect_fp": 129,
+          "detect_fpr": 25.8,
+          "block_fp": 100,
+          "block_fpr": 20.0
+        },
+        "legit_all": {
+          "n": 1000,
+          "detect_fp": 251,
+          "detect_fpr": 25.1,
+          "block_fp": 199,
+          "block_fpr": 19.9
+        },
+        "legit_landing": {
+          "n": 500,
+          "detect_fp": 77,
+          "detect_fpr": 15.4,
+          "block_fp": 65,
+          "block_fpr": 13.0
+        },
+        "legit_deep": {
+          "n": 500,
+          "detect_fp": 174,
+          "detect_fpr": 34.8,
+          "block_fp": 134,
+          "block_fpr": 26.8
+        },
+        "legit_by_band": {
+          "1-1k": {
+            "n": 200,
+            "detect_fp": 26,
+            "detect_fpr": 13.0,
+            "block_fp": 15,
+            "block_fpr": 7.5
+          },
+          "100k-500k": {
+            "n": 200,
+            "detect_fp": 60,
+            "detect_fpr": 30.0,
+            "block_fp": 44,
+            "block_fpr": 22.0
+          },
+          "10k-100k": {
+            "n": 200,
+            "detect_fp": 46,
+            "detect_fpr": 23.0,
+            "block_fp": 42,
+            "block_fpr": 21.0
+          },
+          "1k-10k": {
+            "n": 200,
+            "detect_fp": 50,
+            "detect_fpr": 25.0,
+            "block_fp": 46,
+            "block_fpr": 23.0
+          },
+          "500k-1M": {
+            "n": 200,
+            "detect_fp": 69,
+            "detect_fpr": 34.5,
+            "block_fp": 52,
+            "block_fpr": 26.0
+          }
+        },
+        "phish_browser": {
+          "n": 500,
+          "detect_tp": 153,
+          "detect_recall": 30.6,
+          "block_tp": 124,
+          "block_recall": 24.8
+        },
+        "phish_listed": {
+          "n": 500,
+          "detect_tp": 230,
+          "detect_recall": 46.0,
+          "block_tp": 203,
+          "block_recall": 40.6
+        },
+        "phish_live": {
+          "n": 15,
+          "detect_tp": 7,
+          "detect_recall": 46.667,
+          "block_tp": 6,
+          "block_recall": 40.0
+        },
+        "phish_seen_host": {
+          "n": 2,
+          "detect_tp": 1,
+          "detect_recall": 50.0,
+          "block_tp": 1,
+          "block_recall": 50.0
+        },
+        "phish_unseen_host": {
+          "n": 498,
+          "detect_tp": 152,
+          "detect_recall": 30.522,
+          "block_tp": 123,
+          "block_recall": 24.699
+        },
+        "phish_free_hosting": {
+          "n": 64,
+          "detect_tp": 32,
+          "detect_recall": 50.0,
+          "block_tp": 26,
+          "block_recall": 40.625
+        },
+        "prefix": {
+          "https": 134,
+          "www": 6,
+          "http": 500,
+          "n": 500,
+          "detect_flips_any": 494,
+          "detect_flips_https_http": 366,
+          "block_flips_any": 496
+        }
+      },
+      "cb": {
+        "legit_headline": {
+          "n": 500,
+          "detect_fp": 172,
+          "detect_fpr": 34.4,
+          "block_fp": 169,
+          "block_fpr": 33.8
+        },
+        "legit_all": {
+          "n": 1000,
+          "detect_fp": 343,
+          "detect_fpr": 34.3,
+          "block_fp": 335,
+          "block_fpr": 33.5
+        },
+        "legit_landing": {
+          "n": 500,
+          "detect_fp": 110,
+          "detect_fpr": 22.0,
+          "block_fp": 106,
+          "block_fpr": 21.2
+        },
+        "legit_deep": {
+          "n": 500,
+          "detect_fp": 233,
+          "detect_fpr": 46.6,
+          "block_fp": 229,
+          "block_fpr": 45.8
+        },
+        "legit_by_band": {
+          "1-1k": {
+            "n": 200,
+            "detect_fp": 35,
+            "detect_fpr": 17.5,
+            "block_fp": 34,
+            "block_fpr": 17.0
+          },
+          "100k-500k": {
+            "n": 200,
+            "detect_fp": 81,
+            "detect_fpr": 40.5,
+            "block_fp": 81,
+            "block_fpr": 40.5
+          },
+          "10k-100k": {
+            "n": 200,
+            "detect_fp": 66,
+            "detect_fpr": 33.0,
+            "block_fp": 62,
+            "block_fpr": 31.0
+          },
+          "1k-10k": {
+            "n": 200,
+            "detect_fp": 60,
+            "detect_fpr": 30.0,
+            "block_fp": 59,
+            "block_fpr": 29.5
+          },
+          "500k-1M": {
+            "n": 200,
+            "detect_fp": 101,
+            "detect_fpr": 50.5,
+            "block_fp": 99,
+            "block_fpr": 49.5
+          }
+        },
+        "phish_browser": {
+          "n": 500,
+          "detect_tp": 151,
+          "detect_recall": 30.2,
+          "block_tp": 139,
+          "block_recall": 27.8
+        },
+        "phish_listed": {
+          "n": 500,
+          "detect_tp": 246,
+          "detect_recall": 49.2,
+          "block_tp": 231,
+          "block_recall": 46.2
+        },
+        "phish_live": {
+          "n": 15,
+          "detect_tp": 6,
+          "detect_recall": 40.0,
+          "block_tp": 6,
+          "block_recall": 40.0
+        },
+        "phish_seen_host": {
+          "n": 2,
+          "detect_tp": 1,
+          "detect_recall": 50.0,
+          "block_tp": 1,
+          "block_recall": 50.0
+        },
+        "phish_unseen_host": {
+          "n": 498,
+          "detect_tp": 150,
+          "detect_recall": 30.12,
+          "block_tp": 138,
+          "block_recall": 27.711
+        },
+        "phish_free_hosting": {
+          "n": 64,
+          "detect_tp": 9,
+          "detect_recall": 14.062,
+          "block_tp": 5,
+          "block_recall": 7.812
+        },
+        "prefix": {
+          "https": 179,
+          "www": 2,
+          "http": 500,
+          "n": 500,
+          "detect_flips_any": 498,
+          "detect_flips_https_http": 321,
+          "block_flips_any": 500
+        }
+      }
+    },
+    "all": {
+      "rf": {
+        "legit_headline": {
+          "n": 500,
+          "detect_fp": 9,
+          "detect_fpr": 1.8,
+          "block_fp": 0,
+          "block_fpr": 0.0
+        },
+        "legit_all": {
+          "n": 1000,
+          "detect_fp": 20,
+          "detect_fpr": 2.0,
+          "block_fp": 0,
+          "block_fpr": 0.0
+        },
+        "legit_landing": {
+          "n": 500,
+          "detect_fp": 4,
+          "detect_fpr": 0.8,
+          "block_fp": 0,
+          "block_fpr": 0.0
+        },
+        "legit_deep": {
+          "n": 500,
+          "detect_fp": 16,
+          "detect_fpr": 3.2,
+          "block_fp": 0,
+          "block_fpr": 0.0
+        },
+        "legit_by_band": {
+          "1-1k": {
+            "n": 200,
+            "detect_fp": 1,
+            "detect_fpr": 0.5,
+            "block_fp": 0,
+            "block_fpr": 0.0
+          },
+          "100k-500k": {
+            "n": 200,
+            "detect_fp": 6,
+            "detect_fpr": 3.0,
+            "block_fp": 0,
+            "block_fpr": 0.0
+          },
+          "10k-100k": {
+            "n": 200,
+            "detect_fp": 3,
+            "detect_fpr": 1.5,
+            "block_fp": 0,
+            "block_fpr": 0.0
+          },
+          "1k-10k": {
+            "n": 200,
+            "detect_fp": 0,
+            "detect_fpr": 0.0,
+            "block_fp": 0,
+            "block_fpr": 0.0
+          },
+          "500k-1M": {
+            "n": 200,
+            "detect_fp": 10,
+            "detect_fpr": 5.0,
+            "block_fp": 0,
+            "block_fpr": 0.0
+          }
+        },
+        "phish_browser": {
+          "n": 500,
+          "detect_tp": 17,
+          "detect_recall": 3.4,
+          "block_tp": 1,
+          "block_recall": 0.2
+        },
+        "phish_listed": {
+          "n": 500,
+          "detect_tp": 113,
+          "detect_recall": 22.6,
+          "block_tp": 8,
+          "block_recall": 1.6
+        },
+        "phish_live": {
+          "n": 15,
+          "detect_tp": 1,
+          "detect_recall": 6.667,
+          "block_tp": 0,
+          "block_recall": 0.0
+        },
+        "phish_seen_host": {
+          "n": 2,
+          "detect_tp": 1,
+          "detect_recall": 50.0,
+          "block_tp": 0,
+          "block_recall": 0.0
+        },
+        "phish_unseen_host": {
+          "n": 498,
+          "detect_tp": 16,
+          "detect_recall": 3.213,
+          "block_tp": 1,
+          "block_recall": 0.201
+        },
+        "phish_free_hosting": {
+          "n": 64,
+          "detect_tp": 0,
+          "detect_recall": 0.0,
+          "block_tp": 0,
+          "block_recall": 0.0
+        },
+        "prefix": {
+          "https": 4,
+          "www": 0,
+          "http": 500,
+          "n": 500,
+          "detect_flips_any": 500,
+          "detect_flips_https_http": 496,
+          "block_flips_any": 486
+        }
+      },
+      "xgb": {
+        "legit_headline": {
+          "n": 500,
+          "detect_fp": 158,
+          "detect_fpr": 31.6,
+          "block_fp": 142,
+          "block_fpr": 28.4
+        },
+        "legit_all": {
+          "n": 1000,
+          "detect_fp": 304,
+          "detect_fpr": 30.4,
+          "block_fp": 277,
+          "block_fpr": 27.7
+        },
+        "legit_landing": {
+          "n": 500,
+          "detect_fp": 108,
+          "detect_fpr": 21.6,
+          "block_fp": 99,
+          "block_fpr": 19.8
+        },
+        "legit_deep": {
+          "n": 500,
+          "detect_fp": 196,
+          "detect_fpr": 39.2,
+          "block_fp": 178,
+          "block_fpr": 35.6
+        },
+        "legit_by_band": {
+          "1-1k": {
+            "n": 200,
+            "detect_fp": 30,
+            "detect_fpr": 15.0,
+            "block_fp": 24,
+            "block_fpr": 12.0
+          },
+          "100k-500k": {
+            "n": 200,
+            "detect_fp": 75,
+            "detect_fpr": 37.5,
+            "block_fp": 71,
+            "block_fpr": 35.5
+          },
+          "10k-100k": {
+            "n": 200,
+            "detect_fp": 55,
+            "detect_fpr": 27.5,
+            "block_fp": 51,
+            "block_fpr": 25.5
+          },
+          "1k-10k": {
+            "n": 200,
+            "detect_fp": 55,
+            "detect_fpr": 27.5,
+            "block_fp": 50,
+            "block_fpr": 25.0
+          },
+          "500k-1M": {
+            "n": 200,
+            "detect_fp": 89,
+            "detect_fpr": 44.5,
+            "block_fp": 81,
+            "block_fpr": 40.5
+          }
+        },
+        "phish_browser": {
+          "n": 500,
+          "detect_tp": 212,
+          "detect_recall": 42.4,
+          "block_tp": 174,
+          "block_recall": 34.8
+        },
+        "phish_listed": {
+          "n": 500,
+          "detect_tp": 292,
+          "detect_recall": 58.4,
+          "block_tp": 257,
+          "block_recall": 51.4
+        },
+        "phish_live": {
+          "n": 15,
+          "detect_tp": 6,
+          "detect_recall": 40.0,
+          "block_tp": 6,
+          "block_recall": 40.0
+        },
+        "phish_seen_host": {
+          "n": 2,
+          "detect_tp": 1,
+          "detect_recall": 50.0,
+          "block_tp": 1,
+          "block_recall": 50.0
+        },
+        "phish_unseen_host": {
+          "n": 498,
+          "detect_tp": 211,
+          "detect_recall": 42.369,
+          "block_tp": 173,
+          "block_recall": 34.739
+        },
+        "phish_free_hosting": {
+          "n": 64,
+          "detect_tp": 38,
+          "detect_recall": 59.375,
+          "block_tp": 31,
+          "block_recall": 48.438
+        },
+        "prefix": {
+          "https": 181,
+          "www": 7,
+          "http": 500,
+          "n": 500,
+          "detect_flips_any": 493,
+          "detect_flips_https_http": 319,
+          "block_flips_any": 495
+        }
+      },
+      "cb": {
+        "legit_headline": {
+          "n": 500,
+          "detect_fp": 172,
+          "detect_fpr": 34.4,
+          "block_fp": 169,
+          "block_fpr": 33.8
+        },
+        "legit_all": {
+          "n": 1000,
+          "detect_fp": 342,
+          "detect_fpr": 34.2,
+          "block_fp": 335,
+          "block_fpr": 33.5
+        },
+        "legit_landing": {
+          "n": 500,
+          "detect_fp": 107,
+          "detect_fpr": 21.4,
+          "block_fp": 106,
+          "block_fpr": 21.2
+        },
+        "legit_deep": {
+          "n": 500,
+          "detect_fp": 235,
+          "detect_fpr": 47.0,
+          "block_fp": 229,
+          "block_fpr": 45.8
+        },
+        "legit_by_band": {
+          "1-1k": {
+            "n": 200,
+            "detect_fp": 35,
+            "detect_fpr": 17.5,
+            "block_fp": 33,
+            "block_fpr": 16.5
+          },
+          "100k-500k": {
+            "n": 200,
+            "detect_fp": 82,
+            "detect_fpr": 41.0,
+            "block_fp": 81,
+            "block_fpr": 40.5
+          },
+          "10k-100k": {
+            "n": 200,
+            "detect_fp": 64,
+            "detect_fpr": 32.0,
+            "block_fp": 62,
+            "block_fpr": 31.0
+          },
+          "1k-10k": {
+            "n": 200,
+            "detect_fp": 60,
+            "detect_fpr": 30.0,
+            "block_fp": 59,
+            "block_fpr": 29.5
+          },
+          "500k-1M": {
+            "n": 200,
+            "detect_fp": 101,
+            "detect_fpr": 50.5,
+            "block_fp": 100,
+            "block_fpr": 50.0
+          }
+        },
+        "phish_browser": {
+          "n": 500,
+          "detect_tp": 147,
+          "detect_recall": 29.4,
+          "block_tp": 142,
+          "block_recall": 28.4
+        },
+        "phish_listed": {
+          "n": 500,
+          "detect_tp": 246,
+          "detect_recall": 49.2,
+          "block_tp": 233,
+          "block_recall": 46.6
+        },
+        "phish_live": {
+          "n": 15,
+          "detect_tp": 6,
+          "detect_recall": 40.0,
+          "block_tp": 6,
+          "block_recall": 40.0
+        },
+        "phish_seen_host": {
+          "n": 2,
+          "detect_tp": 1,
+          "detect_recall": 50.0,
+          "block_tp": 1,
+          "block_recall": 50.0
+        },
+        "phish_unseen_host": {
+          "n": 498,
+          "detect_tp": 146,
+          "detect_recall": 29.317,
+          "block_tp": 141,
+          "block_recall": 28.313
+        },
+        "phish_free_hosting": {
+          "n": 64,
+          "detect_tp": 5,
+          "detect_recall": 7.812,
+          "block_tp": 5,
+          "block_recall": 7.812
+        },
+        "prefix": {
+          "https": 178,
+          "www": 1,
+          "http": 500,
+          "n": 500,
+          "detect_flips_any": 499,
+          "detect_flips_https_http": 322,
+          "block_flips_any": 500
+        }
+      }
+    },
+    "no_scheme": {
+      "rf": {
+        "legit_headline": {
+          "n": 500,
+          "detect_fp": 126,
+          "detect_fpr": 25.2,
+          "block_fp": 0,
+          "block_fpr": 0.0
+        },
+        "legit_all": {
+          "n": 1000,
+          "detect_fp": 246,
+          "detect_fpr": 24.6,
+          "block_fp": 0,
+          "block_fpr": 0.0
+        },
+        "legit_landing": {
+          "n": 500,
+          "detect_fp": 109,
+          "detect_fpr": 21.8,
+          "block_fp": 0,
+          "block_fpr": 0.0
+        },
+        "legit_deep": {
+          "n": 500,
+          "detect_fp": 137,
+          "detect_fpr": 27.4,
+          "block_fp": 0,
+          "block_fpr": 0.0
+        },
+        "legit_by_band": {
+          "1-1k": {
+            "n": 200,
+            "detect_fp": 24,
+            "detect_fpr": 12.0,
+            "block_fp": 0,
+            "block_fpr": 0.0
+          },
+          "100k-500k": {
+            "n": 200,
+            "detect_fp": 58,
+            "detect_fpr": 29.0,
+            "block_fp": 0,
+            "block_fpr": 0.0
+          },
+          "10k-100k": {
+            "n": 200,
+            "detect_fp": 42,
+            "detect_fpr": 21.0,
+            "block_fp": 0,
+            "block_fpr": 0.0
+          },
+          "1k-10k": {
+            "n": 200,
+            "detect_fp": 41,
+            "detect_fpr": 20.5,
+            "block_fp": 0,
+            "block_fpr": 0.0
+          },
+          "500k-1M": {
+            "n": 200,
+            "detect_fp": 81,
+            "detect_fpr": 40.5,
+            "block_fp": 0,
+            "block_fpr": 0.0
+          }
+        },
+        "phish_browser": {
+          "n": 500,
+          "detect_tp": 133,
+          "detect_recall": 26.6,
+          "block_tp": 1,
+          "block_recall": 0.2
+        },
+        "phish_listed": {
+          "n": 500,
+          "detect_tp": 137,
+          "detect_recall": 27.4,
+          "block_tp": 1,
+          "block_recall": 0.2
+        },
+        "phish_live": {
+          "n": 15,
+          "detect_tp": 3,
+          "detect_recall": 20.0,
+          "block_tp": 0,
+          "block_recall": 0.0
+        },
+        "phish_seen_host": {
+          "n": 2,
+          "detect_tp": 0,
+          "detect_recall": 0.0,
+          "block_tp": 0,
+          "block_recall": 0.0
+        },
+        "phish_unseen_host": {
+          "n": 498,
+          "detect_tp": 133,
+          "detect_recall": 26.707,
+          "block_tp": 1,
+          "block_recall": 0.201
+        },
+        "phish_free_hosting": {
+          "n": 64,
+          "detect_tp": 0,
+          "detect_recall": 0.0,
+          "block_tp": 0,
+          "block_recall": 0.0
+        },
+        "prefix": {
+          "https": 190,
+          "www": 0,
+          "http": 190,
+          "n": 500,
+          "detect_flips_any": 190,
+          "detect_flips_https_http": 0,
+          "block_flips_any": 0
+        }
+      },
+      "xgb": {
+        "legit_headline": {
+          "n": 500,
+          "detect_fp": 248,
+          "detect_fpr": 49.6,
+          "block_fp": 209,
+          "block_fpr": 41.8
+        },
+        "legit_all": {
+          "n": 1000,
+          "detect_fp": 489,
+          "detect_fpr": 48.9,
+          "block_fp": 406,
+          "block_fpr": 40.6
+        },
+        "legit_landing": {
+          "n": 500,
+          "detect_fp": 252,
+          "detect_fpr": 50.4,
+          "block_fp": 192,
+          "block_fpr": 38.4
+        },
+        "legit_deep": {
+          "n": 500,
+          "detect_fp": 237,
+          "detect_fpr": 47.4,
+          "block_fp": 214,
+          "block_fpr": 42.8
+        },
+        "legit_by_band": {
+          "1-1k": {
+            "n": 200,
+            "detect_fp": 54,
+            "detect_fpr": 27.0,
+            "block_fp": 38,
+            "block_fpr": 19.0
+          },
+          "100k-500k": {
+            "n": 200,
+            "detect_fp": 118,
+            "detect_fpr": 59.0,
+            "block_fp": 99,
+            "block_fpr": 49.5
+          },
+          "10k-100k": {
+            "n": 200,
+            "detect_fp": 97,
+            "detect_fpr": 48.5,
+            "block_fp": 81,
+            "block_fpr": 40.5
+          },
+          "1k-10k": {
+            "n": 200,
+            "detect_fp": 85,
+            "detect_fpr": 42.5,
+            "block_fp": 68,
+            "block_fpr": 34.0
+          },
+          "500k-1M": {
+            "n": 200,
+            "detect_fp": 135,
+            "detect_fpr": 67.5,
+            "block_fp": 120,
+            "block_fpr": 60.0
+          }
+        },
+        "phish_browser": {
+          "n": 500,
+          "detect_tp": 312,
+          "detect_recall": 62.4,
+          "block_tp": 282,
+          "block_recall": 56.4
+        },
+        "phish_listed": {
+          "n": 500,
+          "detect_tp": 326,
+          "detect_recall": 65.2,
+          "block_tp": 288,
+          "block_recall": 57.6
+        },
+        "phish_live": {
+          "n": 15,
+          "detect_tp": 9,
+          "detect_recall": 60.0,
+          "block_tp": 9,
+          "block_recall": 60.0
+        },
+        "phish_seen_host": {
+          "n": 2,
+          "detect_tp": 1,
+          "detect_recall": 50.0,
+          "block_tp": 1,
+          "block_recall": 50.0
+        },
+        "phish_unseen_host": {
+          "n": 498,
+          "detect_tp": 311,
+          "detect_recall": 62.45,
+          "block_tp": 281,
+          "block_recall": 56.426
+        },
+        "phish_free_hosting": {
+          "n": 64,
+          "detect_tp": 42,
+          "detect_recall": 65.625,
+          "block_tp": 38,
+          "block_recall": 59.375
+        },
+        "prefix": {
+          "https": 456,
+          "www": 31,
+          "http": 456,
+          "n": 500,
+          "detect_flips_any": 425,
+          "detect_flips_https_http": 0,
+          "block_flips_any": 330
+        }
+      },
+      "cb": {
+        "legit_headline": {
+          "n": 500,
+          "detect_fp": 247,
+          "detect_fpr": 49.4,
+          "block_fp": 244,
+          "block_fpr": 48.8
+        },
+        "legit_all": {
+          "n": 1000,
+          "detect_fp": 495,
+          "detect_fpr": 49.5,
+          "block_fp": 483,
+          "block_fpr": 48.3
+        },
+        "legit_landing": {
+          "n": 500,
+          "detect_fp": 249,
+          "detect_fpr": 49.8,
+          "block_fp": 241,
+          "block_fpr": 48.2
+        },
+        "legit_deep": {
+          "n": 500,
+          "detect_fp": 246,
+          "detect_fpr": 49.2,
+          "block_fp": 242,
+          "block_fpr": 48.4
+        },
+        "legit_by_band": {
+          "1-1k": {
+            "n": 200,
+            "detect_fp": 54,
+            "detect_fpr": 27.0,
+            "block_fp": 49,
+            "block_fpr": 24.5
+          },
+          "100k-500k": {
+            "n": 200,
+            "detect_fp": 119,
+            "detect_fpr": 59.5,
+            "block_fp": 116,
+            "block_fpr": 58.0
+          },
+          "10k-100k": {
+            "n": 200,
+            "detect_fp": 96,
+            "detect_fpr": 48.0,
+            "block_fp": 94,
+            "block_fpr": 47.0
+          },
+          "1k-10k": {
+            "n": 200,
+            "detect_fp": 87,
+            "detect_fpr": 43.5,
+            "block_fp": 86,
+            "block_fpr": 43.0
+          },
+          "500k-1M": {
+            "n": 200,
+            "detect_fp": 139,
+            "detect_fpr": 69.5,
+            "block_fp": 138,
+            "block_fpr": 69.0
+          }
+        },
+        "phish_browser": {
+          "n": 500,
+          "detect_tp": 233,
+          "detect_recall": 46.6,
+          "block_tp": 200,
+          "block_recall": 40.0
+        },
+        "phish_listed": {
+          "n": 500,
+          "detect_tp": 295,
+          "detect_recall": 59.0,
+          "block_tp": 254,
+          "block_recall": 50.8
+        },
+        "phish_live": {
+          "n": 15,
+          "detect_tp": 6,
+          "detect_recall": 40.0,
+          "block_tp": 6,
+          "block_recall": 40.0
+        },
+        "phish_seen_host": {
+          "n": 2,
+          "detect_tp": 1,
+          "detect_recall": 50.0,
+          "block_tp": 1,
+          "block_recall": 50.0
+        },
+        "phish_unseen_host": {
+          "n": 498,
+          "detect_tp": 232,
+          "detect_recall": 46.586,
+          "block_tp": 199,
+          "block_recall": 39.96
+        },
+        "phish_free_hosting": {
+          "n": 64,
+          "detect_tp": 7,
+          "detect_recall": 10.938,
+          "block_tp": 6,
+          "block_recall": 9.375
+        },
+        "prefix": {
+          "https": 491,
+          "www": 9,
+          "http": 491,
+          "n": 500,
+          "detect_flips_any": 482,
+          "detect_flips_https_http": 0,
+          "block_flips_any": 470
+        }
+      }
+    },
+    "no_scheme_www": {
+      "rf": {
+        "legit_headline": {
+          "n": 500,
+          "detect_fp": 3,
+          "detect_fpr": 0.6,
+          "block_fp": 0,
+          "block_fpr": 0.0
+        },
+        "legit_all": {
+          "n": 1000,
+          "detect_fp": 5,
+          "detect_fpr": 0.5,
+          "block_fp": 0,
+          "block_fpr": 0.0
+        },
+        "legit_landing": {
+          "n": 500,
+          "detect_fp": 1,
+          "detect_fpr": 0.2,
+          "block_fp": 0,
+          "block_fpr": 0.0
+        },
+        "legit_deep": {
+          "n": 500,
+          "detect_fp": 4,
+          "detect_fpr": 0.8,
+          "block_fp": 0,
+          "block_fpr": 0.0
+        },
+        "legit_by_band": {
+          "1-1k": {
+            "n": 200,
+            "detect_fp": 1,
+            "detect_fpr": 0.5,
+            "block_fp": 0,
+            "block_fpr": 0.0
+          },
+          "100k-500k": {
+            "n": 200,
+            "detect_fp": 1,
+            "detect_fpr": 0.5,
+            "block_fp": 0,
+            "block_fpr": 0.0
+          },
+          "10k-100k": {
+            "n": 200,
+            "detect_fp": 1,
+            "detect_fpr": 0.5,
+            "block_fp": 0,
+            "block_fpr": 0.0
+          },
+          "1k-10k": {
+            "n": 200,
+            "detect_fp": 0,
+            "detect_fpr": 0.0,
+            "block_fp": 0,
+            "block_fpr": 0.0
+          },
+          "500k-1M": {
+            "n": 200,
+            "detect_fp": 2,
+            "detect_fpr": 1.0,
+            "block_fp": 0,
+            "block_fpr": 0.0
+          }
+        },
+        "phish_browser": {
+          "n": 500,
+          "detect_tp": 7,
+          "detect_recall": 1.4,
+          "block_tp": 1,
+          "block_recall": 0.2
+        },
+        "phish_listed": {
+          "n": 500,
+          "detect_tp": 7,
+          "detect_recall": 1.4,
+          "block_tp": 1,
+          "block_recall": 0.2
+        },
+        "phish_live": {
+          "n": 15,
+          "detect_tp": 0,
+          "detect_recall": 0.0,
+          "block_tp": 0,
+          "block_recall": 0.0
+        },
+        "phish_seen_host": {
+          "n": 2,
+          "detect_tp": 0,
+          "detect_recall": 0.0,
+          "block_tp": 0,
+          "block_recall": 0.0
+        },
+        "phish_unseen_host": {
+          "n": 498,
+          "detect_tp": 7,
+          "detect_recall": 1.406,
+          "block_tp": 1,
+          "block_recall": 0.201
+        },
+        "phish_free_hosting": {
+          "n": 64,
+          "detect_tp": 0,
+          "detect_recall": 0.0,
+          "block_tp": 0,
+          "block_recall": 0.0
+        },
+        "prefix": {
+          "https": 0,
+          "www": 0,
+          "http": 0,
+          "n": 500,
+          "detect_flips_any": 0,
+          "detect_flips_https_http": 0,
+          "block_flips_any": 0
+        }
+      },
+      "xgb": {
+        "legit_headline": {
+          "n": 500,
+          "detect_fp": 97,
+          "detect_fpr": 19.4,
+          "block_fp": 54,
+          "block_fpr": 10.8
+        },
+        "legit_all": {
+          "n": 1000,
+          "detect_fp": 180,
+          "detect_fpr": 18.0,
+          "block_fp": 111,
+          "block_fpr": 11.1
+        },
+        "legit_landing": {
+          "n": 500,
+          "detect_fp": 65,
+          "detect_fpr": 13.0,
+          "block_fp": 37,
+          "block_fpr": 7.4
+        },
+        "legit_deep": {
+          "n": 500,
+          "detect_fp": 115,
+          "detect_fpr": 23.0,
+          "block_fp": 74,
+          "block_fpr": 14.8
+        },
+        "legit_by_band": {
+          "1-1k": {
+            "n": 200,
+            "detect_fp": 29,
+            "detect_fpr": 14.5,
+            "block_fp": 16,
+            "block_fpr": 8.0
+          },
+          "100k-500k": {
+            "n": 200,
+            "detect_fp": 34,
+            "detect_fpr": 17.0,
+            "block_fp": 24,
+            "block_fpr": 12.0
+          },
+          "10k-100k": {
+            "n": 200,
+            "detect_fp": 42,
+            "detect_fpr": 21.0,
+            "block_fp": 21,
+            "block_fpr": 10.5
+          },
+          "1k-10k": {
+            "n": 200,
+            "detect_fp": 21,
+            "detect_fpr": 10.5,
+            "block_fp": 16,
+            "block_fpr": 8.0
+          },
+          "500k-1M": {
+            "n": 200,
+            "detect_fp": 54,
+            "detect_fpr": 27.0,
+            "block_fp": 34,
+            "block_fpr": 17.0
+          }
+        },
+        "phish_browser": {
+          "n": 500,
+          "detect_tp": 284,
+          "detect_recall": 56.8,
+          "block_tp": 211,
+          "block_recall": 42.2
+        },
+        "phish_listed": {
+          "n": 500,
+          "detect_tp": 293,
+          "detect_recall": 58.6,
+          "block_tp": 219,
+          "block_recall": 43.8
+        },
+        "phish_live": {
+          "n": 15,
+          "detect_tp": 9,
+          "detect_recall": 60.0,
+          "block_tp": 7,
+          "block_recall": 46.667
+        },
+        "phish_seen_host": {
+          "n": 2,
+          "detect_tp": 1,
+          "detect_recall": 50.0,
+          "block_tp": 1,
+          "block_recall": 50.0
+        },
+        "phish_unseen_host": {
+          "n": 498,
+          "detect_tp": 283,
+          "detect_recall": 56.827,
+          "block_tp": 210,
+          "block_recall": 42.169
+        },
+        "phish_free_hosting": {
+          "n": 64,
+          "detect_tp": 39,
+          "detect_recall": 60.938,
+          "block_tp": 35,
+          "block_recall": 54.688
+        },
+        "prefix": {
+          "https": 61,
+          "www": 61,
+          "http": 61,
+          "n": 500,
+          "detect_flips_any": 0,
+          "detect_flips_https_http": 0,
+          "block_flips_any": 0
+        }
+      },
+      "cb": {
+        "legit_headline": {
+          "n": 500,
+          "detect_fp": 60,
+          "detect_fpr": 12.0,
+          "block_fp": 28,
+          "block_fpr": 5.6
+        },
+        "legit_all": {
+          "n": 1000,
+          "detect_fp": 115,
+          "detect_fpr": 11.5,
+          "block_fp": 55,
+          "block_fpr": 5.5
+        },
+        "legit_landing": {
+          "n": 500,
+          "detect_fp": 45,
+          "detect_fpr": 9.0,
+          "block_fp": 20,
+          "block_fpr": 4.0
+        },
+        "legit_deep": {
+          "n": 500,
+          "detect_fp": 70,
+          "detect_fpr": 14.0,
+          "block_fp": 35,
+          "block_fpr": 7.0
+        },
+        "legit_by_band": {
+          "1-1k": {
+            "n": 200,
+            "detect_fp": 16,
+            "detect_fpr": 8.0,
+            "block_fp": 8,
+            "block_fpr": 4.0
+          },
+          "100k-500k": {
+            "n": 200,
+            "detect_fp": 31,
+            "detect_fpr": 15.5,
+            "block_fp": 17,
+            "block_fpr": 8.5
+          },
+          "10k-100k": {
+            "n": 200,
+            "detect_fp": 23,
+            "detect_fpr": 11.5,
+            "block_fp": 8,
+            "block_fpr": 4.0
+          },
+          "1k-10k": {
+            "n": 200,
+            "detect_fp": 13,
+            "detect_fpr": 6.5,
+            "block_fp": 5,
+            "block_fpr": 2.5
+          },
+          "500k-1M": {
+            "n": 200,
+            "detect_fp": 32,
+            "detect_fpr": 16.0,
+            "block_fp": 17,
+            "block_fpr": 8.5
+          }
+        },
+        "phish_browser": {
+          "n": 500,
+          "detect_tp": 161,
+          "detect_recall": 32.2,
+          "block_tp": 84,
+          "block_recall": 16.8
+        },
+        "phish_listed": {
+          "n": 500,
+          "detect_tp": 227,
+          "detect_recall": 45.4,
+          "block_tp": 144,
+          "block_recall": 28.8
+        },
+        "phish_live": {
+          "n": 15,
+          "detect_tp": 5,
+          "detect_recall": 33.333,
+          "block_tp": 2,
+          "block_recall": 13.333
+        },
+        "phish_seen_host": {
+          "n": 2,
+          "detect_tp": 1,
+          "detect_recall": 50.0,
+          "block_tp": 0,
+          "block_recall": 0.0
+        },
+        "phish_unseen_host": {
+          "n": 498,
+          "detect_tp": 160,
+          "detect_recall": 32.129,
+          "block_tp": 84,
+          "block_recall": 16.867
+        },
+        "phish_free_hosting": {
+          "n": 64,
+          "detect_tp": 16,
+          "detect_recall": 25.0,
+          "block_tp": 4,
+          "block_recall": 6.25
+        },
+        "prefix": {
+          "https": 40,
+          "www": 40,
+          "http": 40,
+          "n": 500,
+          "detect_flips_any": 0,
+          "detect_flips_https_http": 0,
+          "block_flips_any": 0
+        }
+      }
+    },
+    "tfidf_only": {
+      "rf": {
+        "legit_headline": {
+          "n": 500,
+          "detect_fp": 0,
+          "detect_fpr": 0.0,
+          "block_fp": 0,
+          "block_fpr": 0.0
+        },
+        "legit_all": {
+          "n": 1000,
+          "detect_fp": 0,
+          "detect_fpr": 0.0,
+          "block_fp": 0,
+          "block_fpr": 0.0
+        },
+        "legit_landing": {
+          "n": 500,
+          "detect_fp": 0,
+          "detect_fpr": 0.0,
+          "block_fp": 0,
+          "block_fpr": 0.0
+        },
+        "legit_deep": {
+          "n": 500,
+          "detect_fp": 0,
+          "detect_fpr": 0.0,
+          "block_fp": 0,
+          "block_fpr": 0.0
+        },
+        "legit_by_band": {
+          "1-1k": {
+            "n": 200,
+            "detect_fp": 0,
+            "detect_fpr": 0.0,
+            "block_fp": 0,
+            "block_fpr": 0.0
+          },
+          "100k-500k": {
+            "n": 200,
+            "detect_fp": 0,
+            "detect_fpr": 0.0,
+            "block_fp": 0,
+            "block_fpr": 0.0
+          },
+          "10k-100k": {
+            "n": 200,
+            "detect_fp": 0,
+            "detect_fpr": 0.0,
+            "block_fp": 0,
+            "block_fpr": 0.0
+          },
+          "1k-10k": {
+            "n": 200,
+            "detect_fp": 0,
+            "detect_fpr": 0.0,
+            "block_fp": 0,
+            "block_fpr": 0.0
+          },
+          "500k-1M": {
+            "n": 200,
+            "detect_fp": 0,
+            "detect_fpr": 0.0,
+            "block_fp": 0,
+            "block_fpr": 0.0
+          }
+        },
+        "phish_browser": {
+          "n": 500,
+          "detect_tp": 0,
+          "detect_recall": 0.0,
+          "block_tp": 0,
+          "block_recall": 0.0
+        },
+        "phish_listed": {
+          "n": 500,
+          "detect_tp": 98,
+          "detect_recall": 19.6,
+          "block_tp": 1,
+          "block_recall": 0.2
+        },
+        "phish_live": {
+          "n": 15,
+          "detect_tp": 0,
+          "detect_recall": 0.0,
+          "block_tp": 0,
+          "block_recall": 0.0
+        },
+        "phish_seen_host": {
+          "n": 2,
+          "detect_tp": 0,
+          "detect_recall": 0.0,
+          "block_tp": 0,
+          "block_recall": 0.0
+        },
+        "phish_unseen_host": {
+          "n": 498,
+          "detect_tp": 0,
+          "detect_recall": 0.0,
+          "block_tp": 0,
+          "block_recall": 0.0
+        },
+        "phish_free_hosting": {
+          "n": 64,
+          "detect_tp": 0,
+          "detect_recall": 0.0,
+          "block_tp": 0,
+          "block_recall": 0.0
+        },
+        "prefix": {
+          "https": 0,
+          "www": 0,
+          "http": 500,
+          "n": 500,
+          "detect_flips_any": 500,
+          "detect_flips_https_http": 500,
+          "block_flips_any": 0
+        }
+      },
+      "xgb": {
+        "legit_headline": {
+          "n": 500,
+          "detect_fp": 17,
+          "detect_fpr": 3.4,
+          "block_fp": 15,
+          "block_fpr": 3.0
+        },
+        "legit_all": {
+          "n": 1000,
+          "detect_fp": 35,
+          "detect_fpr": 3.5,
+          "block_fp": 28,
+          "block_fpr": 2.8
+        },
+        "legit_landing": {
+          "n": 500,
+          "detect_fp": 5,
+          "detect_fpr": 1.0,
+          "block_fp": 5,
+          "block_fpr": 1.0
+        },
+        "legit_deep": {
+          "n": 500,
+          "detect_fp": 30,
+          "detect_fpr": 6.0,
+          "block_fp": 23,
+          "block_fpr": 4.6
+        },
+        "legit_by_band": {
+          "1-1k": {
+            "n": 200,
+            "detect_fp": 5,
+            "detect_fpr": 2.5,
+            "block_fp": 4,
+            "block_fpr": 2.0
+          },
+          "100k-500k": {
+            "n": 200,
+            "detect_fp": 6,
+            "detect_fpr": 3.0,
+            "block_fp": 4,
+            "block_fpr": 2.0
+          },
+          "10k-100k": {
+            "n": 200,
+            "detect_fp": 8,
+            "detect_fpr": 4.0,
+            "block_fp": 7,
+            "block_fpr": 3.5
+          },
+          "1k-10k": {
+            "n": 200,
+            "detect_fp": 5,
+            "detect_fpr": 2.5,
+            "block_fp": 3,
+            "block_fpr": 1.5
+          },
+          "500k-1M": {
+            "n": 200,
+            "detect_fp": 11,
+            "detect_fpr": 5.5,
+            "block_fp": 10,
+            "block_fpr": 5.0
+          }
+        },
+        "phish_browser": {
+          "n": 500,
+          "detect_tp": 91,
+          "detect_recall": 18.2,
+          "block_tp": 55,
+          "block_recall": 11.0
+        },
+        "phish_listed": {
+          "n": 500,
+          "detect_tp": 176,
+          "detect_recall": 35.2,
+          "block_tp": 143,
+          "block_recall": 28.6
+        },
+        "phish_live": {
+          "n": 15,
+          "detect_tp": 3,
+          "detect_recall": 20.0,
+          "block_tp": 2,
+          "block_recall": 13.333
+        },
+        "phish_seen_host": {
+          "n": 2,
+          "detect_tp": 1,
+          "detect_recall": 50.0,
+          "block_tp": 1,
+          "block_recall": 50.0
+        },
+        "phish_unseen_host": {
+          "n": 498,
+          "detect_tp": 90,
+          "detect_recall": 18.072,
+          "block_tp": 54,
+          "block_recall": 10.843
+        },
+        "phish_free_hosting": {
+          "n": 64,
+          "detect_tp": 33,
+          "detect_recall": 51.562,
+          "block_tp": 5,
+          "block_recall": 7.812
+        },
+        "prefix": {
+          "https": 2,
+          "www": 2,
+          "http": 500,
+          "n": 500,
+          "detect_flips_any": 498,
+          "detect_flips_https_http": 498,
+          "block_flips_any": 497
+        }
+      },
+      "cb": {
+        "legit_headline": {
+          "n": 500,
+          "detect_fp": 7,
+          "detect_fpr": 1.4,
+          "block_fp": 3,
+          "block_fpr": 0.6
+        },
+        "legit_all": {
+          "n": 1000,
+          "detect_fp": 13,
+          "detect_fpr": 1.3,
+          "block_fp": 6,
+          "block_fpr": 0.6
+        },
+        "legit_landing": {
+          "n": 500,
+          "detect_fp": 3,
+          "detect_fpr": 0.6,
+          "block_fp": 2,
+          "block_fpr": 0.4
+        },
+        "legit_deep": {
+          "n": 500,
+          "detect_fp": 10,
+          "detect_fpr": 2.0,
+          "block_fp": 4,
+          "block_fpr": 0.8
+        },
+        "legit_by_band": {
+          "1-1k": {
+            "n": 200,
+            "detect_fp": 3,
+            "detect_fpr": 1.5,
+            "block_fp": 2,
+            "block_fpr": 1.0
+          },
+          "100k-500k": {
+            "n": 200,
+            "detect_fp": 3,
+            "detect_fpr": 1.5,
+            "block_fp": 0,
+            "block_fpr": 0.0
+          },
+          "10k-100k": {
+            "n": 200,
+            "detect_fp": 2,
+            "detect_fpr": 1.0,
+            "block_fp": 2,
+            "block_fpr": 1.0
+          },
+          "1k-10k": {
+            "n": 200,
+            "detect_fp": 0,
+            "detect_fpr": 0.0,
+            "block_fp": 0,
+            "block_fpr": 0.0
+          },
+          "500k-1M": {
+            "n": 200,
+            "detect_fp": 5,
+            "detect_fpr": 2.5,
+            "block_fp": 2,
+            "block_fpr": 1.0
+          }
+        },
+        "phish_browser": {
+          "n": 500,
+          "detect_tp": 22,
+          "detect_recall": 4.4,
+          "block_tp": 12,
+          "block_recall": 2.4
+        },
+        "phish_listed": {
+          "n": 500,
+          "detect_tp": 117,
+          "detect_recall": 23.4,
+          "block_tp": 108,
+          "block_recall": 21.6
+        },
+        "phish_live": {
+          "n": 15,
+          "detect_tp": 2,
+          "detect_recall": 13.333,
+          "block_tp": 2,
+          "block_recall": 13.333
+        },
+        "phish_seen_host": {
+          "n": 2,
+          "detect_tp": 1,
+          "detect_recall": 50.0,
+          "block_tp": 1,
+          "block_recall": 50.0
+        },
+        "phish_unseen_host": {
+          "n": 498,
+          "detect_tp": 21,
+          "detect_recall": 4.217,
+          "block_tp": 11,
+          "block_recall": 2.209
+        },
+        "phish_free_hosting": {
+          "n": 64,
+          "detect_tp": 3,
+          "detect_recall": 4.688,
+          "block_tp": 3,
+          "block_recall": 4.688
+        },
+        "prefix": {
+          "https": 2,
+          "www": 2,
+          "http": 500,
+          "n": 500,
+          "detect_flips_any": 498,
+          "detect_flips_https_http": 498,
+          "block_flips_any": 499
+        }
+      }
+    },
+    "struct_only": {
+      "rf": {
+        "legit_headline": {
+          "n": 500,
+          "detect_fp": 236,
+          "detect_fpr": 47.2,
+          "block_fp": 206,
+          "block_fpr": 41.2
+        },
+        "legit_all": {
+          "n": 1000,
+          "detect_fp": 475,
+          "detect_fpr": 47.5,
+          "block_fp": 416,
+          "block_fpr": 41.6
+        },
+        "legit_landing": {
+          "n": 500,
+          "detect_fp": 244,
+          "detect_fpr": 48.8,
+          "block_fp": 185,
+          "block_fpr": 37.0
+        },
+        "legit_deep": {
+          "n": 500,
+          "detect_fp": 231,
+          "detect_fpr": 46.2,
+          "block_fp": 231,
+          "block_fpr": 46.2
+        },
+        "legit_by_band": {
+          "1-1k": {
+            "n": 200,
+            "detect_fp": 48,
+            "detect_fpr": 24.0,
+            "block_fp": 41,
+            "block_fpr": 20.5
+          },
+          "100k-500k": {
+            "n": 200,
+            "detect_fp": 112,
+            "detect_fpr": 56.0,
+            "block_fp": 94,
+            "block_fpr": 47.0
+          },
+          "10k-100k": {
+            "n": 200,
+            "detect_fp": 93,
+            "detect_fpr": 46.5,
+            "block_fp": 82,
+            "block_fpr": 41.0
+          },
+          "1k-10k": {
+            "n": 200,
+            "detect_fp": 87,
+            "detect_fpr": 43.5,
+            "block_fp": 75,
+            "block_fpr": 37.5
+          },
+          "500k-1M": {
+            "n": 200,
+            "detect_fp": 135,
+            "detect_fpr": 67.5,
+            "block_fp": 124,
+            "block_fpr": 62.0
+          }
+        },
+        "phish_browser": {
+          "n": 500,
+          "detect_tp": 184,
+          "detect_recall": 36.8,
+          "block_tp": 169,
+          "block_recall": 33.8
+        },
+        "phish_listed": {
+          "n": 500,
+          "detect_tp": 193,
+          "detect_recall": 38.6,
+          "block_tp": 170,
+          "block_recall": 34.0
+        },
+        "phish_live": {
+          "n": 15,
+          "detect_tp": 6,
+          "detect_recall": 40.0,
+          "block_tp": 5,
+          "block_recall": 33.333
+        },
+        "phish_seen_host": {
+          "n": 2,
+          "detect_tp": 1,
+          "detect_recall": 50.0,
+          "block_tp": 1,
+          "block_recall": 50.0
+        },
+        "phish_unseen_host": {
+          "n": 498,
+          "detect_tp": 183,
+          "detect_recall": 36.747,
+          "block_tp": 168,
+          "block_recall": 33.735
+        },
+        "phish_free_hosting": {
+          "n": 64,
+          "detect_tp": 2,
+          "detect_recall": 3.125,
+          "block_tp": 2,
+          "block_recall": 3.125
+        },
+        "prefix": {
+          "https": 488,
+          "www": 4,
+          "http": 487,
+          "n": 500,
+          "detect_flips_any": 484,
+          "detect_flips_https_http": 1,
+          "block_flips_any": 424
+        }
+      },
+      "xgb": {
+        "legit_headline": {
+          "n": 500,
+          "detect_fp": 241,
+          "detect_fpr": 48.2,
+          "block_fp": 201,
+          "block_fpr": 40.2
+        },
+        "legit_all": {
+          "n": 1000,
+          "detect_fp": 481,
+          "detect_fpr": 48.1,
+          "block_fp": 408,
+          "block_fpr": 40.8
+        },
+        "legit_landing": {
+          "n": 500,
+          "detect_fp": 243,
+          "detect_fpr": 48.6,
+          "block_fp": 176,
+          "block_fpr": 35.2
+        },
+        "legit_deep": {
+          "n": 500,
+          "detect_fp": 238,
+          "detect_fpr": 47.6,
+          "block_fp": 232,
+          "block_fpr": 46.4
+        },
+        "legit_by_band": {
+          "1-1k": {
+            "n": 200,
+            "detect_fp": 51,
+            "detect_fpr": 25.5,
+            "block_fp": 39,
+            "block_fpr": 19.5
+          },
+          "100k-500k": {
+            "n": 200,
+            "detect_fp": 114,
+            "detect_fpr": 57.0,
+            "block_fp": 92,
+            "block_fpr": 46.0
+          },
+          "10k-100k": {
+            "n": 200,
+            "detect_fp": 95,
+            "detect_fpr": 47.5,
+            "block_fp": 82,
+            "block_fpr": 41.0
+          },
+          "1k-10k": {
+            "n": 200,
+            "detect_fp": 87,
+            "detect_fpr": 43.5,
+            "block_fp": 77,
+            "block_fpr": 38.5
+          },
+          "500k-1M": {
+            "n": 200,
+            "detect_fp": 134,
+            "detect_fpr": 67.0,
+            "block_fp": 118,
+            "block_fpr": 59.0
+          }
+        },
+        "phish_browser": {
+          "n": 500,
+          "detect_tp": 195,
+          "detect_recall": 39.0,
+          "block_tp": 179,
+          "block_recall": 35.8
+        },
+        "phish_listed": {
+          "n": 500,
+          "detect_tp": 252,
+          "detect_recall": 50.4,
+          "block_tp": 210,
+          "block_recall": 42.0
+        },
+        "phish_live": {
+          "n": 15,
+          "detect_tp": 6,
+          "detect_recall": 40.0,
+          "block_tp": 6,
+          "block_recall": 40.0
+        },
+        "phish_seen_host": {
+          "n": 2,
+          "detect_tp": 1,
+          "detect_recall": 50.0,
+          "block_tp": 1,
+          "block_recall": 50.0
+        },
+        "phish_unseen_host": {
+          "n": 498,
+          "detect_tp": 194,
+          "detect_recall": 38.956,
+          "block_tp": 178,
+          "block_recall": 35.743
+        },
+        "phish_free_hosting": {
+          "n": 64,
+          "detect_tp": 7,
+          "detect_recall": 10.938,
+          "block_tp": 6,
+          "block_recall": 9.375
+        },
+        "prefix": {
+          "https": 487,
+          "www": 11,
+          "http": 487,
+          "n": 500,
+          "detect_flips_any": 477,
+          "detect_flips_https_http": 2,
+          "block_flips_any": 408
+        }
+      },
+      "cb": {
+        "legit_headline": {
+          "n": 500,
+          "detect_fp": 239,
+          "detect_fpr": 47.8,
+          "block_fp": 217,
+          "block_fpr": 43.4
+        },
+        "legit_all": {
+          "n": 1000,
+          "detect_fp": 480,
+          "detect_fpr": 48.0,
+          "block_fp": 437,
+          "block_fpr": 43.7
+        },
+        "legit_landing": {
+          "n": 500,
+          "detect_fp": 245,
+          "detect_fpr": 49.0,
+          "block_fp": 206,
+          "block_fpr": 41.2
+        },
+        "legit_deep": {
+          "n": 500,
+          "detect_fp": 235,
+          "detect_fpr": 47.0,
+          "block_fp": 231,
+          "block_fpr": 46.2
+        },
+        "legit_by_band": {
+          "1-1k": {
+            "n": 200,
+            "detect_fp": 51,
+            "detect_fpr": 25.5,
+            "block_fp": 40,
+            "block_fpr": 20.0
+          },
+          "100k-500k": {
+            "n": 200,
+            "detect_fp": 113,
+            "detect_fpr": 56.5,
+            "block_fp": 101,
+            "block_fpr": 50.5
+          },
+          "10k-100k": {
+            "n": 200,
+            "detect_fp": 93,
+            "detect_fpr": 46.5,
+            "block_fp": 87,
+            "block_fpr": 43.5
+          },
+          "1k-10k": {
+            "n": 200,
+            "detect_fp": 88,
+            "detect_fpr": 44.0,
+            "block_fp": 87,
+            "block_fpr": 43.5
+          },
+          "500k-1M": {
+            "n": 200,
+            "detect_fp": 135,
+            "detect_fpr": 67.5,
+            "block_fp": 122,
+            "block_fpr": 61.0
+          }
+        },
+        "phish_browser": {
+          "n": 500,
+          "detect_tp": 186,
+          "detect_recall": 37.2,
+          "block_tp": 167,
+          "block_recall": 33.4
+        },
+        "phish_listed": {
+          "n": 500,
+          "detect_tp": 276,
+          "detect_recall": 55.2,
+          "block_tp": 252,
+          "block_recall": 50.4
+        },
+        "phish_live": {
+          "n": 15,
+          "detect_tp": 6,
+          "detect_recall": 40.0,
+          "block_tp": 5,
+          "block_recall": 33.333
+        },
+        "phish_seen_host": {
+          "n": 2,
+          "detect_tp": 1,
+          "detect_recall": 50.0,
+          "block_tp": 1,
+          "block_recall": 50.0
+        },
+        "phish_unseen_host": {
+          "n": 498,
+          "detect_tp": 185,
+          "detect_recall": 37.149,
+          "block_tp": 166,
+          "block_recall": 33.333
+        },
+        "phish_free_hosting": {
+          "n": 64,
+          "detect_tp": 7,
+          "detect_recall": 10.938,
+          "block_tp": 3,
+          "block_recall": 4.688
+        },
+        "prefix": {
+          "https": 488,
+          "www": 11,
+          "http": 488,
+          "n": 500,
+          "detect_flips_any": 477,
+          "detect_flips_https_http": 0,
+          "block_flips_any": 440
+        }
+      }
+    },
+    "tfidf_only_no_scheme_www": {
+      "rf": {
+        "legit_headline": {
+          "n": 500,
+          "detect_fp": 3,
+          "detect_fpr": 0.6,
+          "block_fp": 0,
+          "block_fpr": 0.0
+        },
+        "legit_all": {
+          "n": 1000,
+          "detect_fp": 4,
+          "detect_fpr": 0.4,
+          "block_fp": 0,
+          "block_fpr": 0.0
+        },
+        "legit_landing": {
+          "n": 500,
+          "detect_fp": 1,
+          "detect_fpr": 0.2,
+          "block_fp": 0,
+          "block_fpr": 0.0
+        },
+        "legit_deep": {
+          "n": 500,
+          "detect_fp": 3,
+          "detect_fpr": 0.6,
+          "block_fp": 0,
+          "block_fpr": 0.0
+        },
+        "legit_by_band": {
+          "1-1k": {
+            "n": 200,
+            "detect_fp": 1,
+            "detect_fpr": 0.5,
+            "block_fp": 0,
+            "block_fpr": 0.0
+          },
+          "100k-500k": {
+            "n": 200,
+            "detect_fp": 0,
+            "detect_fpr": 0.0,
+            "block_fp": 0,
+            "block_fpr": 0.0
+          },
+          "10k-100k": {
+            "n": 200,
+            "detect_fp": 1,
+            "detect_fpr": 0.5,
+            "block_fp": 0,
+            "block_fpr": 0.0
+          },
+          "1k-10k": {
+            "n": 200,
+            "detect_fp": 0,
+            "detect_fpr": 0.0,
+            "block_fp": 0,
+            "block_fpr": 0.0
+          },
+          "500k-1M": {
+            "n": 200,
+            "detect_fp": 2,
+            "detect_fpr": 1.0,
+            "block_fp": 0,
+            "block_fpr": 0.0
+          }
+        },
+        "phish_browser": {
+          "n": 500,
+          "detect_tp": 4,
+          "detect_recall": 0.8,
+          "block_tp": 0,
+          "block_recall": 0.0
+        },
+        "phish_listed": {
+          "n": 500,
+          "detect_tp": 4,
+          "detect_recall": 0.8,
+          "block_tp": 0,
+          "block_recall": 0.0
+        },
+        "phish_live": {
+          "n": 15,
+          "detect_tp": 0,
+          "detect_recall": 0.0,
+          "block_tp": 0,
+          "block_recall": 0.0
+        },
+        "phish_seen_host": {
+          "n": 2,
+          "detect_tp": 0,
+          "detect_recall": 0.0,
+          "block_tp": 0,
+          "block_recall": 0.0
+        },
+        "phish_unseen_host": {
+          "n": 498,
+          "detect_tp": 4,
+          "detect_recall": 0.803,
+          "block_tp": 0,
+          "block_recall": 0.0
+        },
+        "phish_free_hosting": {
+          "n": 64,
+          "detect_tp": 0,
+          "detect_recall": 0.0,
+          "block_tp": 0,
+          "block_recall": 0.0
+        },
+        "prefix": {
+          "https": 0,
+          "www": 0,
+          "http": 0,
+          "n": 500,
+          "detect_flips_any": 0,
+          "detect_flips_https_http": 0,
+          "block_flips_any": 0
+        }
+      },
+      "xgb": {
+        "legit_headline": {
+          "n": 500,
+          "detect_fp": 113,
+          "detect_fpr": 22.6,
+          "block_fp": 64,
+          "block_fpr": 12.8
+        },
+        "legit_all": {
+          "n": 1000,
+          "detect_fp": 223,
+          "detect_fpr": 22.3,
+          "block_fp": 123,
+          "block_fpr": 12.3
+        },
+        "legit_landing": {
+          "n": 500,
+          "detect_fp": 97,
+          "detect_fpr": 19.4,
+          "block_fp": 41,
+          "block_fpr": 8.2
+        },
+        "legit_deep": {
+          "n": 500,
+          "detect_fp": 126,
+          "detect_fpr": 25.2,
+          "block_fp": 82,
+          "block_fpr": 16.4
+        },
+        "legit_by_band": {
+          "1-1k": {
+            "n": 200,
+            "detect_fp": 28,
+            "detect_fpr": 14.0,
+            "block_fp": 15,
+            "block_fpr": 7.5
+          },
+          "100k-500k": {
+            "n": 200,
+            "detect_fp": 51,
+            "detect_fpr": 25.5,
+            "block_fp": 27,
+            "block_fpr": 13.5
+          },
+          "10k-100k": {
+            "n": 200,
+            "detect_fp": 50,
+            "detect_fpr": 25.0,
+            "block_fp": 27,
+            "block_fpr": 13.5
+          },
+          "1k-10k": {
+            "n": 200,
+            "detect_fp": 39,
+            "detect_fpr": 19.5,
+            "block_fp": 23,
+            "block_fpr": 11.5
+          },
+          "500k-1M": {
+            "n": 200,
+            "detect_fp": 55,
+            "detect_fpr": 27.5,
+            "block_fp": 31,
+            "block_fpr": 15.5
+          }
+        },
+        "phish_browser": {
+          "n": 500,
+          "detect_tp": 226,
+          "detect_recall": 45.2,
+          "block_tp": 182,
+          "block_recall": 36.4
+        },
+        "phish_listed": {
+          "n": 500,
+          "detect_tp": 224,
+          "detect_recall": 44.8,
+          "block_tp": 180,
+          "block_recall": 36.0
+        },
+        "phish_live": {
+          "n": 15,
+          "detect_tp": 7,
+          "detect_recall": 46.667,
+          "block_tp": 6,
+          "block_recall": 40.0
+        },
+        "phish_seen_host": {
+          "n": 2,
+          "detect_tp": 1,
+          "detect_recall": 50.0,
+          "block_tp": 1,
+          "block_recall": 50.0
+        },
+        "phish_unseen_host": {
+          "n": 498,
+          "detect_tp": 225,
+          "detect_recall": 45.181,
+          "block_tp": 181,
+          "block_recall": 36.345
+        },
+        "phish_free_hosting": {
+          "n": 64,
+          "detect_tp": 38,
+          "detect_recall": 59.375,
+          "block_tp": 36,
+          "block_recall": 56.25
+        },
+        "prefix": {
+          "https": 103,
+          "www": 103,
+          "http": 103,
+          "n": 500,
+          "detect_flips_any": 0,
+          "detect_flips_https_http": 0,
+          "block_flips_any": 0
+        }
+      },
+      "cb": {
+        "legit_headline": {
+          "n": 500,
+          "detect_fp": 57,
+          "detect_fpr": 11.4,
+          "block_fp": 29,
+          "block_fpr": 5.8
+        },
+        "legit_all": {
+          "n": 1000,
+          "detect_fp": 111,
+          "detect_fpr": 11.1,
+          "block_fp": 55,
+          "block_fpr": 5.5
+        },
+        "legit_landing": {
+          "n": 500,
+          "detect_fp": 36,
+          "detect_fpr": 7.2,
+          "block_fp": 21,
+          "block_fpr": 4.2
+        },
+        "legit_deep": {
+          "n": 500,
+          "detect_fp": 75,
+          "detect_fpr": 15.0,
+          "block_fp": 34,
+          "block_fpr": 6.8
+        },
+        "legit_by_band": {
+          "1-1k": {
+            "n": 200,
+            "detect_fp": 21,
+            "detect_fpr": 10.5,
+            "block_fp": 9,
+            "block_fpr": 4.5
+          },
+          "100k-500k": {
+            "n": 200,
+            "detect_fp": 28,
+            "detect_fpr": 14.0,
+            "block_fp": 15,
+            "block_fpr": 7.5
+          },
+          "10k-100k": {
+            "n": 200,
+            "detect_fp": 22,
+            "detect_fpr": 11.0,
+            "block_fp": 9,
+            "block_fpr": 4.5
+          },
+          "1k-10k": {
+            "n": 200,
+            "detect_fp": 15,
+            "detect_fpr": 7.5,
+            "block_fp": 5,
+            "block_fpr": 2.5
+          },
+          "500k-1M": {
+            "n": 200,
+            "detect_fp": 25,
+            "detect_fpr": 12.5,
+            "block_fp": 17,
+            "block_fpr": 8.5
+          }
+        },
+        "phish_browser": {
+          "n": 500,
+          "detect_tp": 156,
+          "detect_recall": 31.2,
+          "block_tp": 45,
+          "block_recall": 9.0
+        },
+        "phish_listed": {
+          "n": 500,
+          "detect_tp": 155,
+          "detect_recall": 31.0,
+          "block_tp": 45,
+          "block_recall": 9.0
+        },
+        "phish_live": {
+          "n": 15,
+          "detect_tp": 3,
+          "detect_recall": 20.0,
+          "block_tp": 1,
+          "block_recall": 6.667
+        },
+        "phish_seen_host": {
+          "n": 2,
+          "detect_tp": 0,
+          "detect_recall": 0.0,
+          "block_tp": 0,
+          "block_recall": 0.0
+        },
+        "phish_unseen_host": {
+          "n": 498,
+          "detect_tp": 156,
+          "detect_recall": 31.325,
+          "block_tp": 45,
+          "block_recall": 9.036
+        },
+        "phish_free_hosting": {
+          "n": 64,
+          "detect_tp": 39,
+          "detect_recall": 60.938,
+          "block_tp": 4,
+          "block_recall": 6.25
+        },
+        "prefix": {
+          "https": 35,
+          "www": 35,
+          "http": 35,
+          "n": 500,
+          "detect_flips_any": 0,
+          "detect_flips_https_http": 0,
+          "block_flips_any": 0
+        }
+      }
+    },
+    "struct_only_no_scheme_www": {
+      "rf": {
+        "legit_headline": {
+          "n": 500,
+          "detect_fp": 20,
+          "detect_fpr": 4.0,
+          "block_fp": 3,
+          "block_fpr": 0.6
+        },
+        "legit_all": {
+          "n": 1000,
+          "detect_fp": 31,
+          "detect_fpr": 3.1,
+          "block_fp": 9,
+          "block_fpr": 0.9
+        },
+        "legit_landing": {
+          "n": 500,
+          "detect_fp": 10,
+          "detect_fpr": 2.0,
+          "block_fp": 8,
+          "block_fpr": 1.6
+        },
+        "legit_deep": {
+          "n": 500,
+          "detect_fp": 21,
+          "detect_fpr": 4.2,
+          "block_fp": 1,
+          "block_fpr": 0.2
+        },
+        "legit_by_band": {
+          "1-1k": {
+            "n": 200,
+            "detect_fp": 4,
+            "detect_fpr": 2.0,
+            "block_fp": 1,
+            "block_fpr": 0.5
+          },
+          "100k-500k": {
+            "n": 200,
+            "detect_fp": 5,
+            "detect_fpr": 2.5,
+            "block_fp": 2,
+            "block_fpr": 1.0
+          },
+          "10k-100k": {
+            "n": 200,
+            "detect_fp": 5,
+            "detect_fpr": 2.5,
+            "block_fp": 2,
+            "block_fpr": 1.0
+          },
+          "1k-10k": {
+            "n": 200,
+            "detect_fp": 6,
+            "detect_fpr": 3.0,
+            "block_fp": 1,
+            "block_fpr": 0.5
+          },
+          "500k-1M": {
+            "n": 200,
+            "detect_fp": 11,
+            "detect_fpr": 5.5,
+            "block_fp": 3,
+            "block_fpr": 1.5
+          }
+        },
+        "phish_browser": {
+          "n": 500,
+          "detect_tp": 111,
+          "detect_recall": 22.2,
+          "block_tp": 29,
+          "block_recall": 5.8
+        },
+        "phish_listed": {
+          "n": 500,
+          "detect_tp": 137,
+          "detect_recall": 27.4,
+          "block_tp": 56,
+          "block_recall": 11.2
+        },
+        "phish_live": {
+          "n": 15,
+          "detect_tp": 3,
+          "detect_recall": 20.0,
+          "block_tp": 2,
+          "block_recall": 13.333
+        },
+        "phish_seen_host": {
+          "n": 2,
+          "detect_tp": 1,
+          "detect_recall": 50.0,
+          "block_tp": 1,
+          "block_recall": 50.0
+        },
+        "phish_unseen_host": {
+          "n": 498,
+          "detect_tp": 110,
+          "detect_recall": 22.088,
+          "block_tp": 28,
+          "block_recall": 5.622
+        },
+        "phish_free_hosting": {
+          "n": 64,
+          "detect_tp": 6,
+          "detect_recall": 9.375,
+          "block_tp": 2,
+          "block_recall": 3.125
+        },
+        "prefix": {
+          "https": 11,
+          "www": 11,
+          "http": 11,
+          "n": 500,
+          "detect_flips_any": 0,
+          "detect_flips_https_http": 0,
+          "block_flips_any": 0
+        }
+      },
+      "xgb": {
+        "legit_headline": {
+          "n": 500,
+          "detect_fp": 25,
+          "detect_fpr": 5.0,
+          "block_fp": 8,
+          "block_fpr": 1.6
+        },
+        "legit_all": {
+          "n": 1000,
+          "detect_fp": 50,
+          "detect_fpr": 5.0,
+          "block_fp": 18,
+          "block_fpr": 1.8
+        },
+        "legit_landing": {
+          "n": 500,
+          "detect_fp": 14,
+          "detect_fpr": 2.8,
+          "block_fp": 9,
+          "block_fpr": 1.8
+        },
+        "legit_deep": {
+          "n": 500,
+          "detect_fp": 36,
+          "detect_fpr": 7.2,
+          "block_fp": 9,
+          "block_fpr": 1.8
+        },
+        "legit_by_band": {
+          "1-1k": {
+            "n": 200,
+            "detect_fp": 12,
+            "detect_fpr": 6.0,
+            "block_fp": 3,
+            "block_fpr": 1.5
+          },
+          "100k-500k": {
+            "n": 200,
+            "detect_fp": 9,
+            "detect_fpr": 4.5,
+            "block_fp": 2,
+            "block_fpr": 1.0
+          },
+          "10k-100k": {
+            "n": 200,
+            "detect_fp": 11,
+            "detect_fpr": 5.5,
+            "block_fp": 4,
+            "block_fpr": 2.0
+          },
+          "1k-10k": {
+            "n": 200,
+            "detect_fp": 5,
+            "detect_fpr": 2.5,
+            "block_fp": 2,
+            "block_fpr": 1.0
+          },
+          "500k-1M": {
+            "n": 200,
+            "detect_fp": 13,
+            "detect_fpr": 6.5,
+            "block_fp": 7,
+            "block_fpr": 3.5
+          }
+        },
+        "phish_browser": {
+          "n": 500,
+          "detect_tp": 139,
+          "detect_recall": 27.8,
+          "block_tp": 68,
+          "block_recall": 13.6
+        },
+        "phish_listed": {
+          "n": 500,
+          "detect_tp": 197,
+          "detect_recall": 39.4,
+          "block_tp": 138,
+          "block_recall": 27.6
+        },
+        "phish_live": {
+          "n": 15,
+          "detect_tp": 5,
+          "detect_recall": 33.333,
+          "block_tp": 4,
+          "block_recall": 26.667
+        },
+        "phish_seen_host": {
+          "n": 2,
+          "detect_tp": 1,
+          "detect_recall": 50.0,
+          "block_tp": 1,
+          "block_recall": 50.0
+        },
+        "phish_unseen_host": {
+          "n": 498,
+          "detect_tp": 138,
+          "detect_recall": 27.711,
+          "block_tp": 67,
+          "block_recall": 13.454
+        },
+        "phish_free_hosting": {
+          "n": 64,
+          "detect_tp": 10,
+          "detect_recall": 15.625,
+          "block_tp": 3,
+          "block_recall": 4.688
+        },
+        "prefix": {
+          "https": 12,
+          "www": 12,
+          "http": 12,
+          "n": 500,
+          "detect_flips_any": 0,
+          "detect_flips_https_http": 0,
+          "block_flips_any": 0
+        }
+      },
+      "cb": {
+        "legit_headline": {
+          "n": 500,
+          "detect_fp": 28,
+          "detect_fpr": 5.6,
+          "block_fp": 8,
+          "block_fpr": 1.6
+        },
+        "legit_all": {
+          "n": 1000,
+          "detect_fp": 48,
+          "detect_fpr": 4.8,
+          "block_fp": 15,
+          "block_fpr": 1.5
+        },
+        "legit_landing": {
+          "n": 500,
+          "detect_fp": 14,
+          "detect_fpr": 2.8,
+          "block_fp": 8,
+          "block_fpr": 1.6
+        },
+        "legit_deep": {
+          "n": 500,
+          "detect_fp": 34,
+          "detect_fpr": 6.8,
+          "block_fp": 7,
+          "block_fpr": 1.4
+        },
+        "legit_by_band": {
+          "1-1k": {
+            "n": 200,
+            "detect_fp": 10,
+            "detect_fpr": 5.0,
+            "block_fp": 2,
+            "block_fpr": 1.0
+          },
+          "100k-500k": {
+            "n": 200,
+            "detect_fp": 8,
+            "detect_fpr": 4.0,
+            "block_fp": 3,
+            "block_fpr": 1.5
+          },
+          "10k-100k": {
+            "n": 200,
+            "detect_fp": 9,
+            "detect_fpr": 4.5,
+            "block_fp": 3,
+            "block_fpr": 1.5
+          },
+          "1k-10k": {
+            "n": 200,
+            "detect_fp": 6,
+            "detect_fpr": 3.0,
+            "block_fp": 3,
+            "block_fpr": 1.5
+          },
+          "500k-1M": {
+            "n": 200,
+            "detect_fp": 15,
+            "detect_fpr": 7.5,
+            "block_fp": 4,
+            "block_fpr": 2.0
+          }
+        },
+        "phish_browser": {
+          "n": 500,
+          "detect_tp": 121,
+          "detect_recall": 24.2,
+          "block_tp": 42,
+          "block_recall": 8.4
+        },
+        "phish_listed": {
+          "n": 500,
+          "detect_tp": 195,
+          "detect_recall": 39.0,
+          "block_tp": 141,
+          "block_recall": 28.2
+        },
+        "phish_live": {
+          "n": 15,
+          "detect_tp": 5,
+          "detect_recall": 33.333,
+          "block_tp": 3,
+          "block_recall": 20.0
+        },
+        "phish_seen_host": {
+          "n": 2,
+          "detect_tp": 1,
+          "detect_recall": 50.0,
+          "block_tp": 1,
+          "block_recall": 50.0
+        },
+        "phish_unseen_host": {
+          "n": 498,
+          "detect_tp": 120,
+          "detect_recall": 24.096,
+          "block_tp": 41,
+          "block_recall": 8.233
+        },
+        "phish_free_hosting": {
+          "n": 64,
+          "detect_tp": 5,
+          "detect_recall": 7.812,
+          "block_tp": 3,
+          "block_recall": 4.688
+        },
+        "prefix": {
+          "https": 11,
+          "www": 11,
+          "http": 11,
+          "n": 500,
+          "detect_flips_any": 0,
+          "detect_flips_https_http": 0,
+          "block_flips_any": 0
+        }
+      }
+    }
+  },
+  "mcnemar": {
+    "all": {
+      "rf": {
+        "detected": {
+          "b": 12,
+          "c": 0,
+          "p": 0.000488
+        },
+        "blocked": {
+          "b": 1,
+          "c": 0,
+          "p": 1.0
+        },
+        "recall_gain_pp": 2.4
+      },
+      "xgb": {
+        "detected": {
+          "b": 68,
+          "c": 9,
+          "p": 0.0
+        },
+        "blocked": {
+          "b": 61,
+          "c": 11,
+          "p": 0.0
+        },
+        "recall_gain_pp": 11.8
+      },
+      "cb": {
+        "detected": {
+          "b": 2,
+          "c": 6,
+          "p": 0.289062
+        },
+        "blocked": {
+          "b": 3,
+          "c": 0,
+          "p": 0.25
+        },
+        "recall_gain_pp": -0.8
+      }
+    },
+    "no_scheme": {
+      "rf": {
+        "detected": {
+          "b": 128,
+          "c": 0,
+          "p": 0.0
+        },
+        "blocked": {
+          "b": 1,
+          "c": 0,
+          "p": 1.0
+        },
+        "recall_gain_pp": 25.6
+      },
+      "xgb": {
+        "detected": {
+          "b": 161,
+          "c": 2,
+          "p": 0.0
+        },
+        "blocked": {
+          "b": 160,
+          "c": 2,
+          "p": 0.0
+        },
+        "recall_gain_pp": 31.8
+      },
+      "cb": {
+        "detected": {
+          "b": 88,
+          "c": 6,
+          "p": 0.0
+        },
+        "blocked": {
+          "b": 61,
+          "c": 0,
+          "p": 0.0
+        },
+        "recall_gain_pp": 16.4
+      }
+    },
+    "no_scheme_www": {
+      "rf": {
+        "detected": {
+          "b": 4,
+          "c": 2,
+          "p": 0.6875
+        },
+        "blocked": {
+          "b": 1,
+          "c": 0,
+          "p": 1.0
+        },
+        "recall_gain_pp": 0.4
+      },
+      "xgb": {
+        "detected": {
+          "b": 163,
+          "c": 32,
+          "p": 0.0
+        },
+        "blocked": {
+          "b": 124,
+          "c": 37,
+          "p": 0.0
+        },
+        "recall_gain_pp": 26.2
+      },
+      "cb": {
+        "detected": {
+          "b": 99,
+          "c": 89,
+          "p": 0.51168
+        },
+        "blocked": {
+          "b": 51,
+          "c": 106,
+          "p": 1.4e-05
+        },
+        "recall_gain_pp": 2.0
+      }
+    },
+    "tfidf_only": {
+      "rf": {
+        "detected": {
+          "b": 0,
+          "c": 5,
+          "p": 0.0625
+        },
+        "blocked": {
+          "b": 0,
+          "c": 0,
+          "p": 1.0
+        },
+        "recall_gain_pp": -1.0
+      },
+      "xgb": {
+        "detected": {
+          "b": 23,
+          "c": 85,
+          "p": 0.0
+        },
+        "blocked": {
+          "b": 23,
+          "c": 92,
+          "p": 0.0
+        },
+        "recall_gain_pp": -12.4
+      },
+      "cb": {
+        "detected": {
+          "b": 6,
+          "c": 135,
+          "p": 0.0
+        },
+        "blocked": {
+          "b": 3,
+          "c": 130,
+          "p": 0.0
+        },
+        "recall_gain_pp": -25.8
+      }
+    },
+    "struct_only": {
+      "rf": {
+        "detected": {
+          "b": 179,
+          "c": 0,
+          "p": 0.0
+        },
+        "blocked": {
+          "b": 169,
+          "c": 0,
+          "p": 0.0
+        },
+        "recall_gain_pp": 35.8
+      },
+      "xgb": {
+        "detected": {
+          "b": 103,
+          "c": 61,
+          "p": 0.001296
+        },
+        "blocked": {
+          "b": 101,
+          "c": 46,
+          "p": 7e-06
+        },
+        "recall_gain_pp": 8.4
+      },
+      "cb": {
+        "detected": {
+          "b": 47,
+          "c": 12,
+          "p": 5e-06
+        },
+        "blocked": {
+          "b": 34,
+          "c": 6,
+          "p": 8e-06
+        },
+        "recall_gain_pp": 7.0
+      }
+    },
+    "tfidf_only_no_scheme_www": {
+      "rf": {
+        "detected": {
+          "b": 2,
+          "c": 3,
+          "p": 1.0
+        },
+        "blocked": {
+          "b": 0,
+          "c": 0,
+          "p": 1.0
+        },
+        "recall_gain_pp": -0.2
+      },
+      "xgb": {
+        "detected": {
+          "b": 112,
+          "c": 39,
+          "p": 0.0
+        },
+        "blocked": {
+          "b": 107,
+          "c": 49,
+          "p": 4e-06
+        },
+        "recall_gain_pp": 14.6
+      },
+      "cb": {
+        "detected": {
+          "b": 115,
+          "c": 110,
+          "p": 0.789797
+        },
+        "blocked": {
+          "b": 28,
+          "c": 122,
+          "p": 0.0
+        },
+        "recall_gain_pp": 1.0
+      }
+    },
+    "struct_only_no_scheme_www": {
+      "rf": {
+        "detected": {
+          "b": 110,
+          "c": 4,
+          "p": 0.0
+        },
+        "blocked": {
+          "b": 29,
+          "c": 0,
+          "p": 0.0
+        },
+        "recall_gain_pp": 21.2
+      },
+      "xgb": {
+        "detected": {
+          "b": 97,
+          "c": 111,
+          "p": 0.367419
+        },
+        "blocked": {
+          "b": 50,
+          "c": 106,
+          "p": 9e-06
+        },
+        "recall_gain_pp": -2.8
+      },
+      "cb": {
+        "detected": {
+          "b": 83,
+          "c": 113,
+          "p": 0.038047
+        },
+        "blocked": {
+          "b": 28,
+          "c": 125,
+          "p": 0.0
+        },
+        "recall_gain_pp": -6.0
+      }
+    }
+  },
+  "deployment_rule": {
+    "rf": {
+      "baseline": {
+        "detect_fpr": 0.5,
+        "block_fpr": 0.0,
+        "recall": 1.0
+      },
+      "candidates": {
+        "no_scheme": {
+          "detect_fpr": 24.6,
+          "detect_fp": 246,
+          "block_fpr": 0.0,
+          "recall": 26.6,
+          "recall_gain_pp": 25.6,
+          "mcnemar_p": 0.0,
+          "c1_fpr": false,
+          "c2_block": true,
+          "c3_recall": true,
+          "pass": false
+        },
+        "no_scheme_www": {
+          "detect_fpr": 0.5,
+          "detect_fp": 5,
+          "block_fpr": 0.0,
+          "recall": 1.4,
+          "recall_gain_pp": 0.4,
+          "mcnemar_p": 0.6875,
+          "c1_fpr": true,
+          "c2_block": true,
+          "c3_recall": false,
+          "pass": false
+        }
+      },
+      "decision": {
+        "winner": null,
+        "keep_v34": true
+      }
+    },
+    "xgb": {
+      "baseline": {
+        "detect_fpr": 25.1,
+        "block_fpr": 19.9,
+        "recall": 30.6
+      },
+      "candidates": {
+        "no_scheme": {
+          "detect_fpr": 48.9,
+          "detect_fp": 489,
+          "block_fpr": 40.6,
+          "recall": 62.4,
+          "recall_gain_pp": 31.8,
+          "mcnemar_p": 0.0,
+          "c1_fpr": false,
+          "c2_block": false,
+          "c3_recall": true,
+          "pass": false
+        },
+        "no_scheme_www": {
+          "detect_fpr": 18.0,
+          "detect_fp": 180,
+          "block_fpr": 11.1,
+          "recall": 56.8,
+          "recall_gain_pp": 26.2,
+          "mcnemar_p": 0.0,
+          "c1_fpr": false,
+          "c2_block": false,
+          "c3_recall": true,
+          "pass": false
+        }
+      },
+      "decision": {
+        "winner": null,
+        "keep_v34": true
+      }
+    },
+    "cb": {
+      "baseline": {
+        "detect_fpr": 34.3,
+        "block_fpr": 33.5,
+        "recall": 30.2
+      },
+      "candidates": {
+        "no_scheme": {
+          "detect_fpr": 49.5,
+          "detect_fp": 495,
+          "block_fpr": 48.3,
+          "recall": 46.6,
+          "recall_gain_pp": 16.4,
+          "mcnemar_p": 0.0,
+          "c1_fpr": false,
+          "c2_block": false,
+          "c3_recall": true,
+          "pass": false
+        },
+        "no_scheme_www": {
+          "detect_fpr": 11.5,
+          "detect_fp": 115,
+          "block_fpr": 5.5,
+          "recall": 32.2,
+          "recall_gain_pp": 2.0,
+          "mcnemar_p": 0.51168,
+          "c1_fpr": false,
+          "c2_block": false,
+          "c3_recall": false,
+          "pass": false
+        }
+      },
+      "decision": {
+        "winner": null,
+        "keep_v34": true
+      }
+    }
+  },
+  "context_in_distribution": {
+    "all": {
+      "rf": {
+        "validation_recall": 0.9643,
+        "validation_fpr": 0.00011,
+        "test_recall": 0.9639,
+        "test_fpr": 0.00022,
+        "external_recall": 0.034,
+        "external_fpr": 0.02
+      },
+      "xgb": {
+        "validation_recall": 0.9868,
+        "validation_fpr": 0.00177,
+        "test_recall": 0.9841,
+        "test_fpr": 0.00158,
+        "external_recall": 0.424,
+        "external_fpr": 0.304
+      },
+      "cb": {
+        "validation_recall": 0.9847,
+        "validation_fpr": 0.00043,
+        "test_recall": 0.9831,
+        "test_fpr": 0.00026,
+        "external_recall": 0.294,
+        "external_fpr": 0.342
+      }
+    },
+    "no_scheme": {
+      "rf": {
+        "validation_recall": 0.5783,
+        "validation_fpr": 0.00069,
+        "test_recall": 0.5774,
+        "test_fpr": 0.00082,
+        "external_recall": 0.266,
+        "external_fpr": 0.24600000000000002
+      },
+      "xgb": {
+        "validation_recall": 0.9172,
+        "validation_fpr": 0.00828,
+        "test_recall": 0.9209,
+        "test_fpr": 0.00771,
+        "external_recall": 0.624,
+        "external_fpr": 0.489
+      },
+      "cb": {
+        "validation_recall": 0.8661,
+        "validation_fpr": 0.00466,
+        "test_recall": 0.8736,
+        "test_fpr": 0.00418,
+        "external_recall": 0.466,
+        "external_fpr": 0.495
+      }
+    },
+    "no_scheme_www": {
+      "rf": {
+        "validation_recall": 0.3238,
+        "validation_fpr": 0.00177,
+        "test_recall": 0.3172,
+        "test_fpr": 0.00123,
+        "external_recall": 0.013999999999999999,
+        "external_fpr": 0.005
+      },
+      "xgb": {
+        "validation_recall": 0.8401,
+        "validation_fpr": 0.02271,
+        "test_recall": 0.8406,
+        "test_fpr": 0.02033,
+        "external_recall": 0.568,
+        "external_fpr": 0.18
+      },
+      "cb": {
+        "validation_recall": 0.7543,
+        "validation_fpr": 0.0162,
+        "test_recall": 0.7547,
+        "test_fpr": 0.01513,
+        "external_recall": 0.322,
+        "external_fpr": 0.115
+      }
+    },
+    "tfidf_only": {
+      "rf": {
+        "validation_recall": 0.9485,
+        "validation_fpr": 4e-05,
+        "test_recall": 0.95,
+        "test_fpr": 0.0,
+        "external_recall": 0.0,
+        "external_fpr": 0.0
+      },
+      "xgb": {
+        "validation_recall": 0.9764,
+        "validation_fpr": 0.00199,
+        "test_recall": 0.9755,
+        "test_fpr": 0.00153,
+        "external_recall": 0.182,
+        "external_fpr": 0.035
+      },
+      "cb": {
+        "validation_recall": 0.9728,
+        "validation_fpr": 0.00025,
+        "test_recall": 0.9701,
+        "test_fpr": 0.00036,
+        "external_recall": 0.044000000000000004,
+        "external_fpr": 0.013000000000000001
+      }
+    },
+    "struct_only": {
+      "rf": {
+        "validation_recall": 0.7114,
+        "validation_fpr": 0.00568,
+        "test_recall": 0.7219,
+        "test_fpr": 0.00607,
+        "external_recall": 0.368,
+        "external_fpr": 0.475
+      },
+      "xgb": {
+        "validation_recall": 0.7469,
+        "validation_fpr": 0.0137,
+        "test_recall": 0.7554,
+        "test_fpr": 0.0139,
+        "external_recall": 0.39,
+        "external_fpr": 0.48100000000000004
+      },
+      "cb": {
+        "validation_recall": 0.7337,
+        "validation_fpr": 0.01164,
+        "test_recall": 0.7455,
+        "test_fpr": 0.01053,
+        "external_recall": 0.37200000000000005,
+        "external_fpr": 0.48
+      }
+    },
+    "tfidf_only_no_scheme_www": {
+      "rf": {
+        "validation_recall": 0.2594,
+        "validation_fpr": 0.00119,
+        "test_recall": 0.2542,
+        "test_fpr": 0.00106,
+        "external_recall": 0.008,
+        "external_fpr": 0.004
+      },
+      "xgb": {
+        "validation_recall": 0.7217,
+        "validation_fpr": 0.02195,
+        "test_recall": 0.7195,
+        "test_fpr": 0.02103,
+        "external_recall": 0.452,
+        "external_fpr": 0.223
+      },
+      "cb": {
+        "validation_recall": 0.6423,
+        "validation_fpr": 0.0158,
+        "test_recall": 0.6432,
+        "test_fpr": 0.01466,
+        "external_recall": 0.312,
+        "external_fpr": 0.111
+      }
+    },
+    "struct_only_no_scheme_www": {
+      "rf": {
+        "validation_recall": 0.5063,
+        "validation_fpr": 0.03189,
+        "test_recall": 0.5079,
+        "test_fpr": 0.02884,
+        "external_recall": 0.222,
+        "external_fpr": 0.031
+      },
+      "xgb": {
+        "validation_recall": 0.5745,
+        "validation_fpr": 0.047,
+        "test_recall": 0.5676,
+        "test_fpr": 0.04428,
+        "external_recall": 0.278,
+        "external_fpr": 0.05
+      },
+      "cb": {
+        "validation_recall": 0.5397,
+        "validation_fpr": 0.04317,
+        "test_recall": 0.5355,
+        "test_fpr": 0.03947,
+        "external_recall": 0.242,
+        "external_fpr": 0.048
+      }
+    }
+  }
+}
