@@ -242,7 +242,7 @@ def main():
         for i, name in enumerate(('https', 'www', 'http')):
             vec = p['px'][i::3]
             entry['prefix'][name] = int(detected(vec, DETECT).sum())
-        px = p['px'].reshape(3, -1).T
+        px = p['px'].reshape(-1, 3)
         det = detected(px, DETECT)          # rows x 3
         blk = detected(px, BLOCK)
         entry['prefix'].update({
