@@ -1,5 +1,5 @@
 # Deteksi URL Phishing Real-Time Berbasis Client-Side Browser Extension
-### Komparasi Kinerja Algoritma Random Forest dan XGBoost via ONNX Runtime Web
+### Komparasi Kinerja Algoritma Random Forest, XGBoost, dan CatBoost via ONNX Runtime Web
 
 > **Repositori Tugas Akhir**  
 > **Program Studi:** Informatika  
@@ -11,9 +11,10 @@
 
 Pertahanan peramban konvensional (seperti *Google Safe Browsing* dan basis data tanda tangan antivirus) mengandalkan daftar hitam (*blacklist*) terpusat. Pendekatan ini memiliki *detection lag* rata-rata 4,5 hari, padahal situs phishing modern memiliki median masa hidup hanya sekitar 5,46 jam. Pendekatan berbasis *server-side* atau API eksternal juga menimbulkan risiko kebocoran privasi riwayat penjelajahan dan latensi jaringan.
 
-Penelitian ini merancang dan mengimplementasikan **ekstensi Google Chrome mandiri (*standalone*)** yang melakukan inferensi Machine Learning secara **100% di sisi klien (*client-side*)** menggunakan **ONNX Runtime Web (WASM)**. Sistem ini membandingkan kinerja deteksi dan efisiensi komputasi antara dua algoritma utama:
+Penelitian ini merancang dan mengimplementasikan **ekstensi Google Chrome mandiri (*standalone*)** yang melakukan inferensi Machine Learning secara **100% di sisi klien (*client-side*)** menggunakan **ONNX Runtime Web (WASM)**. Sistem ini membandingkan kinerja deteksi dan efisiensi komputasi antara tiga algoritma utama:
 1. **Random Forest (RF):** Model *bagging* acuan yang dioptimalkan (*bonsai trees*) untuk ukuran berkas ringan dan *False Positive Rate* (FPR) mendekati 0%.
 2. **XGBoost (XGB):** Model *gradient boosting* yang dipadukan dengan *pipeline* reduksi dimensi berganda (*StandardScaler* → *SelectKBest* ANOVA F → *RFECV* → *PCA 95%*) terinspirasi dari arsitektur *PhishGuard*.
+3. **CatBoost (CB):** Model *gradient boosting* yang memakai fitur mentah yang sama dengan Random Forest (TF-IDF kata + fitur struktural); ditambahkan sebagai model ketiga pada ekstensi versi 3.4.
 
 Ketiga model dikonversi ke format ONNX dan dapat diuji secara langsung serta bergantian melalui antarmuka ekstensi peramban.
 
@@ -54,50 +55,75 @@ Deteksi berjalan secara otomatis pada saat pengguna melakukan navigasi URL di pe
 
 ## 📁 Peta Struktur Repositori
 
-Struktur proyek disusun secara modular agar memudahkan penelusuran tahapan penelitian:
+Semua skrip dijalankan **dari root repositori** (`python nama_skrip.py`). Tiga modul inti (`features.py`, `sampling.py`, `ml_pipelines.py`) sengaja berada di root: berkas model `.pkl` menyimpan nama modul tersebut, sehingga memindahkannya akan membuat model lama tidak dapat dimuat.
 
 ```
 Tugas Akhir/
 │
-├── phishingdetectorExt/           # PRODUK: Paket Chrome Extension (Manifest V3)
+├── phishingdetectorExt/           # PRODUK: paket Chrome Extension (Manifest V3)
 │   ├── manifest.json              # Konfigurasi ekstensi & deklarasi permissions
-│   ├── background.js              # Service Worker (intersepsi onBeforeNavigate, ONNX runner)
-│   ├── popup.html / popup.js      # Antarmuka popup (pemindaian manual, toggle RF/XGB, kelola whitelist)
-│   ├── content.js                 # Injeksi banner peringatan non-intrusif pada situs mencurigakan
-│   ├── blocked.html               # Halaman peringatan blokir (dengan session bypass & whitelist)
-│   ├── utils.js                   # Ekstraksi fitur leksikal 100% konsisten dengan Python
-│   ├── phishing_rf.onnx           # Model Random Forest terkompresi (~730 KB)
-│   ├── tfidf_data.json            # Kosakata TF-IDF (1.500 token) untuk RF
-│   ├── phishing_xgb.onnx          # Model XGBoost ONNX (~1,29 MB)
+│   ├── background.js              # Service worker: pemindaian navigasi, sesi ONNX, message API
+│   ├── popup.html / popup.js      # Popup: pemindaian manual, pilihan model, kelola whitelist
+│   ├── content.js                 # Banner peringatan pada situs mencurigakan
+│   ├── blocked.html / blocked.js  # Halaman blokir (session bypass & whitelist)
+│   ├── utils.js                   # Ekstraksi fitur leksikal, harus identik dengan features.py
+│   ├── bench.html / bench.js      # Benchmark latensi di dalam browser (bench_urls.json)
+│   ├── phishing_rf.onnx           # Random Forest (tidak dilacak git; lihat MODELS.md)
+│   ├── phishing_xgb.onnx          # XGBoost
+│   ├── phishing_catboost.onnx     # CatBoost
+│   ├── tfidf_data.json            # Kosakata TF-IDF untuk RF dan CatBoost
 │   ├── tfidf_data_xgb.json        # Kosakata TF-IDF untuk XGBoost
-│   ├── xgb_preprocessing.json     # Bobot StandardScaler, indeks seleksi (177), & matriks PCA (149)
-│   └── libs/                      # Pustaka ONNX Runtime Web (WASM & WASM-SIMD)
+│   ├── xgb_preprocessing.json     # StandardScaler, indeks seleksi fitur, dan matriks PCA XGBoost
+│   └── libs/                      # ONNX Runtime Web (WASM & WASM-SIMD)
 │
-├── hybrid/                        # Pelatihan model Random Forest
-│   └── train_hybrid_model_v2.py   # Pelatihan RF (opsi --no-undersample atau undersampling)
+├── ── MODUL INTI (root) ──
+├── features.py                    # Satu-satunya sumber kebenaran fitur di sisi Python
+├── sampling.py                    # Protokol data: bersihkan → split 80/20 (seed 42) → validasi 10%
+├── ml_pipelines.py                # Pipeline RF dan XGBoost dengan hyperparameter tetap
 │
-├── Xgboost/                       # Pelatihan model XGBoost
-│   ├── train_xgb.py               # Pipeline: Scaler → SelectKBest → RFECV → PCA → XGBoost
-│   ├── export_xgb_onnx_colab.py   # Ekspor ONNX di Google Colab
-│   └── ...
+├── ── PELATIHAN & EKSPOR ──
+├── hybrid/train_hybrid_model_v2.py  # Pelatihan Random Forest (--no-undersample untuk varian full)
+├── hybrid/test_hybrid.py          # Uji interaktif sebuah model RF (.pkl)
+├── Xgboost/                       # Pelatihan/ekspor XGBoost versi Colab (+ artefak Colab lama)
+├── Catboost/                      # Pelatihan CatBoost, perbaikan keluaran ONNX, verifikasi ONNX
+├── export_to_web.py               # RF (.pkl) → ONNX + tfidf_data.json
+├── export_xgb_onnx.py, xgb_export.py  # XGBoost → ONNX + berkas preprocessing JSON
 │
-├── sampling_results/              # Artefak dan laporan studi sampling (Undersampling vs Non-Undersampling)
-│   ├── sampling_report.md         # Laporan perbandingan metrik evaluasi
-│   ├── sampling_metrics.csv       # Metrik terkuantisasi
-│   └── *.pkl / *.onnx             # Artefak model hasil studi sampling
+├── ── BENCHMARK ──
+├── benchmark_sampling.py          # Undersampling vs full (melatih RF/XGB; ± 8 menit)
+├── benchmark_all_models.py        # PKL vs ONNX pada test set bersama
+├── benchmark_deployed_latency.py  # Latensi model yang di-deploy (Python)
+├── benchmark_memory.py            # Memori dan latensi
+├── benchmark_browser.py           # Membandingkan hasil bench.html dengan Python
+├── benchmark_ablation.py          # Ablasi fitur: skema, www., kelompok fitur, n-gram karakter
 │
-├── features.py                    # SINGLE SOURCE OF TRUTH fitur (9 struktural + TF-IDF + preprocessing)
-├── sampling.py                    # Protokol pemisahan data terkontrol (stratified 80/20, seed 42)
-├── export_to_web.py               # Skrip konversi model scikit-learn (.pkl) ke format ONNX
-├── export_xgb_onnx.py             # Skrip konversi model XGBoost + preprocessing ke format ONNX
-├── benchmark_sampling.py          # Skrip eksperimen perbandingan undersampling vs non-undersampling
-├── benchmark_all_models.py        # Pengujian perbandingan format PKL vs ONNX
-├── benchmark_memory.py            # Pengukuran latensi dan alokasi memori
-├── run_realworld_test.py          # Pengujian validasi URL nyata (PhishTank feed aktif)
-├── MODELS.md                      # Dokumentasi rekam jejak, ukuran berkas, & SHA-256 checksum model
-├── URL dataset.csv                # Dataset utama (Mendeley Phishing Dataset 2024, ~450k baris)
-└── README.md                      # Dokumentasi komprehensif repositori (dokumen ini)
+├── ── ANALISIS ──
+├── analyze_dataset_split.py       # Overlap host latih/uji dan statistik awalan URL
+├── analyze_feature_importance.py  # Bobot fitur RF dan XGBoost
+├── analyze_thresholds.py          # Sensitivitas ambang keputusan (60% / 80%)
+├── analyze_overfitting.py         # Kinerja data latih vs data uji
+├── run_realworld_test.py          # Validasi awal 25/25 URL (PhishTank)
+├── explore_char_external.py       # Penilaian eksploratif n-gram karakter pada daftar eksternal
+├── make_thesis_figures.py         # Grafik untuk naskah (docs/figures/)
+│
+├── ── HASIL (bukti; angka di naskah diambil dari sini) ──
+├── sampling_results/              # Studi sampling, ambang, bobot fitur, split data, overfitting, CatBoost
+├── ablation_results/              # Ablasi skema/www./kelompok fitur (10 Okt 2026)
+├── ablation_char_results/         # Ablasi n-gram karakter + penilaian eksternal eksploratif
+├── external_500/                  # Uji eksternal Tranco + PhishTank: protokol, daftar beku, laporan, audit
+├── realworld_test/                # Validasi awal pada 25/25 URL
+├── browser_bench/                 # Pengujian di browser: panduan, hasil, tangkapan layar
+├── rf_models/                     # Model RF biner (tidak dilacak git)
+├── docs/                          # Laporan PKL vs ONNX, catatan keterbatasan ekstensi, figures/
+│
+├── tests/                         # Uji paritas fitur (pytest) dan navigasi ekstensi (node --test)
+├── legacy/                        # Skrip generasi awal, disimpan sebagai arsip (lihat legacy/README.md)
+├── MODELS.md                      # Catatan resmi model yang di-deploy: ukuran dan SHA-256
+├── URL dataset.csv                # Dataset (Mendeley 2024, 450.176 baris setelah dibersihkan)
+└── README.md                      # Dokumen ini
 ```
+
+Berkas `*.pkl` hasil pelatihan dan `phishing_rf*.onnx` tidak dilacak git (lihat `.gitignore`); klon baru perlu melatih ulang sebelum sebagian besar benchmark dapat dijalankan.
 
 ---
 
@@ -167,11 +193,12 @@ Seluruh pengujian dievaluasi pada data uji bersama (*unseen test set*) sebesar *
 
 ### 3. Validasi pada Data Nyata (*PhishTank Live Feed*)
 
-Pengujian dilakukan terhadap 25 URL phishing aktif dari feed PhishTank (dikonfirmasi daring) dan 20 URL *legitimate* populer yang rentan *false positive*:
-- **Random Forest:** Recall 0/25 (0%), False Positive 0/20 (0%). Bersifat sangat defensif karena dataset 2024 mengasosiasikan HTTPS dengan URL aman, sedangkan phishing modern saat ini hampir seluruhnya telah menggunakan HTTPS.
-- **XGBoost:** Recall 7/25 (28%), False Positive 2/20 (10%). Mampu mendeteksi sebagian phishing aktif pada infrastruktur *free-hosting* (*pages.dev*, *web.app*, dsb.), namun menghasilkan false positive pada layanan tertentu (misal: Steam).
+Pengujian dilakukan terhadap 25 URL phishing aktif dari feed PhishTank (dikonfirmasi daring) dan 25 URL *legitimate* populer yang rentan *false positive*:
+- **Random Forest:** Recall 0/25 (0%), False Positive 0/25 (0%). Bersifat sangat defensif karena dataset 2024 mengasosiasikan HTTPS dengan URL aman, sedangkan phishing modern saat ini hampir seluruhnya telah menggunakan HTTPS.
+- **XGBoost:** Recall 7/25 (28%), False Positive 4/25 (16%). Mampu mendeteksi sebagian phishing aktif pada infrastruktur *free-hosting* (*pages.dev*, *web.app*, dsb.), namun menghasilkan false positive pada layanan tertentu (misal: Steam).
+- **CatBoost:** Recall 6/25 (24%), False Positive 5/25 (20%). Memakai fitur mentah yang sama dengan Random Forest; pola deteksinya menyerupai XGBoost.
 
-Temuan ini menegaskan keunggulan menyediakan **dua model yang dapat dipilih pengguna**: Random Forest untuk pengguna yang mengutamakan tanpa gangguan (*zero false alarms*), dan XGBoost untuk pengguna yang menginginkan proteksi lebih proaktif.
+Temuan ini menegaskan keunggulan menyediakan **tiga model yang dapat dipilih pengguna**: Random Forest untuk pengguna yang mengutamakan tanpa gangguan (*zero false alarms*), serta XGBoost dan CatBoost untuk pengguna yang menginginkan proteksi lebih proaktif. Uji eksternal 500/500 pada daftar beku (`external_500/`) menunjukkan pola yang sama pada skala lebih besar: ketiga model masih bergantung pada pintasan dataset (skema dan `www.`) dan belum layak diklaim untuk produksi — rinciannya di `external_500/external_report.md`.
 
 ---
 
@@ -224,7 +251,7 @@ Untuk menguji langsung ekstensi di peramban Google Chrome:
 5. Ekstensi **"Phishing Detector (RF + XGBoost)"** akan muncul di bilah alat peramban.
 
 ### Fitur Antarmuka Ekstensi
-- **Model Switcher:** Pengguna dapat berpindah antara model *Random Forest* dan *XGBoost* secara instan melalui *dropdown* di bagian atas jendela popup.
+- **Model Switcher:** Pengguna dapat berpindah antara model *Random Forest*, *XGBoost*, dan *CatBoost* secara instan melalui *dropdown* di bagian atas jendela popup.
 - **Auto-Scan & Pre-Execution Blocking:** Intersepsi navigasi via `webNavigation.onBeforeNavigate` memblokir akses ke situs phishing (>80%) sebelum aset berbahaya dieksekusi.
 - **Warning Banner:** Menampilkan spanduk peringatan melayang dengan opsi *Trust Site* dan *Details* untuk URL mencurigakan (probabilitas 60%–80%).
 - **Blocked Page (`blocked.html`):** Menyediakan tombol *Go Back*, *Trust Site*, dan *Continue* (dilengkapi mekanisme *Session Bypass* satu kali sehingga tidak memicu pengalihan berulang).
@@ -236,8 +263,8 @@ Untuk menguji langsung ekstensi di peramban Google Chrome:
 
 
 ### Rekomendasi Sesuai Arahan Pembimbing
-1. **Penambahan Fitur Character n-grams:** Mengintegrasikan n-gram karakter (sub-kata 3–5 karakter) pada vektor masukan untuk memperkuat daya deteksi terhadap teknik pemalsuan domain (*typosquatting* / *combosquatting*).
-2. **Evaluasi Model Ketiga:** Melakukan eksperimen komparasi tambahan dengan algoritma alternatif (misal: *CatBoost* atau *LightGBM*) untuk menganalisis efisiensi komputasi lebih lanjut di lingkungan web.
+1. **Penambahan Fitur Character n-grams:** *Sudah dilaksanakan.* Blok n-gram karakter (3–5 karakter pada host, TF-IDF 1.500 n-gram) diimplementasikan, dilatih, dan dievaluasi pada Bab IV Subbab 4.9 (`ablation_char_results/`). Hasilnya: memperkuat pintasan `www.` dan tidak memenuhi batas FPR pada daftar eksternal, sehingga tidak dipasang di ekstensi.
+2. **Evaluasi Model Ketiga:** *Sudah dilaksanakan.* CatBoost dipasang sebagai model ketiga pada ekstensi versi 3.4 (disebut "model dasar" pada draf) dan dibandingkan dengan Random Forest dan XGBoost pada Bab IV.
 
 ---
 

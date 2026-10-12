@@ -23,7 +23,7 @@ from sklearn.metrics import (
 # FEATURE EXTRACTION (single source of truth: features.py)
 # ============================================================
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # repo root
 from features import (  # noqa: E402
     extract_features_onnx as extract_features,
     preprocess_xgb,

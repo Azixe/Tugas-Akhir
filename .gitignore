@@ -2,7 +2,9 @@ phishing_detector_model.pkl
 phishing_hybrid_model.pkl
 phishing_optimized.pkl
 phishing_rf*.onnx
-chat_history.md.vscode/
+chat_history.md
+.vscode/
+.pytest_cache/
 __pycache__/
 *.pyc
 sampling_results/*.pkl
@@ -16,5 +18,7 @@ referrence/*
 CLAUDE.md
 .mcp.json
 ablation_results/*.pkl
+ablation_char_results/*.pkl
+ablation_smoke*/
 external_500/raw/
 external_500/frozen/phishtank_domains.csv
