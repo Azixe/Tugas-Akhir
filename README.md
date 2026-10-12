@@ -277,13 +277,3 @@ Untuk menguji langsung ekstensi di peramban Google Chrome:
 - **Manajemen Whitelist:** Pengguna dapat menambah atau menghapus domain aman yang dikecualikan dari pemindaian.
 
 ---
-
-## Kesimpulan & Rencana Pengembangan Lanjutan
-
-
-### Rekomendasi Sesuai Arahan Pembimbing
-1. **Penambahan Fitur Character n-grams:** *Sudah dilaksanakan.* Blok n-gram karakter (3–5 karakter pada host, TF-IDF 1.500 n-gram) diimplementasikan, dilatih, dan dievaluasi pada Bab IV Subbab 4.9 (`ablation_char_results/`). Hasilnya: memperkuat pintasan `www.` dan tidak memenuhi batas FPR pada daftar eksternal, sehingga tidak dipasang di ekstensi.
-2. **Evaluasi Model Ketiga:** *Sudah dilaksanakan.* CatBoost dipasang sebagai model ketiga pada ekstensi versi 3.4 (disebut "model dasar" pada draf) dan dibandingkan dengan Random Forest dan XGBoost pada Bab IV.
-
----
-
