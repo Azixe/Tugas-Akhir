@@ -640,7 +640,7 @@ def write_report(s):
               ]
     c = s['construction']
     lines += [
-        "- Pre-registration trail: the frozen lists were committed before scoring (`8a63af0`); "
+        "- Pre-registration trail: the frozen lists were committed before scoring (`18d49b6`); "
         "the scorer changed once afterwards (a KeyError hotfix in the rule-evaluation code plus "
         "report notes) — thresholds, metrics and rule logic are unchanged, and the scoring pass "
         "reproduced identical counts.",

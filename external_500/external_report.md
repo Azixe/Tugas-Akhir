@@ -1,6 +1,6 @@
 # External 500/500 evaluation — live Tranco legit + PhishTank phishing
 
-Generated: 2026-10-10T15:25:55+00:00 — harness commit `6c37215`, extension v3.4
+Generated: 2026-10-10T15:25:55+00:00 — harness commit `2c7d4e9`, extension v3.4
 Protocol: `external_500/PROTOCOL.md` (frozen before collection; amendment log inside).
 Lists (frozen, hashed): `legit_urls.csv` 1000 rows sha256 `8a0829d0b08c8f29…`; `phishing_urls.csv` 500 rows sha256 `af5f9f8b3721c9b3…`; `prefix_sensitivity.csv` 500 rows sha256 `ea0c5636a1584ef0…`
 ONNX models: RF `625c9333151667c4…`, XGB `4efd7ead699770a0…`, CatBoost `791a503e72426426…`
@@ -228,7 +228,7 @@ Baseline v3.4: detected FPR 34.3% | blocked FPR 33.5% | detected recall 30.2%.
 - Collection environment: Bitdefender real-time protection was active during collection; individual fetches may have been blocked by its web filtering (recorded as drops or non-answering entries, never silently dropped). Phishing liveness (33/500 answered, 15 live) is therefore a lower bound; scoring is URL-only, so headline metrics do not depend on liveness.
 - Phishing entries that no longer resolve are still scored (URL-only analysis); the live-only row reports the subset that answered when resolved.
 - The `all` arm is trained on the fit set (90% of the train pool), so it is close to but not identical with v3.4 (full train pool).
-- Pre-registration trail: the frozen lists were committed before scoring (`8a63af0`); the scorer changed once afterwards (a KeyError hotfix in the rule-evaluation code plus report notes) — thresholds, metrics and rule logic are unchanged, and the scoring pass reproduced identical counts.
+- Pre-registration trail: the frozen lists were committed before scoring (`18d49b6`); the scorer changed once afterwards (a KeyError hotfix in the rule-evaluation code plus report notes) — thresholds, metrics and rule logic are unchanged, and the scoring pass reproduced identical counts.
 - Legit construction (documented, no re-sampling): the PhishTank exclusion matched registrable (last-two-label) domains, so whole suffixes such as co.uk / com.au / co.id were removed (no legit domains under those suffixes remain); 2 scored rows sit on hosts the extension whitelists (v3.4 flags: RF 0, XGB 1, CB 1 — 0.1 pp for XGB/CB); 24 deep URLs returned non-200 and 6 redirected off the landing site (54 landings themselves redirected to another registrable domain); all are scored as stored (`browser_url`).
 - Legit/training overlap (from the committed audit): 69 of 500 legit landing hosts also appear in the training data and 14 scored legit URLs are exact training rows — the legit FPR is therefore a slight underestimate for entirely unseen hosts.
 - As-listed caveat: 117 phishing entries are bare hosts without the trailing slash a browser adds; on the 49 slash-only rows, CatBoost `no_scheme_www` detects 41 as listed vs 14 with the slash — as-listed recall for de-shortcut arms must not be quoted as browser-realistic.
