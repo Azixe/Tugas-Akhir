@@ -56,6 +56,15 @@ def normalize_url(url, strip_scheme=False, strip_www=False):
     return rest if strip_scheme else scheme + rest
 
 
+def url_host(url, strip_www=False):
+    """Lowercased host of a URL: everything between the scheme and the first '/', '?' or '#'.
+
+    A port or ``user@`` prefix stays in the string; the character n-gram block
+    only needs the same cut on both sides, not a full URL parse.
+    """
+    return re.split(r'[/?#]', normalize_url(url, strip_scheme=True, strip_www=strip_www), 1)[0]
+
+
 # ============================================================
 # TRAINING-SIDE FEATURES (used by sklearn pipelines / pickles)
 # ============================================================
@@ -163,6 +172,31 @@ class UrlTokenizer:
     def __call__(self, f):
         tokens = make_tokens(normalize_url(f, self.strip_scheme, self.strip_www))
         return [t for t in tokens if t] if self.drop_empty else tokens
+
+
+class UrlText:
+    """Text handed to the character n-gram vectorizer; picklable.
+
+    ``scope='host'`` (default) returns ``url_host`` so the n-grams describe the
+    domain name, which is where typosquatting and look-alike brands live;
+    the scheme never reaches this block. ``scope='url'`` returns the whole
+    normalised URL and then honours ``strip_scheme`` as well.
+
+    Not mirrored in utils.js yet: a model trained with this block must not be
+    deployed before the same n-gram extraction exists there.
+    """
+
+    def __init__(self, strip_scheme=False, strip_www=False, scope='host'):
+        if scope not in ('host', 'url'):
+            raise ValueError(f"scope must be 'host' or 'url', got {scope!r}")
+        self.strip_scheme = strip_scheme
+        self.strip_www = strip_www
+        self.scope = scope
+
+    def __call__(self, url):
+        if self.scope == 'host':
+            return url_host(url, self.strip_www)
+        return normalize_url(url, self.strip_scheme, self.strip_www)
 
 
 def alias_legacy_main():

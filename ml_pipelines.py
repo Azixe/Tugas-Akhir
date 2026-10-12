@@ -23,7 +23,7 @@ from sklearn.pipeline import FeatureUnion, Pipeline
 from sklearn.preprocessing import StandardScaler
 from xgboost import XGBClassifier
 
-from features import StructuralFeatureExtractor, UrlTokenizer, make_tokens
+from features import StructuralFeatureExtractor, UrlText, UrlTokenizer, make_tokens
 
 SEED = 42
 
@@ -59,17 +59,25 @@ IMPORTANCE_PARAMS = dict(
 K_BEST = 'all'
 
 
-FEATURE_GROUPS = ('text', 'structural')
+FEATURE_GROUPS = ('text', 'structural')      # the historical 1,509-dim extractor
+BLOCK_ORDER = ('text', 'char', 'structural')  # column order when the char block is added
+
+# Character n-gram block (ablation only; see features.UrlText)
+CHAR_FEATURES = 1500
+CHAR_NGRAM = (3, 5)
+CHAR_SCOPE = 'host'
 
 
 def build_feature_union(max_features: int = 1500, strip_scheme: bool = False,
                         strip_www: bool = False, drop_empty: bool = False,
-                        groups=FEATURE_GROUPS) -> FeatureUnion:
-    """TF-IDF + structural feature union.
+                        groups=FEATURE_GROUPS, char_features: int = CHAR_FEATURES,
+                        char_ngram=CHAR_NGRAM, char_scope: str = CHAR_SCOPE) -> FeatureUnion:
+    """TF-IDF + structural feature union, optionally with a character n-gram block.
 
     The defaults build the historical 1,509-dim extractor. The keyword
     switches are the ablation arms (see ``features.normalize_url``);
-    ``groups`` keeps only the TF-IDF block or only the structural block.
+    ``groups`` selects blocks: ``'text'`` (word-level TF-IDF), ``'char'``
+    (character n-gram TF-IDF, off by default) and ``'structural'``.
     """
     if strip_scheme or strip_www or drop_empty:
         tokenizer = UrlTokenizer(strip_scheme, strip_www, drop_empty)
@@ -78,10 +86,17 @@ def build_feature_union(max_features: int = 1500, strip_scheme: bool = False,
     blocks = {
         'text': ('text_features', TfidfVectorizer(
             tokenizer=tokenizer, token_pattern=None, max_features=max_features)),
+        'char': ('char_features', TfidfVectorizer(
+            analyzer='char', ngram_range=tuple(char_ngram), lowercase=False,
+            preprocessor=UrlText(strip_scheme, strip_www, char_scope),
+            max_features=char_features)),
         'structural': ('structural_features',
                        StructuralFeatureExtractor(strip_scheme, strip_www)),
     }
-    return FeatureUnion([blocks[g] for g in FEATURE_GROUPS if g in groups])
+    unknown = set(groups) - set(BLOCK_ORDER)
+    if unknown:
+        raise ValueError(f"unknown feature groups: {sorted(unknown)}")
+    return FeatureUnion([blocks[g] for g in BLOCK_ORDER if g in groups])
 
 
 def build_rf_pipeline(**feature_kwargs) -> Pipeline:
@@ -110,12 +125,16 @@ def train_xgb_pipeline(urls, labels, verbose: bool = True, **feature_kwargs) -> 
     if verbose:
         print(f"    features: {X_raw.shape} ({time.time()-t0:.0f}s)", flush=True)
 
+    # Free each dense copy as soon as the next stage has its own: with the char
+    # block the matrix is twice as wide, and three live copies do not fit in RAM.
     scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X_raw).astype(np.float32)
+    X_scaled = scaler.fit_transform(X_raw).astype(np.float32, copy=False)
+    del X_raw
+    gc.collect()
 
     selector = SelectKBest(score_func=f_classif, k=K_BEST)
-    X_kbest = selector.fit_transform(X_scaled, labels).astype(np.float32)
-    del X_raw, X_scaled
+    X_kbest = selector.fit_transform(X_scaled, labels).astype(np.float32, copy=False)
+    del X_scaled
     gc.collect()
 
     importance_xgb = XGBClassifier(

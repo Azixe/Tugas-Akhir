@@ -19,6 +19,13 @@ Arms (``--arms``, default: the first five):
     struct_only                9 structural features only
     tfidf_only_no_scheme_www   TF-IDF block only, scheme and ``www.`` removed
     struct_only_no_scheme_www  structural only, scheme and ``www.`` removed
+    char                       ``all`` plus a character n-gram block on the host
+    char_no_scheme_www         the same, scheme and ``www.`` removed
+    char_only                  character n-grams + structural (no word-level TF-IDF)
+    char_only_no_scheme_www    the same, scheme and ``www.`` removed
+
+The character block is TF-IDF over ``ml_pipelines.CHAR_NGRAM`` character
+n-grams of the host, ``ml_pipelines.CHAR_FEATURES`` terms (see ``features.UrlText``).
 
 Usage (run from the repo root; ``--outdir`` is required and must not be
 ``sampling_results``, which holds the v3.4 evidence):
@@ -59,6 +66,10 @@ ARMS = {
     'struct_only': dict(groups=('structural',)),
     'tfidf_only_no_scheme_www': dict(strip_scheme=True, strip_www=True, groups=('text',)),
     'struct_only_no_scheme_www': dict(strip_scheme=True, strip_www=True, groups=('structural',)),
+    'char': dict(groups=('text', 'char', 'structural')),
+    'char_no_scheme_www': dict(strip_scheme=True, strip_www=True, groups=('text', 'char', 'structural')),
+    'char_only': dict(groups=('char', 'structural')),
+    'char_only_no_scheme_www': dict(strip_scheme=True, strip_www=True, groups=('char', 'structural')),
 }
 DEFAULT_ARMS = ['all', 'no_scheme', 'no_scheme_www', 'tfidf_only', 'struct_only']
 MODELS = {'rf': 'Random Forest', 'xgb': 'XGBoost', 'cb': 'CatBoost'}
@@ -97,6 +108,8 @@ def parse_args():
                         help="Debug: cap the train pool / test set size (0 = full)")
     parser.add_argument('--latency-samples', type=int, default=0,
                         help="URLs sampled for per-URL latency (default: %(default)s = skip)")
+    parser.add_argument('--summary-only', action='store_true',
+                        help="Print the summary table from the saved ablation_metrics.json and exit")
     args = parser.parse_args()
     if os.path.basename(os.path.normpath(args.outdir)).lower() in PROTECTED_OUTDIRS:
         parser.error(f"--outdir {args.outdir} holds deployed/v3.4 artifacts; pick another directory")
@@ -180,6 +193,23 @@ def metrics_table(results, arms, models, split):
     return lines
 
 
+def print_summary(results, arms, models, final_test):
+    """Console copy of the report tables: recall and FPR per arm and model (same rounding)."""
+    print()
+    head = f"{'Arm':<27}{'Model':<15}{'Val recall':>11}{'Val FPR':>9}"
+    print(head + (f"{'Test recall':>13}{'Test FPR':>10}" if final_test else ''))
+    for arm in arms:
+        for family in models:
+            entry = results[arm][family]
+            v = entry['validation']
+            line = f"{arm:<27}{MODELS[family]:<15}{v['recall_phishing']:>11.4f}{v['fpr'] * 100:>8.3f}%"
+            if final_test:
+                t = entry['test']
+                line += f"{t['recall_phishing']:>13.4f}{t['fpr'] * 100:>9.3f}%"
+            print(line)
+    print()
+
+
 def write_report(args, meta, results):
     lines = ["# Feature Ablation — scheme, `www.` and feature groups", ""]
     if meta['smoke_test']:
@@ -197,6 +227,9 @@ def write_report(args, meta, results):
         f"({'scored below' if meta['final_test'] else 'NOT scored in this run'})",
         f"- Empty-string token at training time: {'dropped' if meta['drop_empty_tokens'] else 'kept (historical)'}",
         f"- Training data: full fit set (no undersampling); CatBoost iterations: {meta['cb_iterations']}",
+        f"- Character block (`char*` arms only): TF-IDF over {meta['char_block']['ngram'][0]}-"
+        f"{meta['char_block']['ngram'][1]} character n-grams of the {meta['char_block']['scope']}, "
+        f"{meta['char_block']['features']} terms",
         "",
         "## Validation set — use this table to choose an arm",
         "",
@@ -225,6 +258,12 @@ def write_report(args, meta, results):
 
 def main():
     args = parse_args()
+    if args.summary_only:
+        with open(os.path.join(args.outdir, 'ablation_metrics.json'), encoding='utf-8') as f:
+            saved = json.load(f)
+        meta = saved['meta']
+        print_summary(saved['arms'], meta['arms'], meta['models'], meta['final_test'])
+        return
     os.makedirs(args.outdir, exist_ok=True)
     check_cached_config(args)
 
@@ -277,6 +316,8 @@ def main():
         'arm_definitions': {a: {k: list(v) if isinstance(v, tuple) else v for k, v in ARMS[a].items()}
                             for a in args.arms},
         'models': args.models,
+        'char_block': {'features': ml_pipelines.CHAR_FEATURES, 'ngram': list(ml_pipelines.CHAR_NGRAM),
+                       'scope': ml_pipelines.CHAR_SCOPE},
         'drop_empty_tokens': bool(args.drop_empty_tokens),
         'cb_iterations': args.cb_iterations,
         'final_test': bool(args.final_test),
@@ -287,7 +328,7 @@ def main():
         json.dump({'meta': meta, 'arms': results}, f, indent=2)
     report_path = write_report(args, meta, results)
 
-    print()
+    print_summary(results, args.arms, args.models, args.final_test)
     print(f"Saved: {json_path}")
     print(f"Saved: {report_path}")
 

@@ -1,0 +1,214 @@
+{
+  "meta": {
+    "timestamp": "2026-10-12T15:08:06+00:00",
+    "models_dir": "ablation_char_results",
+    "legit": 1000,
+    "legit_www": 469,
+    "legit_non_www": 531,
+    "phishing": 500,
+    "prefix_domains": 500,
+    "detect_threshold": 0.6,
+    "block_threshold": 0.8,
+    "exploratory": true
+  },
+  "results": {
+    "all__rf": {
+      "legit_detected": 20,
+      "legit_blocked": 0,
+      "legit_detected_www": 0,
+      "legit_detected_non_www": 20,
+      "phish_detected_browser": 17,
+      "phish_detected_listed": 113,
+      "prefix_https": 4,
+      "prefix_www": 0,
+      "prefix_http": 500
+    },
+    "all__xgb": {
+      "legit_detected": 304,
+      "legit_blocked": 277,
+      "legit_detected_www": 10,
+      "legit_detected_non_www": 294,
+      "phish_detected_browser": 212,
+      "phish_detected_listed": 292,
+      "prefix_https": 181,
+      "prefix_www": 7,
+      "prefix_http": 500
+    },
+    "all__cb": {
+      "legit_detected": 342,
+      "legit_blocked": 335,
+      "legit_detected_www": 0,
+      "legit_detected_non_www": 342,
+      "phish_detected_browser": 147,
+      "phish_detected_listed": 246,
+      "prefix_https": 178,
+      "prefix_www": 1,
+      "prefix_http": 500
+    },
+    "no_scheme_www__rf": {
+      "legit_detected": 5,
+      "legit_blocked": 0,
+      "legit_detected_www": 0,
+      "legit_detected_non_www": 5,
+      "phish_detected_browser": 7,
+      "phish_detected_listed": 7,
+      "prefix_https": 0,
+      "prefix_www": 0,
+      "prefix_http": 0
+    },
+    "no_scheme_www__xgb": {
+      "legit_detected": 180,
+      "legit_blocked": 111,
+      "legit_detected_www": 66,
+      "legit_detected_non_www": 114,
+      "phish_detected_browser": 284,
+      "phish_detected_listed": 293,
+      "prefix_https": 61,
+      "prefix_www": 61,
+      "prefix_http": 61
+    },
+    "no_scheme_www__cb": {
+      "legit_detected": 115,
+      "legit_blocked": 55,
+      "legit_detected_www": 37,
+      "legit_detected_non_www": 78,
+      "phish_detected_browser": 161,
+      "phish_detected_listed": 227,
+      "prefix_https": 40,
+      "prefix_www": 40,
+      "prefix_http": 40
+    },
+    "char__rf": {
+      "legit_detected": 511,
+      "legit_blocked": 8,
+      "legit_detected_www": 0,
+      "legit_detected_non_www": 511,
+      "phish_detected_browser": 434,
+      "phish_detected_listed": 442,
+      "prefix_https": 491,
+      "prefix_www": 0,
+      "prefix_http": 499
+    },
+    "char__xgb": {
+      "legit_detected": 405,
+      "legit_blocked": 368,
+      "legit_detected_www": 4,
+      "legit_detected_non_www": 401,
+      "phish_detected_browser": 406,
+      "phish_detected_listed": 427,
+      "prefix_https": 278,
+      "prefix_www": 3,
+      "prefix_http": 494
+    },
+    "char__cb": {
+      "legit_detected": 395,
+      "legit_blocked": 261,
+      "legit_detected_www": 0,
+      "legit_detected_non_www": 395,
+      "phish_detected_browser": 431,
+      "phish_detected_listed": 452,
+      "prefix_https": 198,
+      "prefix_www": 0,
+      "prefix_http": 500
+    },
+    "char_no_scheme_www__rf": {
+      "legit_detected": 6,
+      "legit_blocked": 0,
+      "legit_detected_www": 1,
+      "legit_detected_non_www": 5,
+      "phish_detected_browser": 11,
+      "phish_detected_listed": 11,
+      "prefix_https": 0,
+      "prefix_www": 0,
+      "prefix_http": 0
+    },
+    "char_no_scheme_www__xgb": {
+      "legit_detected": 213,
+      "legit_blocked": 133,
+      "legit_detected_www": 71,
+      "legit_detected_non_www": 142,
+      "phish_detected_browser": 280,
+      "phish_detected_listed": 273,
+      "prefix_https": 80,
+      "prefix_www": 80,
+      "prefix_http": 80
+    },
+    "char_no_scheme_www__cb": {
+      "legit_detected": 162,
+      "legit_blocked": 76,
+      "legit_detected_www": 48,
+      "legit_detected_non_www": 114,
+      "phish_detected_browser": 274,
+      "phish_detected_listed": 304,
+      "prefix_https": 62,
+      "prefix_www": 62,
+      "prefix_http": 62
+    },
+    "char_only__rf": {
+      "legit_detected": 530,
+      "legit_blocked": 507,
+      "legit_detected_www": 0,
+      "legit_detected_non_www": 530,
+      "phish_detected_browser": 470,
+      "phish_detected_listed": 470,
+      "prefix_https": 499,
+      "prefix_www": 0,
+      "prefix_http": 499
+    },
+    "char_only__xgb": {
+      "legit_detected": 515,
+      "legit_blocked": 484,
+      "legit_detected_www": 12,
+      "legit_detected_non_www": 503,
+      "phish_detected_browser": 461,
+      "phish_detected_listed": 459,
+      "prefix_https": 457,
+      "prefix_www": 10,
+      "prefix_http": 458
+    },
+    "char_only__cb": {
+      "legit_detected": 540,
+      "legit_blocked": 522,
+      "legit_detected_www": 10,
+      "legit_detected_non_www": 530,
+      "phish_detected_browser": 472,
+      "phish_detected_listed": 472,
+      "prefix_https": 491,
+      "prefix_www": 2,
+      "prefix_http": 491
+    },
+    "char_only_no_scheme_www__rf": {
+      "legit_detected": 4,
+      "legit_blocked": 1,
+      "legit_detected_www": 0,
+      "legit_detected_non_www": 4,
+      "phish_detected_browser": 11,
+      "phish_detected_listed": 13,
+      "prefix_https": 0,
+      "prefix_www": 0,
+      "prefix_http": 0
+    },
+    "char_only_no_scheme_www__xgb": {
+      "legit_detected": 213,
+      "legit_blocked": 118,
+      "legit_detected_www": 78,
+      "legit_detected_non_www": 135,
+      "phish_detected_browser": 294,
+      "phish_detected_listed": 292,
+      "prefix_https": 83,
+      "prefix_www": 83,
+      "prefix_http": 83
+    },
+    "char_only_no_scheme_www__cb": {
+      "legit_detected": 190,
+      "legit_blocked": 87,
+      "legit_detected_www": 69,
+      "legit_detected_non_www": 121,
+      "phish_detected_browser": 290,
+      "phish_detected_listed": 300,
+      "prefix_https": 82,
+      "prefix_www": 82,
+      "prefix_http": 82
+    }
+  }
+}

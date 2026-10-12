@@ -229,6 +229,51 @@ def test_inference_tfidf_follows_export_flags():
     print("inference TF-IDF flags: OK")
 
 
+# ============================================================
+# Character n-gram block - not part of the default feature union
+# ============================================================
+
+def test_url_host_and_text():
+    h = features.url_host
+    assert h("HTTPS://WWW.PayPal.com/Signin?x=1") == "www.paypal.com"
+    assert h("https://www.paypal.com/signin", strip_www=True) == "paypal.com"
+    assert h("http://paypal.com.secure-login.xyz") == "paypal.com.secure-login.xyz"
+    assert h("example.com?next=http://x/y") == "example.com"
+    assert h("https://a.b.c:8080/#frag") == "a.b.c:8080"
+    url = "http://www.faceb00k.com/login.php"
+    assert features.UrlText()(url) == "www.faceb00k.com"
+    assert features.UrlText(strip_www=True)(url) == "faceb00k.com"
+    assert features.UrlText(scope='url')(url) == url
+    assert features.UrlText(True, True, scope='url')(url) == "faceb00k.com/login.php"
+    print("url_host / UrlText: OK")
+
+
+def test_char_block_is_opt_in():
+    import pickle
+
+    import ml_pipelines
+
+    default = ml_pipelines.build_feature_union()
+    assert [name for name, _ in default.transformer_list] == ['text_features', 'structural_features']
+
+    union = ml_pipelines.build_feature_union(
+        strip_scheme=True, strip_www=True, groups=('text', 'char', 'structural'), char_features=50)
+    assert [name for name, _ in union.transformer_list] == \
+        ['text_features', 'char_features', 'structural_features']
+    X = union.fit_transform(URLS)
+    char = union.transformer_list[1][1]
+    terms = list(char.vocabulary_)
+    assert X.shape[1] == len(union.transformer_list[0][1].vocabulary_) + len(terms) + 9
+    assert len(terms) == 50 and all(3 <= len(t) <= 5 for t in terms)
+    # host only, prefixes stripped: no scheme and no path separator in any term
+    assert not any('/' in t or ':' in t for t in terms)
+    hosts = [features.url_host(u, strip_www=True) for u in URLS]
+    assert all(any(t in host for host in hosts) for t in terms)
+    again = pickle.loads(pickle.dumps(union))
+    assert (again.transform(URLS) != union.transform(URLS)).nnz == 0
+    print("character n-gram block: OK")
+
+
 if __name__ == "__main__":
     test_tokenizer_parity()
     test_structural_parity()
@@ -240,4 +285,6 @@ if __name__ == "__main__":
     test_url_tokenizer_switches()
     test_structural_switches()
     test_inference_tfidf_follows_export_flags()
+    test_url_host_and_text()
+    test_char_block_is_opt_in()
     print("\nAll parity checks passed.")
