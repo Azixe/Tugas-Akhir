@@ -198,7 +198,26 @@ Pengujian dilakukan terhadap 25 URL phishing aktif dari feed PhishTank (dikonfir
 - **XGBoost:** Recall 7/25 (28%), False Positive 4/25 (16%). Mampu mendeteksi sebagian phishing aktif pada infrastruktur *free-hosting* (*pages.dev*, *web.app*, dsb.), namun menghasilkan false positive pada layanan tertentu (misal: Steam).
 - **CatBoost:** Recall 6/25 (24%), False Positive 5/25 (20%). Memakai fitur mentah yang sama dengan Random Forest; pola deteksinya menyerupai XGBoost.
 
-Temuan ini menegaskan keunggulan menyediakan **tiga model yang dapat dipilih pengguna**: Random Forest untuk pengguna yang mengutamakan tanpa gangguan (*zero false alarms*), serta XGBoost dan CatBoost untuk pengguna yang menginginkan proteksi lebih proaktif. Uji eksternal 500/500 pada daftar beku (`external_500/`) menunjukkan pola yang sama pada skala lebih besar: ketiga model masih bergantung pada pintasan dataset (skema dan `www.`) dan belum layak diklaim untuk produksi — rinciannya di `external_500/external_report.md`.
+Temuan ini menegaskan keunggulan menyediakan **tiga model yang dapat dipilih pengguna**: Random Forest untuk pengguna yang mengutamakan tanpa gangguan (*zero false alarms*), serta XGBoost dan CatBoost untuk pengguna yang menginginkan proteksi lebih proaktif. Pada skala yang lebih besar, pilihan ini tidak cukup: lihat bagian 4.
+
+### 4. Ablasi Fitur dan Uji Eksternal (temuan utama)
+
+Angka pada bagian 1 sampai 3 diukur pada data yang berasal dari dataset yang sama dengan data latih. Di luar dataset, kinerja model yang di-deploy turun tajam.
+
+| Model yang di-deploy | Recall, test set | FPR, test set | Recall, eksternal (500 URL PhishTank) | FPR, eksternal (1.000 URL Tranco) |
+|---|:---:|:---:|:---:|:---:|
+| **Random Forest** | 95,87% | 0,001% | 1,0% – 14,0% | 0,5% |
+| **XGBoost** | 98,48% | 0,127% | 30,6% – 46,0% | 25,1% |
+| **CatBoost** | 98,35% | 0,030% | 30,2% – 49,2% | 34,3% |
+
+*Kolom test set memakai ambang 0,5; kolom eksternal memakai ambang ekstensi (terdeteksi jika skor > 60%). Rentang recall adalah varian browser sampai varian sesuai daftar.*
+
+- **Penyebabnya terukur:** pada dataset tidak ada URL *legitimate* berskema `http`, dan 99,80% URL *legitimate* berawalan `www.` (`sampling_results/dataset_split_report.md`). Model mempelajari dua pintasan ini, bukan pola phishing.
+- **Ablasi:** tanpa skema dan `www.`, recall pada test set turun menjadi 31,72% (RF), 84,06% (XGBoost), dan 75,47% (CatBoost) (`ablation_results/ablation_report.md`).
+- **Model tanpa pintasan tidak lolos** aturan penerapan yang ditetapkan sebelum data dikumpulkan (FPR eksternal paling tinggi 2%), sehingga model yang di-deploy tidak diganti (`external_500/external_report.md`).
+- **N-gram karakter** pada host tidak mengubah hasil ini dan justru memperkuat pintasan `www.` (`ablation_char_results/`).
+
+Kesimpulannya: inferensi di sisi klien layak dan ringan, tetapi model leksikal yang dilatih pada dataset ini belum dapat diandalkan sebagai pendeteksi phishing pada penggunaan nyata.
 
 ---
 
