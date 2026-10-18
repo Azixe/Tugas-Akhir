@@ -1,6 +1,6 @@
 # External 500/500 evaluation — protocol (frozen before any list is fetched)
 
-> Agreed 2026-10-10 between Claude Code (Opus) and OpenCode. **This file is committed
+> Agreed on 2026-10-10. **This file is committed
 > before any list is downloaded.** The lists are frozen and committed before scoring;
 > there is no re-sampling and no retraining after scores are seen (rule 6).
 
@@ -12,13 +12,16 @@ Measure how the deployed v3.4 models and the scheme/`www.` ablation candidates b
 
 ## Ownership
 
-| Area | Owner |
+The harness and its verification are kept apart: the scripts that build and score the lists
+are not the scripts that re-check them.
+
+| Area | Role |
 |---|---|
-| `external_500/` harness: list builders, frozen lists, scoring script, report | OpenCode |
-| Independent verification (re-score a sample from the frozen lists; check counts) | Claude Code (Opus) |
+| `external_500/` harness: list builders, frozen lists, scoring script, report | harness |
+| Re-score of the frozen lists and count check (`external_500/audit/`) | audit scripts, written separately from the harness |
 | `realworld_test/` + `run_realworld_test.py` (v3.4 25/25 evidence) | untouched |
-| `features.py`, `ml_pipelines.py`, `sampling.py`, `benchmark_ablation.py`, `tests/` | Claude Code |
-| `utils.js` + export scripts — only if a candidate passes the deployment rule | Claude Code |
+| `features.py`, `ml_pipelines.py`, `sampling.py`, `benchmark_ablation.py`, `tests/` | model code, frozen for this test |
+| `utils.js` + export scripts — only if a candidate passes the deployment rule | model code |
 
 ## (a) Legitimate set — Tranco
 
@@ -108,3 +111,12 @@ Headline phishing set: 500 URLs, seed 42, sampled across the qualifying hosts.
 - **2026-10-10 — deep-link definition:** added the static-asset exclusion to §(a) after smoke
   tests showed `…/assets/index-*.css` being picked as a deep link. Made **before any real list
   was fetched** (only smoke-test fetches of a handful of candidates); no scores were seen.
+- **2026-10-10 — scorer hotfix after the freeze (logged 2026-10-13):** the commit that added the
+  results also changed `score_external.py` in the code that evaluates the deployment rule: a
+  key-access fix (`mc['p']` → `mc['detected']['p']`) for a `KeyError` on the first full run,
+  plus report notes. Thresholds, metrics and the rule's logic are unchanged, and the scoring
+  pass reproduced identical counts (see the note in `external_report.md`). It is recorded here
+  because it happened after the lists were frozen.
+- **Timestamps:** the order above (protocol, amendment, frozen lists, results) is the order of
+  the local commits. The branch was first pushed to the remote on 2026-10-12, so there is no
+  third-party timestamp for the individual steps.

@@ -31,6 +31,7 @@ SEED = 42
 RF_HPARAMS = dict(
     n_estimators=100,
     n_jobs=-1,
+    random_state=SEED,  # added 2026-10-13; the deployed RF and earlier pickles were fitted unseeded
     max_depth=15,
     min_samples_split=10,
     min_samples_leaf=4,

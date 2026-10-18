@@ -105,6 +105,7 @@ def main():
         ('clf', RandomForestClassifier(
             n_estimators=100,
             n_jobs=-1,
+            random_state=42,  # added 2026-10-13; the deployed RF was fitted unseeded
             max_depth=15,
             min_samples_split=10,
             min_samples_leaf=4,

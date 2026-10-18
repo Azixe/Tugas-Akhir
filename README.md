@@ -104,6 +104,7 @@ Tugas Akhir/
 ├── analyze_overfitting.py         # Kinerja data latih vs data uji
 ├── run_realworld_test.py          # Validasi awal 25/25 URL (PhishTank)
 ├── explore_char_external.py       # Penilaian eksploratif n-gram karakter pada daftar eksternal
+├── analyze_external_posthoc.py    # Pasca-hoc: ROC-AUC eksternal, selang kepercayaan, TLD, test set jalur ekstensi
 ├── make_thesis_figures.py         # Grafik untuk naskah (docs/figures/)
 │
 ├── ── HASIL (bukti; angka di naskah diambil dari sini) ──
@@ -111,6 +112,7 @@ Tugas Akhir/
 ├── ablation_results/              # Ablasi skema/www./kelompok fitur (10 Okt 2026)
 ├── ablation_char_results/         # Ablasi n-gram karakter + penilaian eksternal eksploratif
 ├── external_500/                  # Uji eksternal Tranco + PhishTank: protokol, daftar beku, laporan, audit
+├── external_posthoc/              # Analisis pasca-hoc atas uji eksternal (bukan bagian protokol)
 ├── realworld_test/                # Validasi awal pada 25/25 URL
 ├── browser_bench/                 # Pengujian di browser: panduan, hasil, tangkapan layar
 ├── rf_models/                     # Model RF biner (tidak dilacak git)
@@ -131,6 +133,7 @@ Berkas `*.pkl` hasil pelatihan dan `phishing_rf*.onnx` tidak dilacak git (lihat 
 
 ### 1. Dataset
 Menggunakan dataset gabungan dari **Mendeley Phishing URL Dataset (2024)** berjumlah 450.176 baris setelah pembersihan data (penghapusan baris kosong dan duplikasi).
+- **Sumber dan lisensi:** K. S. Jishnu dan B. Arthi, "Phishing URL dataset", *Mendeley Data*, V1, 2024, doi: [10.17632/vfszbj9b36.1](https://doi.org/10.17632/vfszbj9b36.1), lisensi CC BY 4.0. Berkas `URL dataset.csv` di repositori ini adalah salinan dataset tersebut.
 - **Pembagian Data:** *Stratified Hold-out* 80% data latih (360.140 URL) dan 20% data uji bersama (90.036 URL: 69.148 *legitimate*, 20.888 *phishing*).
 
 ### 2. Ekstraksi Fitur Leksikal (1.509 Fitur)
@@ -149,7 +152,7 @@ Tidak seperti metode berbasis konten yang mengunduh seluruh halaman HTML, sistem
   | 8 | `is_common_tld` | Variabel biner TLD populer (`.com`, `.org`, `.id`, dll.) | Domain tidak lazim sering digunakan karena murah atau gratis. |
   | 9 | `subdomain_level`| Kedalaman level subdomain dari nama *host* | Indikasi peniruan domain bertingkat. |
 
-*Catatan Paritas:* Logika ekstraksi fitur di `phishingdetectorExt/utils.js` telah diselaraskan 100% dengan `features.py` pada lingkungan Python (termasuk normalisasi URL berakhiran *trailing slash*).
+*Catatan Paritas:* Logika ekstraksi fitur di `phishingdetectorExt/utils.js` sama dengan jalur inferensi di `features.py` (`build_tfidf_vector` / `structural_features`, termasuk normalisasi URL berakhiran *trailing slash*). Ada satu perbedaan yang disengaja terhadap jalur **pelatihan**: tokenizer pelatihan mempertahankan token string kosong, sedangkan jalur inferensi (JS dan Python) membuangnya. Akibatnya 37 (RF) dan 148 (XGBoost) dari 90.036 prediksi test set berbeda antara pipeline `.pkl` dan berkas ONNX yang di-deploy (`docs/benchmark_pkl_vs_onnx_full.md`).
 
 ### 3. Spesifikasi Model yang Di-deploy pada Ekstensi
 
@@ -206,15 +209,18 @@ Angka pada bagian 1 sampai 3 diukur pada data yang berasal dari dataset yang sam
 
 | Model yang di-deploy | Recall, test set | FPR, test set | Recall, eksternal (500 URL PhishTank) | FPR, eksternal (1.000 URL Tranco) |
 |---|:---:|:---:|:---:|:---:|
-| **Random Forest** | 95,87% | 0,001% | 1,0% – 14,0% | 0,5% |
-| **XGBoost** | 98,48% | 0,127% | 30,6% – 46,0% | 25,1% |
-| **CatBoost** | 98,35% | 0,030% | 30,2% – 49,2% | 34,3% |
+| **Random Forest** | 87,41% | 0,0000% | 1,0% – 14,0% | 0,5% |
+| **XGBoost** | 98,02% | 0,1128% | 30,6% – 46,0% | 25,1% |
+| **CatBoost** | 98,22% | 0,0202% | 30,2% – 49,2% | 34,3% |
 
-*Kolom test set memakai ambang 0,5; kolom eksternal memakai ambang ekstensi (terdeteksi jika skor > 60%). Rentang recall adalah varian browser sampai varian sesuai daftar.*
+*Semua kolom memakai jalur yang sama, yaitu berkas ONNX yang di-deploy dengan jalur fitur ekstensi, pada ambang deteksi ekstensi (skor > 60%). Angka test set dari `external_posthoc/posthoc_report.md`; rentang recall eksternal adalah varian browser sampai varian sesuai daftar.*
+
+- **Bukan soal ambang (analisis pasca-hoc):** ROC-AUC model yang di-deploy pada data eksternal adalah 0,495 (RF), 0,536 (XGBoost), dan 0,553 (CatBoost), hampir sama dengan acak; recall terbaik yang mungkin pada FPR paling tinggi 2% hanya 2,4% sampai 3,0% (`external_posthoc/posthoc_report.md`).
 
 - **Penyebabnya terukur:** pada dataset tidak ada URL *legitimate* berskema `http`, dan 99,80% URL *legitimate* berawalan `www.` (`sampling_results/dataset_split_report.md`). Model mempelajari dua pintasan ini, bukan pola phishing.
 - **Ablasi:** tanpa skema dan `www.`, recall pada test set turun menjadi 31,72% (RF), 84,06% (XGBoost), dan 75,47% (CatBoost) (`ablation_results/ablation_report.md`).
-- **Model tanpa pintasan tidak lolos** aturan penerapan yang ditetapkan sebelum data dikumpulkan (FPR eksternal paling tinggi 2%), sehingga model yang di-deploy tidak diganti (`external_500/external_report.md`).
+- **Tidak ada model yang lolos** batas FPR pada aturan penerapan yang ditetapkan sebelum data dikumpulkan (FPR eksternal paling tinggi 2%), termasuk model yang di-deploy; model tanpa pintasan tidak menggantikannya (`external_500/external_report.md`).
+- **Pintasan yang tersisa:** setelah skema dan `www.` dihapus, TLD masih membedakan kelas (76,8% URL *legitimate* pada data latih berakhiran `.com`, dibandingkan 48,8% URL phishing), dan FPR eksternal mengikuti TLD (`external_posthoc/posthoc_report.md`).
 - **N-gram karakter** pada host tidak mengubah hasil ini dan justru memperkuat pintasan `www.` (`ablation_char_results/`).
 
 Kesimpulannya: inferensi di sisi klien layak dan ringan, tetapi model leksikal yang dilatih pada dataset ini belum dapat diandalkan sebagai pendeteksi phishing pada penggunaan nyata.

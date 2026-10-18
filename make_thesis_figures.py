@@ -203,9 +203,14 @@ def fig_prefix(ext):
     save(fig, 'gambar_sensitivitas_awalan.png', bottom=0.1)
 
 
-def fig_test_vs_external(ext, thr):
-    at60 = {f: next(t for t in thr['models'][f]['by_threshold'] if abs(t['threshold'] - 0.6) < 1e-9)
-            for f in FAMILIES}
+def fig_test_vs_external(ext, thr, post=None):
+    # Both sides on one path: when the post-hoc report has the deployed models scored through
+    # the extension's feature path, the test-set bars use it (the external bars always do).
+    if post and 'test_set_deployed_path' in post:
+        at60 = {f: post['test_set_deployed_path'][f]['above_0.6'] for f in FAMILIES}
+    else:
+        at60 = {f: next(t for t in thr['models'][f]['by_threshold'] if abs(t['threshold'] - 0.6) < 1e-9)
+                for f in FAMILIES}
     base = ext['results']['v3.4']
     recall = {f: [at60[f]['recall'] * 100, base[f]['phish_listed']['detect_recall'],
                   base[f]['phish_browser']['detect_recall']] for f in FAMILIES}
@@ -243,6 +248,35 @@ def fig_char_external(char):
     save(fig, 'gambar_ngram_eksternal.png', bottom=0.1)
 
 
+def fig_external_roc(post):
+    """Post hoc: ROC curves of the deployed models on the frozen external lists."""
+    fig, ax = plt.subplots(figsize=(WIDTH_IN * 0.72, 3.5))
+    styles = {'rf': '-', 'xgb': '--', 'cb': '-.'}
+    ax.plot([0, 100], [0, 100], ':', color=MUTED, linewidth=1.0, label='Acak (AUC 0,5)')
+    for fam in FAMILIES:
+        curve = post['roc_curves'][fam]
+        auc = post['threshold_free'][f'model dasar__{fam}']['roc_auc']
+        ax.plot([100 * v for v in curve['fpr']], [100 * v for v in curve['tpr']], styles[fam],
+                color=COLORS[fam], linewidth=1.6, label=f'{NAMES[fam]} (AUC {num(auc, 3)})')
+        u = post['uncertainty'][fam]            # the extension's operating point (score > 60%)
+        ax.plot(100 * u['fpr'], 100 * u['recall'], 'o', color=COLORS[fam], markersize=5,
+                markeredgecolor='#ffffff', markeredgewidth=0.8)
+    ax.axvline(2, color=MUTED, linewidth=0.8)
+    ax.annotate('FPR 2%', (2, 96), xytext=(4, 0), textcoords='offset points', fontsize=7.5, color=MUTED, va='top')
+    ax.set_xlim(0, 100)
+    ax.set_ylim(0, 100)
+    ax.set_xlabel('URL legitimate terdeteksi (FPR, %)', fontsize=8.5)
+    ax.set_ylabel('URL phishing terdeteksi (recall, %)', fontsize=8.5)
+    ax.set_aspect('equal')
+    ax.xaxis.grid(True, color=GRID, linewidth=0.6)
+    style_axis(ax)
+    ax.tick_params(labelsize=8)
+    handles, labels = ax.get_legend_handles_labels()
+    fig.legend(handles[1:] + handles[:1], labels[1:] + labels[:1], loc='lower center', ncol=2, fontsize=8,
+               handlelength=2.4, columnspacing=1.4, bbox_to_anchor=(0.5, 0.0))
+    save(fig, 'gambar_roc_eksternal.png', bottom=0.14)
+
+
 def main():
     os.makedirs(OUTDIR, exist_ok=True)
     over = load('sampling_results/overfitting.json')
@@ -255,10 +289,14 @@ def main():
     fig_external_candidates(ext)
     fig_www_split(ext)
     fig_prefix(ext)
-    fig_test_vs_external(ext, thr)
+    post_path = 'external_posthoc/posthoc_metrics.json'
+    post = load(post_path) if os.path.exists(post_path) else None
+    fig_test_vs_external(ext, thr, post)
     char_path = 'ablation_char_results/external_exploratory.json'
     if os.path.exists(char_path):
         fig_char_external(load(char_path))
+    if post:
+        fig_external_roc(post)
 
 
 if __name__ == '__main__':

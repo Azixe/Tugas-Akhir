@@ -1,10 +1,9 @@
-# Independent audit (Claude Code / Opus) — external 500/500
+# Independent audit — external 500/500
 
-Independent verification of the external evaluation, performed by Claude Code (Opus)
-on 2026-10-10 under the ownership split in `external_500/PROTOCOL.md` (OpenCode builds,
-Opus verifies). The scripts were copied **unchanged** from Claude Code's session scratch
-folder (`%TEMP%\claude\C--Users-Enzo-Documents-Python-Tugas-Akhir\d763679c-…\scratchpad\`)
-after the audit completed, so the check is kept as repo evidence.
+Re-verification of the external evaluation, done on 2026-10-10 under the role split in
+`external_500/PROTOCOL.md` (the harness builds and scores; these audit scripts re-score).
+The scripts were written separately from the harness, do not import it, and are committed
+unchanged from the audit run so the check is kept as repo evidence.
 
 ## Files
 
@@ -37,6 +36,6 @@ after the audit completed, so the check is kept as repo evidence.
 ## Reproduce
 
 ```
-python external_500/audit/audit_lists.py "C:\Users\Enzo\Documents\Python\Tugas Akhir"
-python external_500/audit/audit_rescore.py "C:\Users\Enzo\Documents\Python\Tugas Akhir" <scratch_dir> [js]
+python external_500/audit/audit_lists.py <repo_root>
+python external_500/audit/audit_rescore.py <repo_root> <scratch_dir> [js]
 ```

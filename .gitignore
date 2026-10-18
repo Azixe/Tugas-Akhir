@@ -2,6 +2,7 @@ phishing_detector_model.pkl
 phishing_hybrid_model.pkl
 phishing_optimized.pkl
 phishing_rf*.onnx
+!phishingdetectorExt/phishing_rf.onnx
 chat_history.md
 .vscode/
 .pytest_cache/
