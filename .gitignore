@@ -23,3 +23,6 @@ ablation_char_results/*.pkl
 ablation_smoke*/
 external_500/raw/
 external_500/frozen/phishtank_domains.csv
+
+# Personal learning documentation (local only)
+documentation/

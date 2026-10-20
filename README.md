@@ -68,7 +68,7 @@ Tugas Akhir/
 │   ├── blocked.html / blocked.js  # Halaman blokir (session bypass & whitelist)
 │   ├── utils.js                   # Ekstraksi fitur leksikal, harus identik dengan features.py
 │   ├── bench.html / bench.js      # Benchmark latensi di dalam browser (bench_urls.json)
-│   ├── phishing_rf.onnx           # Random Forest (tidak dilacak git; lihat MODELS.md)
+│   ├── phishing_rf.onnx           # Random Forest
 │   ├── phishing_xgb.onnx          # XGBoost
 │   ├── phishing_catboost.onnx     # CatBoost
 │   ├── tfidf_data.json            # Kosakata TF-IDF untuk RF dan CatBoost
@@ -82,9 +82,9 @@ Tugas Akhir/
 ├── ml_pipelines.py                # Pipeline RF dan XGBoost dengan hyperparameter tetap
 │
 ├── ── PELATIHAN & EKSPOR ──
-├── hybrid/train_hybrid_model_v2.py  # Pelatihan Random Forest (--no-undersample untuk varian full)
+├── hybrid/train_hybrid_model_v2.py  # Pelatih RF generasi awal (split sendiri, bukan protokol bersama)
 ├── hybrid/test_hybrid.py          # Uji interaktif sebuah model RF (.pkl)
-├── Xgboost/                       # Pelatihan/ekspor XGBoost versi Colab (+ artefak Colab lama)
+├── Xgboost/                       # Pencarian hyperparameter XGBoost di Colab (+ artefak Colab lama)
 ├── Catboost/                      # Pelatihan CatBoost, perbaikan keluaran ONNX, verifikasi ONNX
 ├── export_to_web.py               # RF (.pkl) → ONNX + tfidf_data.json
 ├── export_xgb_onnx.py, xgb_export.py  # XGBoost → ONNX + berkas preprocessing JSON
@@ -178,21 +178,25 @@ Seluruh pengujian dievaluasi pada data uji bersama (*unseen test set*) sebesar *
 |---|---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | **RF (Undersampled)** | 167.100 | 99,24% | 99,70% | 97,02% | 98,34% | 0,088% | 61 |
 | **RF (Full Dataset) ⭐** | 360.140 | 99,04% | **100,00%** | 95,87% | 97,89% | **0,001%** | **1** |
-| **XGBoost (Undersampled) ⭐**| 167.100 | 99,46% | 98,83% | **98,87%** | **98,85%** | 0,354% | 245 |
-| **XGBoost (Full Dataset)** | 360.140 | **99,55%** | 99,57% | 98,48% | 99,03% | 0,127% | 88 |
+| **XGBoost (Undersampled)** | 167.100 | 99,46% | 98,83% | **98,87%** | 98,85% | 0,354% | 245 |
+| **XGBoost (Full Dataset) ⭐** | 360.140 | 99,55% | 99,57% | 98,48% | 99,03% | 0,127% | 88 |
+| **CatBoost (Undersampled)** | 167.100 | 99,57% | 99,55% | 98,60% | 99,07% | 0,136% | 94 |
+| **CatBoost (Full Dataset) ⭐** | 360.140 | **99,59%** | 99,90% | 98,35% | **99,12%** | 0,030% | 21 |
 
-*Keterangan: Tanda ⭐ menandakan model yang diintegrasikan ke dalam paket Chrome Extension*
+*Keterangan: ⭐ = varian yang di-deploy pada ekstensi (ketiganya varian full dataset). Sumber: `sampling_results/sampling_report.md` (jalur Python/PKL, ambang 0,5).*
 
 ### 2. Evaluasi Format PKL vs ONNX (Efisiensi Komputasi)
 
-| Model & Format | Akurasi / F1 | Latensi Rata-rata per URL | Penggunaan RAM | Ukuran Berkas |
+| Model & Format | Akurasi / F1 | Latensi rata-rata per URL | RSS proses Python (rata-rata) | Ukuran Berkas |
 |---|:---:|:---:|:---:|:---:|
-| **Random Forest (.pkl)** | 99,04% / 97,89% | 28,5 ms | ~255,7 MB | 7.529 KB |
-| **Random Forest (.onnx)** | 99,00% / 97,80% | **5,9 ms** | **163,1 MB** | **730 KB** |
-| **XGBoost (.pkl)** | 99,46% / 98,85% | 5,3 ms | ~213,7 MB | 4.672 KB |
-| **XGBoost (.onnx)** | 99,43% / 98,76% | **9,3 ms** | **169,6 MB** | **1.907 KB** |
+| **Random Forest (.pkl)** | 99,04% / 97,89% | 25,8 ms | 256,4 MB | 7.529 KB |
+| **Random Forest (.onnx)** | 99,00% / 97,80% | **5,2 ms** | **165,0 MB** | **730 KB** |
+| **XGBoost (.pkl)** | 99,55% / 99,03% | 3,9 ms | 261,8 MB | 7.830 KB |
+| **XGBoost (.onnx)** | 99,47% / 98,86% | 7,2 ms | **170,9 MB** | **1.291 KB** (+655 KB JSON) |
+| **CatBoost (.pkl)** | 99,59% / 99,12% | 7,2 ms | 284,8 MB | 7.190 KB |
+| **CatBoost (.onnx)** | 99,59% / 99,12% | **5,2 ms** | **168,2 MB** | **1.618 KB** |
 
-*Catatan:* Konversi ke ONNX berhasil mempertahankan metrik statistik (>99% identik) sekaligus memangkas ukuran berkas hingga **90%** dan menurunkan latensi inferensi secara drastis.
+*Sumber: metrik `docs/benchmark_pkl_vs_onnx_full.md` dan `sampling_results/catboost_onnx_verification.md`; latensi `sampling_results/latency_report.md` (1.000 URL); memori `sampling_results/memory_report.md` (baseline interpreter ±154 MB termasuk); ukuran `MODELS.md`. Semua diukur di Python, bukan di browser. Baris .onnx RF dan XGBoost memakai jalur fitur ekstensi; selisih kecilnya terhadap .pkl berasal dari token string kosong, bukan dari konversi. Latensi di dalam browser: 1,0–1,2 ms (`browser_bench/benchmark_browser_report.md`).*
 
 ### 3. Validasi pada Data Nyata (*PhishTank Live Feed*)
 
@@ -201,7 +205,7 @@ Pengujian dilakukan terhadap 25 URL phishing aktif dari feed PhishTank (dikonfir
 - **XGBoost:** Recall 7/25 (28%), False Positive 4/25 (16%). Mampu mendeteksi sebagian phishing aktif pada infrastruktur *free-hosting* (*pages.dev*, *web.app*, dsb.), namun menghasilkan false positive pada layanan tertentu (misal: Steam).
 - **CatBoost:** Recall 6/25 (24%), False Positive 5/25 (20%). Memakai fitur mentah yang sama dengan Random Forest; pola deteksinya menyerupai XGBoost.
 
-Temuan ini menegaskan keunggulan menyediakan **tiga model yang dapat dipilih pengguna**: Random Forest untuk pengguna yang mengutamakan tanpa gangguan (*zero false alarms*), serta XGBoost dan CatBoost untuk pengguna yang menginginkan proteksi lebih proaktif. Pada skala yang lebih besar, pilihan ini tidak cukup: lihat bagian 4.
+Pada sampel kecil ini Random Forest tidak menghasilkan *false positive* tetapi juga tidak mendeteksi phishing, sedangkan XGBoost dan CatBoost lebih agresif dengan *false positive* yang tinggi. Uji eksternal yang lebih besar (bagian 4) mengonfirmasi pola ini.
 
 ### 4. Ablasi Fitur dan Uji Eksternal (temuan utama)
 
@@ -230,38 +234,41 @@ Kesimpulannya: inferensi di sisi klien layak dan ringan, tetapi model leksikal y
 ## Panduan Menjalankan Eksperimen (Reproducibility)
 
 ### 1. Menyiapkan Lingkungan Python
-Pastikan Python 3.10 atau Anaconda telah terpasang:
+Python 3.10 (Anaconda) dengan `numpy 1.23.5` dan `scikit-learn 1.2.1`; berkas `.pkl` hanya dapat dimuat dengan versi ini (lihat `MODELS.md`).
 ```bash
-# Pemasangan dependensi utama
-pip install numpy pandas scikit-learn xgboost onnxruntime skl2onnx joblib
+pip install numpy pandas scikit-learn xgboost catboost onnx onnxruntime skl2onnx onnxmltools joblib
 ```
 
-### 2. Melatih Model
+### 2. Melatih Model (protokol bersama, `sampling.py`)
+Gunakan direktori keluaran baru agar artefak model yang di-deploy di `sampling_results/` tidak tertimpa.
 ```bash
-# Melatih Random Forest (Varian Full Dataset yang digunakan pada ekstensi)
-python hybrid/train_hybrid_model_v2.py --no-undersample --out rf_models/rf_full.pkl
+# CatBoost lebih dulu (konfigurasi yang di-deploy: 300 iterasi, varian full dan undersampled)
+python Catboost/train_catboost.py --iterations 300 --outdir hasil_baru
 
-# Melatih Random Forest varian Undersampled
-python hybrid/train_hybrid_model_v2.py --out rf_models/phishing_optimized.pkl
+# Random Forest + XGBoost, varian full dan undersampled (± 8 menit), lalu evaluasi keenam varian
+python benchmark_sampling.py --outdir hasil_baru --force-retrain
 
-# Menjalankan pipeline lengkap XGBoost (Scaler -> SelectKBest -> RFECV -> PCA -> Tuning)
-python Xgboost/train_xgb.py
+# Ekspor ke format ekstensi
+python export_to_web.py --model hasil_baru/rf_full.pkl --outdir hasil_baru --onnx-name phishing_rf.onnx --tfidf-name tfidf_data.json
+python export_xgb_onnx.py --pkl hasil_baru/xgb_full.pkl --outdir hasil_baru
 ```
+Random Forest kini memakai seed tetap; model yang di-deploy dilatih sebelum seed ditambahkan, sehingga pelatihan ulang menghasilkan metrik yang sangat dekat tetapi SHA-256 yang berbeda.
 
-### 3. Menjalankan Uji Benchmark Komparatif
+### 3. Benchmark dan Analisis
 ```bash
-# Menjalankan evaluasi sampling (Undersampling vs Non-Undersampling)
-python benchmark_sampling.py
-
-# Menjalankan benchmark komparasi format PKL vs ONNX
-python benchmark_all_models.py
-
-# Menjalankan pengujian konsumsi memori dan latensi
+python benchmark_all_models.py --protocol common --rf-pkl sampling_results/rf_full.pkl --xgb-pkl sampling_results/xgb_full.pkl
+python benchmark_deployed_latency.py
 python benchmark_memory.py
-
-# Menjalankan pengujian validasi URL nyata dari PhishTank
+python analyze_thresholds.py
+python analyze_feature_importance.py
+python analyze_dataset_split.py
+python analyze_overfitting.py
 python run_realworld_test.py
+python benchmark_ablation.py --outdir ablation_baru          # ablasi (lihat docstring untuk pilihan arm)
+python external_500/score_external.py                      # uji eksternal pada daftar yang dibekukan
+python analyze_external_posthoc.py
 ```
+Setiap skrip menulis laporan `.md` dan `.json` ke foldernya masing-masing (lihat peta di atas).
 
 ---
 

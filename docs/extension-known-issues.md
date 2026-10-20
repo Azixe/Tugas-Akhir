@@ -46,6 +46,6 @@ review UI beyond the popup list.
 ## Verification
 
 - `node --test tests/extension_navigation.test.mjs` (9 tests, stubbed Chrome)
-- Python feature parity: `pytest tests/test_features_parity.py` (passes, 5 tests)
+- Python feature parity: `pytest tests/test_features_parity.py` (passes, 12 tests)
 - Manual Chrome checks (pending): blocked-page buttons, warning banner,
   model switcher, popup SAFE-confidence display.

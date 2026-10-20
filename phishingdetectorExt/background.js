@@ -304,4 +304,4 @@ chrome.runtime.onMessage.addListener((req, sender, res) => {
     }
 });
 
-console.log('[BG] Service worker loaded (RF + XGBoost)');
+console.log('[BG] Service worker loaded (RF + XGBoost + CatBoost)');

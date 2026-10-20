@@ -80,15 +80,14 @@ Persiapan: satu jendela Chrome, tutup tab yang tidak perlu, **DevTools service w
    Ini memuat ketiga sesi ke service worker.
 5. Catat memori → screenshot: `screenshots/p02_memory_three_models.png`.
 6. Scan `https://www.youtube.com/` dengan model **CatBoost** → catat lagi →
-   screenshot: `screenshots/p02_memory_catboost_scan.png`.
-7. (P-03) Saat scan CatBoost berjalan, lihat kolom *CPU* → screenshot:
-   `screenshots/p03_cpu_catboost_scan.png`.
+   screenshot: `screenshots/p02_p03_catboost_scan.png`.
+7. (P-03) Saat scan CatBoost berjalan, lihat kolom *CPU*; memori dan CPU diambil dalam satu
+   tangkapan layar yang sama (`screenshots/p02_p03_catboost_scan.png`).
 
 | Kondisi | Memori (MB) | Screenshot |
 |---|---|---|
 | Tiga model dimuat (RF + XGB + CatBoost, popup ditutup) | … | ![alt text](screenshots/p02_memory_three_models.png) |
-| Setelah scan legitimate dengan CatBoost | … | ![alt text](screenshots/p02_memory_catboost_scan.png) |
-| CPU saat scan CatBoost | … % | ![alt text](screenshots/p03_cpu_catboost_scan.png) |
+| Setelah scan legitimate dengan CatBoost (memori + CPU) | … | ![alt text](screenshots/p02_p03_catboost_scan.png) |
 
 Target Bab 3 tetap: idle **< 50 MB**, peak **< 150 MB**, spike CPU **< 30%**.
 Kalau peak > 150 MB, bilang ke asisten — sesi model lama bisa dilepas saat

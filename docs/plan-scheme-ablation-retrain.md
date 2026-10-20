@@ -1,6 +1,6 @@
 # Plan — scheme / `www.` ablation, retrain, and larger external validation
 
-> Source: **Claude Code (Opus) review, 2026-10-10**. Branch: `feat/scheme-ablation-retrain`.
+> Source: **independent review, 2026-10-10**. Branch: `feat/scheme-ablation-retrain`.
 > Baseline to preserve: **extension v3.4** (RF full / XGB full 177→149 / CatBoost full @ 300 iters).
 > Never overwrite v3.4 artifacts — always pass explicit `--out` / `--outdir` paths.
 
@@ -53,5 +53,5 @@ This work tests the shortcut hypothesis directly and produces a fairer feature c
 ## Coordination
 
 - The thesis docx is out of scope here (its own tracked-changes workflow).
-- **One writer per repo file at a time** (OpenCode vs Claude Code) — record ownership in
-  `X:\Opencode-Dev\HANDOFF.md` when handing off.
+- **One writer per repo file at a time** — record who owns which file in the
+  project hand-off notes when switching.

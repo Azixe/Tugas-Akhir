@@ -80,20 +80,16 @@ Benchmark outputs: `benchmark_pkl_vs_onnx_under.md` (PKL vs ONNX on the undersam
 
 ## Regenerating
 
+The deployed RF and XGBoost pickles come from `benchmark_sampling.py` and CatBoost from `Catboost/train_catboost.py`, all on the shared protocol in `sampling.py`. Write to a fresh directory so the files above are not overwritten:
+
 ```bash
-# RF undersampled (default) -> rf_models/phishing_optimized.pkl
-python hybrid/train_hybrid_model_v2.py
-python export_to_web.py --model rf_models/phishing_optimized.pkl --outdir rf_models --onnx-name phishing_rf3.onnx
-
-# RF non-undersampled (deployed variant)
-python hybrid/train_hybrid_model_v2.py --no-undersample --out rf_models/rf_full.pkl
-python export_to_web.py --model rf_models/rf_full.pkl --outdir rf_models \
-    --onnx-name rf_full.onnx --tfidf-name rf_full_tfidf_data.json
-
-# XGBoost (Colab; upload URL dataset.csv, features.py, and the script)
-!python train_xgb_colab.py                          # add --no-undersample for the full variant
-!python export_xgb_onnx_colab.py                    # add --outdir / --pkl as needed
+python Catboost/train_catboost.py --iterations 300 --outdir new_run          # cb_full / cb_under (300 iterations, as deployed)
+python benchmark_sampling.py --outdir new_run --force-retrain                 # rf_* and xgb_* (full + undersampled), report
+python export_to_web.py --model new_run/rf_full.pkl --outdir new_run --onnx-name phishing_rf.onnx --tfidf-name tfidf_data.json
+python export_xgb_onnx.py --pkl new_run/xgb_full.pkl --outdir new_run
 ```
+
+`hybrid/train_hybrid_model_v2.py` is the older RF trainer: it splits the data itself (unstratified) and undersamples by default, so it does not reproduce the deployed RF or the common test set. The Colab scripts in `Xgboost/` produced the hyperparameter search behind `ml_pipelines.BEST_XGB_PARAMS` and the older undersampled artifacts listed above.
 
 ## Notes & policy
 
@@ -101,4 +97,4 @@ python export_to_web.py --model rf_models/rf_full.pkl --outdir rf_models \
 - **Empty-token quirk:** exported TF-IDF vocabularies contain `''` as a term (the training tokenizer keeps empty strings); the JS/benchmark emulation filters empty tokens (`features.build_tfidf_vector`). This is intentional — keep it when comparing pkl vs ONNX.
 - **RF seed:** `ml_pipelines.RF_HPARAMS` and `hybrid/train_hybrid_model_v2.py` set `random_state` since 2026-10-13. The deployed RF and every RF pickle before that date were fitted without a seed, so retraining reproduces their metrics closely but not their SHA-256.
 - **Git tracking:** XGBoost and CatBoost binaries are tracked in git, and so is the deployed `phishingdetectorExt/phishing_rf.onnx` (since 2026-10-13, so a fresh clone can run the default model). Other RF binaries stay ignored via `.gitignore` (`phishing_rf*.onnx`, `*.pkl`, …). Provenance is tracked here by SHA-256. If the repo grows, consider `git rm --cached` for the XGB binaries and rely on this manifest + local/Drive copies.
-- **Python:** local runs use Anaconda Python 3.10 (`numpy 1.23.5`, `sklearn 1.2.1`). The XGB pkls were saved under NumPy 2.x on Colab and will **not** load locally until re-saved with `numpy<2` (see `task.md`).
+- **Python:** local runs use Anaconda Python 3.10 (`numpy 1.23.5`, `sklearn 1.2.1`). The XGB pkls were saved under NumPy 2.x on Colab and will **not** load locally until re-saved with `numpy<2`.
