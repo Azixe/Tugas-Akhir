@@ -1,6 +1,11 @@
 """
 XGBoost ONNX Export Script — Run on Google Colab
 =================================================
+NOT USED by the deployed extension or by any reported result. It exports the old
+Colab-trained undersampled pipeline (Xgboost/phishing_xgb_pipeline.pkl); the deployed
+XGBoost model is exported with export_xgb_onnx.py from the repo root (see MODELS.md).
+Kept as provenance of the Colab hyperparameter search.
+
 Run this AFTER train_xgb_colab.py in the same Colab session,
 or after uploading phishing_xgb_pipeline.pkl to Colab.
 
